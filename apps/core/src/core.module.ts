@@ -11,7 +11,7 @@ import { CompanyModule } from './company/company.module';
     CompanyModule,
     ProductsModule,
     MongooseModule.forRoot(globalConfigs.MONGODB_URI),
-    CompanyModule,
+    CompanyModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

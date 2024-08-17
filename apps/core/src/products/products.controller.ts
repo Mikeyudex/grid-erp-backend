@@ -7,6 +7,10 @@ import { AttributeConfig } from './interfaces/attribute-config.interface';
 import { Product } from './interfaces/products.interface';
 import { CreateAttributeConfigDto } from './dto/create-attribute-config.dto';
 import { Response } from 'express';
+import { CreateCategoryDto } from './dto/category/create-category.dto';
+import { ProductCategory } from './category/category.schema';
+import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
+import { ProductSubCategory } from './subcategory/subcategory.schema';
 
 @ApiTags('products')
 @Controller('products')
@@ -76,5 +80,59 @@ export class ProductsController {
     @Body() createAttributeConfigDto: CreateAttributeConfigDto
   ): Promise<AttributeConfig> {
     return this.productService.createAttributeConfig(createAttributeConfigDto);
+  }
+
+  // Endpoint para crear una categoría
+  @Post('/category/create')
+  async createProductCategory(
+    @Body() createCategoryDto: CreateCategoryDto
+  ): Promise<ProductCategory> {
+    return this.productService.createProductCategory(createCategoryDto);
+  }
+
+  // Endpoint para obtener los atributos configurables por id de la empresa
+  @Get('/category/getByCompanyId/:companyId')
+  async findProductCategory(@Param('companyId') companyId: string, @Res() res: Response) {
+    try {
+      let data = await this.productService.findProductCategorysByCompanyId(companyId);
+      return res.status(200).json({
+        success: true,
+        data,
+        errorMessage: ""
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: [],
+        errorMessage: "Internal Error"
+      });
+    }
+  }
+
+  // Endpoint para crear una subcategoría
+  @Post('/subcategory/create')
+  async createProductSubCategory(
+    @Body() CreateProductSubCategoryDto: CreateProductSubCategoryDto
+  ): Promise<ProductSubCategory> {
+    return this.productService.createProductSubCategory(CreateProductSubCategoryDto);
+  }
+
+  // Endpoint para obtener subcategorías by categoría
+  @Get('/subcategory/getByCategoryId/:categoryId')
+  async findProductSubCategory(@Param('categoryId') categoryId: string, @Res() res: Response) {
+    try {
+      let data = await this.productService.findProductSubCategorysByCategoryId(categoryId);
+      return res.status(200).json({
+        success: true,
+        data,
+        errorMessage: ""
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: [],
+        errorMessage: "Internal Error"
+      });
+    }
   }
 }
