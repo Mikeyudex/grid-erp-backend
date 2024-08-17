@@ -1,31 +1,33 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AttributeConfig } from './interfaces/attribute-config.interface';
 import { Product } from './interfaces/products.interface';
+import { CreateAttributeConfigDto } from './dto/create-attribute-config.dto';
+import { Response } from 'express';
 
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productService: ProductsService) {}
+  constructor(private readonly productService: ProductsService) { }
 
-  @Post()
+  @Post('/create')
   @ApiOperation({ summary: 'Crear un nuevo producto' })
   @ApiResponse({ status: 201, description: 'El producto ha sido creado exitosamente.' })
   async create(@Body() createProductDto: CreateProductDto): Promise<Product> {
     return this.productService.create(createProductDto);
   }
 
-  @Get()
+  @Get('/getAll')
   @ApiOperation({ summary: 'Obtener todos los productos' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
   async findAll(): Promise<Product[]> {
     return this.productService.findAll();
   }
 
-  @Get(':id')
+  @Get('/getProduct/:id')
   @ApiOperation({ summary: 'Obtener un producto por ID' })
   @ApiResponse({ status: 200, description: 'Producto encontrado.' })
   @ApiResponse({ status: 404, description: 'Producto no encontrado.' })
@@ -33,7 +35,7 @@ export class ProductsController {
     return this.productService.findOne(id);
   }
 
-  @Put(':id')
+  @Put('/update:id')
   @ApiOperation({ summary: 'Actualizar un producto por ID' })
   @ApiResponse({ status: 200, description: 'Producto actualizado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Producto no encontrado.' })
@@ -41,7 +43,7 @@ export class ProductsController {
     return this.productService.update(id, updateProductDto);
   }
 
-  @Delete(':id')
+  @Delete('/delete/:id')
   @ApiOperation({ summary: 'Eliminar un producto por ID' })
   @ApiResponse({ status: 200, description: 'Producto eliminado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Producto no encontrado.' })
@@ -49,19 +51,30 @@ export class ProductsController {
     return this.productService.delete(id);
   }
 
-  // Endpoint para obtener los atributos configurables
-  @Get('attributes/config')
-  async findAttributeConfigs(): Promise<AttributeConfig[]> {
-    return this.productService.findAttributeConfigs();
+  // Endpoint para obtener los atributos configurables por id de la empresa
+  @Get('/attributes/getByCompanyId/:companyId')
+  async findAttributeConfigs(@Param('companyId') companyId: string, @Res() res: Response) {
+    try {
+      let data = await this.productService.findAttributeConfigsByCompanyId(companyId);
+      return res.status(200).json({
+        success: true,
+        data,
+        errorMessage: ""
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: [],
+        errorMessage: "Internal Error"
+      });
+    }
   }
 
   // Endpoint para crear un nuevo atributo configurable
-  @Post('attributes/config')
+  @Post('/attributes/create')
   async createAttributeConfig(
-    @Body('name') name: string,
-    @Body('type') type: string,
-    @Body('options') options?: string[],
+    @Body() createAttributeConfigDto: CreateAttributeConfigDto
   ): Promise<AttributeConfig> {
-    return this.productService.createAttributeConfig(name, type, options);
+    return this.productService.createAttributeConfig(createAttributeConfigDto);
   }
 }

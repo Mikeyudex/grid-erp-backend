@@ -8,6 +8,7 @@ import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
+    CompanyModule,
     ProductsModule,
     MongooseModule.forRoot(globalConfigs.MONGODB_URI),
     CompanyModule,

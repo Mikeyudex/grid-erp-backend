@@ -1,6 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
+  @ApiPropertyOptional({ example: '232324gg44545', description: 'ID del producto' })
+  uuid?: string;
+
   @ApiProperty({ example: 'Codigo externo', description: '232324343' })
   readonly externalId: string;
 

@@ -5,6 +5,9 @@ import { Product } from './product.schema';
 import { AttributeConfig } from './attribute-config.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { v4 } from 'uuid';
+import { CreateAttributeConfigDto } from './dto/create-attribute-config.dto';
+import { Http2ServerResponse } from 'http2';
 
 @Injectable()
 export class ProductsService {
@@ -14,6 +17,7 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
+    createProductDto.uuid = v4();
     const newProduct = new this.productModel(createProductDto);
     return newProduct.save();
   }
@@ -50,8 +54,13 @@ export class ProductsService {
     return this.attributeConfigModel.find().exec();
   }
 
-  async createAttributeConfig(name: string, type: string, options?: string[]): Promise<AttributeConfig> {
-    const newAttributeConfig = new this.attributeConfigModel({ name, type, options });
+  async findAttributeConfigsByCompanyId(companyId:string): Promise<AttributeConfig[]> {
+    return this.attributeConfigModel.find({companyId}).exec();
+  }
+
+  async createAttributeConfig(createAttributeConfigDto: CreateAttributeConfigDto): Promise<AttributeConfig> {
+    createAttributeConfigDto.uuid = v4();
+    const newAttributeConfig = new this.attributeConfigModel(createAttributeConfigDto);
     return newAttributeConfig.save();
   }
 }

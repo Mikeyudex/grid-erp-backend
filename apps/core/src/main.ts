@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(CoreModule);
-
+  app.enableCors();
   const config = new DocumentBuilder()
     .setTitle('Inventory API')
     .setDescription('API de Grid ERP')

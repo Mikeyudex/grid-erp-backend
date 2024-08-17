@@ -1,6 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCompanyDto {
+
+  @ApiPropertyOptional({ example: '232323', description: 'Id de la empresa' })
+  uuid?: string;
 
   @ApiProperty({ example: 'Codigo de la empresa', description: '3456' })
   readonly companyCode: string;

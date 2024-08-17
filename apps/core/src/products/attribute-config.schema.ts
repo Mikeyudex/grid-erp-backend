@@ -15,6 +15,9 @@ export class AttributeConfig {
     @Prop({required: true })
     name: string;
 
+    @Prop({required: true })
+    label: string;
+
     @Prop()
     description: string;
 
