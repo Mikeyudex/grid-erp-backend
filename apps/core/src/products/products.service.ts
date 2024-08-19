@@ -81,6 +81,17 @@ export class ProductsService {
     return this.productCategoryModel.find({ companyId }).exec();
   }
 
+  async findProductCategoriesFull(companyId: string): Promise<any> {
+    let categories = await this.productCategoryModel.find({ companyId }).lean();
+    let categoriesFull = [];
+    for (let index = 0; index < categories.length; index++) {
+      const category : ProductCategory = categories[index];
+      let subCat = await this.findProductSubCategorysByCategoryId(category.uuid);
+      categoriesFull.push(Object.assign({...category, subcategories:subCat}));
+    }
+    return categoriesFull;
+  }
+
   async findProductCategoryByCompanyId(companyId: string): Promise<ProductCategory> {
     return this.productCategoryModel.findOne({ companyId }).exec();
   }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Res, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -90,11 +90,30 @@ export class ProductsController {
     return this.productService.createProductCategory(createCategoryDto);
   }
 
-  // Endpoint para obtener los atributos configurables por id de la empresa
+  // Endpoint para obtener las categorías
   @Get('/category/getByCompanyId/:companyId')
   async findProductCategory(@Param('companyId') companyId: string, @Res() res: Response) {
     try {
       let data = await this.productService.findProductCategorysByCompanyId(companyId);
+      return res.status(200).json({
+        success: true,
+        data,
+        errorMessage: ""
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: [],
+        errorMessage: "Internal Error"
+      });
+    }
+  }
+
+  // Endpoint para obtener las categorías
+  @Get('/category/getCategoriesFull')
+  async findProductCategoryFull(@Query('companyId') companyId: string, @Res() res: Response) {
+    try {
+      let data = await this.productService.findProductCategoriesFull(companyId);
       return res.status(200).json({
         success: true,
         data,
