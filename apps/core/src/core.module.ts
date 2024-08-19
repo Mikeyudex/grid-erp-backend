@@ -5,13 +5,15 @@ import { CoreService } from './core.service';
 import { ProductsModule } from './products/products.module';
 import { globalConfigs } from 'configs';
 import { CompanyModule } from './company/company.module';
+import { WarehouseModule } from './warehouse/warehouse.module';
 
 @Module({
   imports: [
     CompanyModule,
     ProductsModule,
     MongooseModule.forRoot(globalConfigs.MONGODB_URI),
-    CompanyModule
+    CompanyModule,
+    WarehouseModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

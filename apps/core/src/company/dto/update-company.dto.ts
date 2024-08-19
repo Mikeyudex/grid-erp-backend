@@ -3,9 +3,6 @@ import { CreateCompanyDto } from './create-company.dto';
 
 export class UpdateCompanyDto extends PartialType(CreateCompanyDto) {
 
-    @ApiProperty({ example: '127ghs5ghs45ash', description: 'Id de la empresa' })
-    readonly uuid: string;
-
     @ApiPropertyOptional({ example: 'Codigo de la empresa', description: '3456' })
     readonly companyCode: string;
 

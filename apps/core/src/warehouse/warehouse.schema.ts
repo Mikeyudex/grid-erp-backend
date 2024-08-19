@@ -2,15 +2,18 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { getCurrentUTCDate } from '../../utils/getUtcDate';
 
-export type CompanyDocument = HydratedDocument<Company>;
+export type WharehouseDocument = HydratedDocument<Warehouse>;
 
-@Schema({ collection: 'company' })
-export class Company {
+@Schema({ collection: 'warehouse' })
+export class Warehouse {
     @Prop({required:true, type:String, unique:true})
     uuid: string;
 
+    @Prop({required:true, type:String}) //Id de la empresa
+    companyId: string;
+
     @Prop({required: true, type:String, unique:true })
-    companyCode: string;
+    warehouseCode: string;
 
     @Prop({required: true })
     name: string;
@@ -18,7 +21,7 @@ export class Company {
     @Prop()
     description: string;
 
-    @Prop({ type: Boolean, default: false })
+    @Prop({ type: Boolean, default: true })
     active: boolean;
 
     @Prop({ default: () => getCurrentUTCDate()})
@@ -27,4 +30,4 @@ export class Company {
     @Prop({ default: null})
     updatedAt: Date;
 }
-export const CompanySchema = SchemaFactory.createForClass(Company);
+export const WarehouseSchema = SchemaFactory.createForClass(Warehouse);
