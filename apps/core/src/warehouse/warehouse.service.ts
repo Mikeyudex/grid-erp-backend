@@ -37,8 +37,8 @@ export class WarehouseService {
     }
 
     async update(id: string, updateWarehouseDto: UpdateWarehouseDto): Promise<boolean> {
-        const updateWarehouse = await this.warehouseModel.updateOne({ uuid: id }, updateWarehouseDto, { new: true }).exec();
-        if (!updateWarehouse) {
+        const updatedWarehouse = await this.warehouseModel.updateOne({ uuid: id }, updateWarehouseDto, { new: true }).exec();
+        if (!updatedWarehouse) {
             throw new NotFoundException(`Warehouse with ID ${id} not found`);
         }
         return true;
