@@ -154,4 +154,10 @@ export class ProductsController {
       });
     }
   }
+
+  @Get('last-sku/:companyId')
+  async getLastSku(@Param('companyId') companyId: string): Promise<{ lastSku: string | null }> {
+    const lastSku = await this.productService.getLastSkuByCompany(companyId);
+    return { lastSku };
+  }
 }

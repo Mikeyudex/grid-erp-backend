@@ -25,6 +25,7 @@ export class ProductsService {
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     createProductDto.uuid = v4();
+    createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO
     const newProduct = new this.productModel(createProductDto);
     return newProduct.save();
   }
@@ -85,9 +86,9 @@ export class ProductsService {
     let categories = await this.productCategoryModel.find({ companyId }).lean();
     let categoriesFull = [];
     for (let index = 0; index < categories.length; index++) {
-      const category : ProductCategory = categories[index];
+      const category: ProductCategory = categories[index];
       let subCat = await this.findProductSubCategorysByCategoryId(category.uuid);
-      categoriesFull.push(Object.assign({...category, subcategories:subCat}));
+      categoriesFull.push(Object.assign({ ...category, subcategories: subCat }));
     }
     return categoriesFull;
   }
@@ -120,6 +121,16 @@ export class ProductsService {
       throw new NotFoundException(`ProductsubCategory with ID ${id} not found`);
     }
     return updatedProductSubCategoryDto;
+  }
+
+  async getLastSkuByCompany(companyId: string): Promise<string | null> {
+    const lastProduct = await this.productModel
+      .findOne({ companyId })  // Filtrar por companyId
+      .sort({ sku: -1 })        // Ordenar por SKU en orden descendente
+      .select('sku')            // Seleccionar solo el campo sku
+      .exec();
+
+    return lastProduct ? String(Number(lastProduct.sku) + 1 ) : null;
   }
 
 }

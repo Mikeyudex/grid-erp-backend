@@ -8,7 +8,7 @@ export class CreateProductDto {
   readonly externalId: string;
 
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
-  readonly companyId: string;
+  companyId: string;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
   readonly warehouseId: string;

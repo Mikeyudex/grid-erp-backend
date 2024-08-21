@@ -7,6 +7,7 @@ import { globalConfigs } from 'configs';
 import { CompanyModule } from './company/company.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { ProviderModule } from './provider/provider.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { ProviderModule } from './provider/provider.module';
     MongooseModule.forRoot(globalConfigs.MONGODB_URI),
     CompanyModule,
     WarehouseModule,
-    ProviderModule
+    ProviderModule,
+    SettingsModule
   ],
   controllers: [CoreController],
   providers: [CoreService],
