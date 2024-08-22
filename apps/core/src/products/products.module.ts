@@ -6,6 +6,7 @@ import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { ProductCategorySchema } from './category/category.schema';
 import { ProductSubCategorySchema } from './subcategory/subcategory.schema';
+import { StockModule } from '../stock/stock.module';
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import { ProductSubCategorySchema } from './subcategory/subcategory.schema';
         MongooseModule.forFeature([{ name: 'AttributeConfig', schema: AttributeConfigSchema }]),
         MongooseModule.forFeature([{ name: 'ProductCategory', schema: ProductCategorySchema }]),
         MongooseModule.forFeature([{ name: 'ProductSubCategory', schema: ProductSubCategorySchema }]),
+        StockModule
       ],
       controllers:[ProductsController],
       providers:[ProductsService]

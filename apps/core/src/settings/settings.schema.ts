@@ -12,7 +12,7 @@ export class Settings {
     @Prop({required:true, type:String}) //Id de la empresa
     companyId: string;
 
-    @Prop({required: true, unique:true })
+    @Prop({required: true })
     name: string;
 
     @Prop({type:[mongoose.Schema.Types.Mixed], required:true})

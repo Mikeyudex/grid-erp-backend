@@ -33,11 +33,11 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   @ApiPropertyOptional({ example: '873827sdd', description: 'Id de la subcategoría del producto' })
   readonly id_sub_category: string;
 
-  @ApiPropertyOptional({ example: 10, description: 'Stock del producto' })
-  readonly stock: number;
+  @ApiPropertyOptional({ example: 25.00, description: 'Precio de venta del producto' })
+  readonly salePrice: number;
 
-  @ApiPropertyOptional({ example: 25.00, description: 'Precio del producto' })
-  readonly price: number;
+  @ApiPropertyOptional({ example: 20.00, description: 'Precio de costo del producto' })
+  readonly costPrice: number;
 
   @ApiPropertyOptional({
     type: 'object',

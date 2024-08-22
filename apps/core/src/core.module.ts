@@ -8,6 +8,7 @@ import { CompanyModule } from './company/company.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { ProviderModule } from './provider/provider.module';
 import { SettingsModule } from './settings/settings.module';
+import { StockModule } from './stock/stock.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { SettingsModule } from './settings/settings.module';
     CompanyModule,
     WarehouseModule,
     ProviderModule,
-    SettingsModule
+    SettingsModule,
+    StockModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

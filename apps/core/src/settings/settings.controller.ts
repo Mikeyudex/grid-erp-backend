@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, Put, Delete, Query, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { query, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
 import { CreateSettingsDto } from './dto/create-settings.dto';
@@ -106,26 +106,26 @@ export class SettingsController {
         try {
             await this.settingsService.updateSettingValue(settingId, updateValueSettingByKeyDto);
             res.status(200).json({ success: true, message: 'Operación exitosa.' });
-        } catch (error:any) {
+        } catch (error: any) {
             console.error(error);
             res.status(500).json({ success: false, message: error });
-        } 
+        }
     }
 
     @Post('/addValue/:name')
     @ApiOperation({ summary: 'Agregar un valor a la configuración' })
     @ApiResponse({ status: 201, description: 'Operación exitosa.' })
-    async addValue(@Param('name') name: string, @Body() payload: Record<string, any>, @Res() res: Response){
+    async addValue(@Param('name') name: string, @Query('companyId') companyId: string, @Body() payload: Record<string, any>, @Res() res: Response) {
         if (!name) {
             return res.status(400).json({ success: false, message: 'El parámetro name es obligatorio.' });
         }
         try {
-            await this.settingsService.addValueByName(name, payload);
+            await this.settingsService.addValueByName(name, companyId, payload);
             res.status(200).json({ success: true, message: 'Operación exitosa.' });
         } catch (error) {
             console.error(error);
             res.status(500).json({ success: false, message: 'Ocurrió un error interno, intente más tarde.' });
         }
-        
+
     }
 }

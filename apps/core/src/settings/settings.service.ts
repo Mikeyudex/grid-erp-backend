@@ -92,9 +92,9 @@ export class SettingsService {
         });
     }
 
-    async addValueByName(name: string, payload: Record<string, any>): Promise<boolean> {
+    async addValueByName(name: string, companyId: string, payload: Record<string, any>): Promise<boolean> {
         return new Promise<boolean>(async (resolve, reject) => {
-            const updatedSetting = await this.settingsModel.updateOne({ name }, { $push: { value: payload } }, { new: true });
+            const updatedSetting = await this.settingsModel.updateOne({ name, companyId }, { $push: { value: payload } }, { new: true });
             if (!updatedSetting) {
                 reject(`setting value with name ${name} not found`);
             }

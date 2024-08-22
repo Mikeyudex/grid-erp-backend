@@ -40,10 +40,10 @@ export class Product {
     id_sub_category: string;
 
     @Prop()
-    stock: number;
+    salePrice: number;
 
     @Prop()
-    price: number;
+    costPrice: number;
 
     @Prop({ default: () => getCurrentUTCDate()})
     createdAt: Date;

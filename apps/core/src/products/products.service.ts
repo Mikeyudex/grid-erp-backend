@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Product } from './product.schema';
+import { Product, ProductDocument } from './product.schema';
 import { AttributeConfig } from './attribute-config.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -13,21 +13,35 @@ import { UpdateCategoryDto } from './dto/category/update-category.dto';
 import { ProductSubCategory } from './subcategory/subcategory.schema';
 import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
 import { UpdateProductSubCategoryDto } from './dto/subcategory/update-subcategory.dto';
+import { CreateStockDto } from '../stock/dto/create-stock.dto';
+import { StockService } from '../stock/stock.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectModel('Product') private readonly productModel: Model<Product>,
+    @InjectModel('Product') private readonly productModel: Model<ProductDocument>,
     @InjectModel('AttributeConfig') private readonly attributeConfigModel: Model<AttributeConfig>,
     @InjectModel('ProductCategory') private readonly productCategoryModel: Model<ProductCategory>,
     @InjectModel('ProductSubCategory') private readonly productSubCategoryModel: Model<ProductSubCategory>,
+    private readonly stockService: StockService,
   ) { }
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     createProductDto.uuid = v4();
     createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO
     const newProduct = new this.productModel(createProductDto);
-    return newProduct.save();
+    const product = await newProduct.save();
+
+    //Creando el stock para el produto recién creado
+    const createStockDto: CreateStockDto = {
+      productId: newProduct._id.toString(),
+      quantity: createProductDto.quantity,
+      warehouseId: createProductDto.warehouseId,
+    }
+
+    await this.stockService.create(createStockDto);
+    return product;
+
   }
 
   async findAll(): Promise<Product[]> {
@@ -130,7 +144,7 @@ export class ProductsService {
       .select('sku')            // Seleccionar solo el campo sku
       .exec();
 
-    return lastProduct ? String(Number(lastProduct.sku) + 1 ) : null;
+    return lastProduct ? String(Number(lastProduct.sku) + 1) : null;
   }
 
 }

@@ -15,13 +15,16 @@ import { ProductSubCategory } from './subcategory/subcategory.schema';
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productService: ProductsService) { }
+  constructor(
+    private readonly productService: ProductsService
+  ) { }
 
   @Post('/create')
   @ApiOperation({ summary: 'Crear un nuevo producto' })
   @ApiResponse({ status: 201, description: 'El producto ha sido creado exitosamente.' })
-  async create(@Body() createProductDto: CreateProductDto): Promise<Product> {
+  async create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
+
   }
 
   @Get('/getAll')
