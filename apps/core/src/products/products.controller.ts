@@ -1,5 +1,8 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Res, Query, UploadedFiles, UseInterceptors, UseFilters , BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -11,13 +14,24 @@ import { CreateCategoryDto } from './dto/category/create-category.dto';
 import { ProductCategory } from './category/category.schema';
 import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
 import { ProductSubCategory } from './subcategory/subcategory.schema';
+import { OracleCloudService } from '../oracle-cloud.service';
+import { globalConfigs } from 'configs';
 
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {
+  private defaultFolderProducts: string;
+  private mockupCompanyId: string;
+
   constructor(
-    private readonly productService: ProductsService
-  ) { }
+    private readonly productService: ProductsService,
+    private readonly oracleCloudService: OracleCloudService,
+
+  ) {
+    this.mockupCompanyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
+    this.defaultFolderProducts = `company-${this.mockupCompanyId}/products/images/`;
+    
+  }
 
   @Post('/create')
   @ApiOperation({ summary: 'Crear un nuevo producto' })
@@ -162,5 +176,62 @@ export class ProductsController {
   async getLastSku(@Param('companyId') companyId: string): Promise<{ lastSku: string | null }> {
     const lastSku = await this.productService.getLastSkuByCompany(companyId);
     return { lastSku };
+  }
+
+  @Post('/upload')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: join(process.cwd(), 'tmp'),
+        filename: (req, file, cb) => {
+          // Generar un nombre único para el archivo
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+          cb(null, filename);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        // Validación de tipo de archivo
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(new BadRequestException('Solo se permiten archivos de imagen.'), false);
+        }
+        cb(null, true);
+      }
+    }),
+  )
+  @ApiOperation({ summary: 'Crear un nuevo producto' })
+  @ApiResponse({ status: 201, description: 'El producto ha sido creado exitosamente.' })
+  async uploadImages(@UploadedFiles() files: Express.Multer.File) {
+
+    if (!files) {
+      throw new BadRequestException('Archivo no encontrado o tipo de archivo no permitido.');
+    }
+
+    let file = files[0];
+    const bucketName = globalConfigs.OCI_BUCKET_NAME;
+    const storageId = this.oracleCloudService.makeStorageId();
+    const objectName = `${this.defaultFolderProducts}${storageId}`;
+    const filePath = file.path;
+    try {
+      const urlObject = await this.oracleCloudService.uploadFileToBucket(bucketName, objectName, filePath, file?.mimetype);
+      return { url: urlObject, storageId };
+    } catch (error) {
+      throw new BadRequestException('File upload failed');
+    }
+  }
+
+  @Delete('/deleteFile/:filename')
+  async deleteFile(@Param('filename') filename: string) {
+    try {
+      const objectName = `${this.defaultFolderProducts}${filename}`;
+      await this.oracleCloudService.deleteFile(globalConfigs.OCI_BUCKET_NAME, objectName);
+      return {
+        status: 'success',
+        message: 'File deleted successfully',
+      };
+    } catch (error) {
+      throw new HttpException('File not found or deletion failed', HttpStatus.NOT_FOUND);
+    }
   }
 }

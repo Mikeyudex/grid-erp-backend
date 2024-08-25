@@ -1,24 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { getCurrentUTCDate } from '../../utils/getUtcDate';
 
 export type ProductDocument = HydratedDocument<Product>;
 
 @Schema({ collection: 'products' })
 export class Product {
-    @Prop({required:true, type:String, unique:true})
+    @Prop({ required: true, type: String, unique: true })
     uuid: string;
 
     @Prop()
     externalId: string;
 
-    @Prop({required:true, type:String}) //Id de la empresa
+    @Prop({ required: true, type: String }) //Id de la empresa
     companyId: string;
 
-    @Prop({required:true, type:String}) //Id de la bodega
+    @Prop({ required: true, type: String }) //Id de la bodega
     warehouseId: string;
 
-    @Prop() //Id del proveedor
+    @Prop({required: true}) //Id del proveedor
     providerId: string;
 
     @Prop() //id de historial de actividad por ejemplo quien lo creó, lo actualizo, etc
@@ -33,22 +33,25 @@ export class Product {
     @Prop()
     sku: string;
 
-    @Prop()
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UnitOfMeasure', required: true })
+    unitOfMeasureId: Types.ObjectId;
+
+    @Prop({required: true})
     id_category: string;
 
-    @Prop()
+    @Prop({required: true})
     id_sub_category: string;
 
-    @Prop()
+    @Prop({required: true})
     salePrice: number;
 
-    @Prop()
+    @Prop({required: true})
     costPrice: number;
 
-    @Prop({ default: () => getCurrentUTCDate()})
+    @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
 
-    @Prop({ default: null})
+    @Prop({ default: null })
     updatedAt: Date;
 
     @Prop({ type: Map, of: mongoose.Schema.Types.Mixed })

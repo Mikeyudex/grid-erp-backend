@@ -16,5 +16,7 @@ export const globalConfigs = {
     MAILER_PASS_INFO : process.env.MAILER_PASS_INFO || "",
     MAILER_HOST : process.env.MAILER_HOST || "",
     MAILER_SECURE : process.env.MAILER_SECURE || false,
-    MAIL_PORT : process.env.MAIL_PORT || ""
+    MAIL_PORT : process.env.MAIL_PORT || "",
+    OCI_BUCKET_NAME: process.env.OCI_BUCKET_NAME || "",
+    OCI_REGION: process.env.OCI_REGION || "",
 }

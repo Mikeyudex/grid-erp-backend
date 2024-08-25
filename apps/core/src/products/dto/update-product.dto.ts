@@ -27,6 +27,9 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   @ApiPropertyOptional({ example: 'CAM123', description: 'SKU del producto' })
   readonly sku: string;
 
+  @ApiPropertyOptional({ example: '99272772', description: 'Id de la unidad de medida del producto' })
+  unitOfMeasureId: string;
+
   @ApiPropertyOptional({ example: '873827', description: 'Id de la categoría del producto' })
   readonly id_category: string;
 

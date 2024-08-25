@@ -15,6 +15,7 @@ import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategor
 import { UpdateProductSubCategoryDto } from './dto/subcategory/update-subcategory.dto';
 import { CreateStockDto } from '../stock/dto/create-stock.dto';
 import { StockService } from '../stock/stock.service';
+import { UnitOfMeasureService } from '../unit-of-measure/unit-of-measure.service';
 
 @Injectable()
 export class ProductsService {
@@ -24,12 +25,22 @@ export class ProductsService {
     @InjectModel('ProductCategory') private readonly productCategoryModel: Model<ProductCategory>,
     @InjectModel('ProductSubCategory') private readonly productSubCategoryModel: Model<ProductSubCategory>,
     private readonly stockService: StockService,
+    private readonly unitOfMeasureService: UnitOfMeasureService
   ) { }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     createProductDto.uuid = v4();
     createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO
+
+    //find by id unitOfMeasure
+    const unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
+    if (!unitOfMeasure) {
+      throw new Error('Unit of Measure not found');
+    }
+
+    createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
     const newProduct = new this.productModel(createProductDto);
+
     const product = await newProduct.save();
 
     //Creando el stock para el produto recién creado

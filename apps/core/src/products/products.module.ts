@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProductSchema } from './product.schema';
 import { AttributeConfigSchema } from './attribute-config.schema';
@@ -7,6 +7,9 @@ import { ProductsService } from './products.service';
 import { ProductCategorySchema } from './category/category.schema';
 import { ProductSubCategorySchema } from './subcategory/subcategory.schema';
 import { StockModule } from '../stock/stock.module';
+import { UnitOfMeasureModule } from '../unit-of-measure/unit-of-measure.module';
+import { OracleCloudModule } from '../oracle-cloud.module';
+import { ProductValidationMiddleware } from './middlewares/product-validation.middleware';
 
 @Module({
     imports: [
@@ -14,9 +17,18 @@ import { StockModule } from '../stock/stock.module';
         MongooseModule.forFeature([{ name: 'AttributeConfig', schema: AttributeConfigSchema }]),
         MongooseModule.forFeature([{ name: 'ProductCategory', schema: ProductCategorySchema }]),
         MongooseModule.forFeature([{ name: 'ProductSubCategory', schema: ProductSubCategorySchema }]),
-        StockModule
+        StockModule,
+        UnitOfMeasureModule, 
+        OracleCloudModule
       ],
       controllers:[ProductsController],
       providers:[ProductsService]
 })
-export class ProductsModule {}
+
+export class ProductsModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(ProductValidationMiddleware)
+      .forRoutes({ path: 'products/create', method: RequestMethod.POST });
+  }
+}

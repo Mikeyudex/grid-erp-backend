@@ -9,6 +9,7 @@ import { WarehouseModule } from './warehouse/warehouse.module';
 import { ProviderModule } from './provider/provider.module';
 import { SettingsModule } from './settings/settings.module';
 import { StockModule } from './stock/stock.module';
+import { UnitOfMeasureModule } from './unit-of-measure/unit-of-measure.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { StockModule } from './stock/stock.module';
     WarehouseModule,
     ProviderModule,
     SettingsModule,
-    StockModule
+    StockModule,
+    UnitOfMeasureModule
   ],
   controllers: [CoreController],
   providers: [CoreService],
