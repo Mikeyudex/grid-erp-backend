@@ -10,6 +10,7 @@ import { ProviderModule } from './provider/provider.module';
 import { SettingsModule } from './settings/settings.module';
 import { StockModule } from './stock/stock.module';
 import { UnitOfMeasureModule } from './unit-of-measure/unit-of-measure.module';
+import { TaxesModule } from './taxes/taxes.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { UnitOfMeasureModule } from './unit-of-measure/unit-of-measure.module';
     ProviderModule,
     SettingsModule,
     StockModule,
-    UnitOfMeasureModule
+    UnitOfMeasureModule,
+    TaxesModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

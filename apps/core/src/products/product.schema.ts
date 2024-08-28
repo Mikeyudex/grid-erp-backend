@@ -36,6 +36,9 @@ export class Product {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UnitOfMeasure', required: true })
     unitOfMeasureId: Types.ObjectId;
 
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tax', required: true })
+    taxId: Types.ObjectId;
+
     @Prop({required: true})
     id_category: string;
 
@@ -56,5 +59,8 @@ export class Product {
 
     @Prop({ type: Map, of: mongoose.Schema.Types.Mixed })
     attributes: Record<string, any>;
+
+    @Prop({ type: Map, of: mongoose.Schema.Types.Mixed })
+    additionalConfigs: Record<string, any>;
 }
 export const ProductSchema = SchemaFactory.createForClass(Product);

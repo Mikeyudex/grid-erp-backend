@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray } from 'class-validator';
 
 export class CreateProductDto {
   @ApiPropertyOptional({ example: '232324gg44545', description: 'ID del producto' })
@@ -46,6 +46,11 @@ export class CreateProductDto {
   @IsString({ message: 'El id de la unidad de medida debe ser una cadena de texto.' })
   unitOfMeasureId: string;
 
+  @ApiProperty({ example: '99272772', description: 'Id de la lista de impuestos' })
+  @IsNotEmpty({ message: 'taxId es un campo requerido.' })
+  @IsString({ message: 'taxId debe ser una cadena.' })
+  taxId: string;
+
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
   @IsNotEmpty({ message: 'La categoría es un campo requerido.' })
   @IsString({ message: 'El id de la categoría debe ser una cadena de texto.' })
@@ -82,4 +87,13 @@ export class CreateProductDto {
   })
   @IsOptional()
   readonly attributes: Record<string, any>;
+
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: true,
+    example: { hasBarcode: true, images: ["image1", "image2"] },
+    description: 'Configuraciones adicionales al producto'
+  })
+  @IsOptional()
+  readonly additionalConfigs: Record<string, any>;
 }

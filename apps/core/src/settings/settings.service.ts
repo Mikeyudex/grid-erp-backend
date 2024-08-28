@@ -27,8 +27,8 @@ export class SettingsService {
         return this.settingsModel.find({ companyId }).lean();
     }
 
-    async findBySettingName(name: string): Promise<Settings[]> {
-        return this.settingsModel.find({ name }).lean();
+    async findBySettingName(name: string, companyId:string): Promise<Settings> {
+        return this.settingsModel.findOne({ name, companyId }).lean();
     }
 
     async findOne(id: string): Promise<Settings> {

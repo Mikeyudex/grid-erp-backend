@@ -10,6 +10,8 @@ import { StockModule } from '../stock/stock.module';
 import { UnitOfMeasureModule } from '../unit-of-measure/unit-of-measure.module';
 import { OracleCloudModule } from '../oracle-cloud.module';
 import { ProductValidationMiddleware } from './middlewares/product-validation.middleware';
+import { SettingsModule } from '../settings/settings.module';
+import { TaxesModule } from '../taxes/taxes.module';
 
 @Module({
     imports: [
@@ -19,7 +21,9 @@ import { ProductValidationMiddleware } from './middlewares/product-validation.mi
         MongooseModule.forFeature([{ name: 'ProductSubCategory', schema: ProductSubCategorySchema }]),
         StockModule,
         UnitOfMeasureModule, 
-        OracleCloudModule
+        OracleCloudModule,
+        SettingsModule,
+        TaxesModule
       ],
       controllers:[ProductsController],
       providers:[ProductsService]

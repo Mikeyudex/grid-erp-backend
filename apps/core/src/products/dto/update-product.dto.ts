@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateProductDto } from './create-product.dto';
+import { IsOptional } from 'class-validator';
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {
   @ApiProperty({ example: '127ghs5ghs45ash', description: 'Id del producto' })
@@ -49,4 +50,13 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
     description: 'Atributos personalizados del producto'
   })
   readonly attributes?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: true,
+    example: { hasBarcode: true, images: ["image1", "image2"] },
+    description: 'Configuraciones adicionales al producto'
+  })
+  @IsOptional()
+  readonly additionalConfigs: Record<string, any>;
 }

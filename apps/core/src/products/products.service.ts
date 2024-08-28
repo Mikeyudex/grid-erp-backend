@@ -16,21 +16,26 @@ import { UpdateProductSubCategoryDto } from './dto/subcategory/update-subcategor
 import { CreateStockDto } from '../stock/dto/create-stock.dto';
 import { StockService } from '../stock/stock.service';
 import { UnitOfMeasureService } from '../unit-of-measure/unit-of-measure.service';
+import { SettingsService } from '../settings/settings.service';
+import { TaxesService } from '../taxes/taxes.service';
 
 @Injectable()
 export class ProductsService {
+  companyId: string;
   constructor(
     @InjectModel('Product') private readonly productModel: Model<ProductDocument>,
     @InjectModel('AttributeConfig') private readonly attributeConfigModel: Model<AttributeConfig>,
     @InjectModel('ProductCategory') private readonly productCategoryModel: Model<ProductCategory>,
     @InjectModel('ProductSubCategory') private readonly productSubCategoryModel: Model<ProductSubCategory>,
     private readonly stockService: StockService,
-    private readonly unitOfMeasureService: UnitOfMeasureService
-  ) { }
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly settingsService: SettingsService,
+    private readonly taxesService: TaxesService
+  ) { this.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a" }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     createProductDto.uuid = v4();
-    createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO
+    createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO el id de la compañia se debe sacar del token o la sesión de la solicitud
 
     //find by id unitOfMeasure
     const unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
@@ -38,7 +43,15 @@ export class ProductsService {
       throw new Error('Unit of Measure not found');
     }
 
+    //find by id tax
+    const tax = await this.taxesService.findOne(createProductDto.taxId);
+    if (!tax) {
+      throw new Error('tax not found');
+    }
+  
     createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
+    createProductDto.taxId = tax._id.toString();
+    
     const newProduct = new this.productModel(createProductDto);
 
     const product = await newProduct.save();
@@ -155,7 +168,23 @@ export class ProductsService {
       .select('sku')            // Seleccionar solo el campo sku
       .exec();
 
+    //Si no existen productos para la empresa, se debe buscar en la configuración de la empresa el initialSku y devolverlo.
+    if (!lastProduct) {
+      let setting = await this.settingsService.findBySettingName('products', this.companyId);
+
+      if (Array.isArray(setting.value) && this.hasValueObject(setting.value, 'initialSku')) {
+        let initialSku = setting.value.filter(val => val.initialSku)[0]['initialSku'];
+        return initialSku as string;
+      } else {
+        return "1000";
+      }
+    }
     return lastProduct ? String(Number(lastProduct.sku) + 1) : null;
   }
+
+  hasValueObject(values: any[], keyToFind: string): boolean {
+    let value = values.find(item => item.hasOwnProperty(keyToFind));
+    return value ? true : false;
+  };
 
 }

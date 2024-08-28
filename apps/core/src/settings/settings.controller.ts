@@ -51,7 +51,8 @@ export class SettingsController {
     @ApiResponse({ status: 200, description: 'Configuración obtenida exitosamente.' })
     async findBySettingName(@Query('name') name: string, @Res() res: Response) {
         try {
-            let data = await this.settingsService.findBySettingName(name);
+            let companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
+            let data = await this.settingsService.findBySettingName(name, companyId);
             return res.status(200).json({
                 success: true,
                 data,

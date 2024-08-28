@@ -4,5 +4,6 @@ export interface Product {
     salePrice: number;  // Precio de venta del producto
     costPrice: number;  // Precio de costo del producto
     attributes: Record<string, any>;  // Atributos personalizados (e.g., { color: 'rojo', size: 'L' })
+    additionalConfigs: Record<string, any>;
   }
   
