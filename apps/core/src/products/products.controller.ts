@@ -41,11 +41,11 @@ export class ProductsController {
 
   }
 
-  @Get('/getAll')
-  @ApiOperation({ summary: 'Obtener todos los productos' })
+  @Get('/getAllByCompany')
+  @ApiOperation({ summary: 'Obtener todos los productos de una compañía' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
   async findAll(): Promise<Product[]> {
-    return this.productService.findAll();
+    return this.productService.findAllByCompany(this.mockupCompanyId);
   }
 
   @Get('/getProduct/:id')

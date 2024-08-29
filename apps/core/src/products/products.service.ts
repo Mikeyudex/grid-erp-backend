@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { Product, ProductDocument } from './product.schema';
 import { AttributeConfig } from './attribute-config.schema';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -18,6 +18,7 @@ import { StockService } from '../stock/stock.service';
 import { UnitOfMeasureService } from '../unit-of-measure/unit-of-measure.service';
 import { SettingsService } from '../settings/settings.service';
 import { TaxesService } from '../taxes/taxes.service';
+import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
 
 @Injectable()
 export class ProductsService {
@@ -37,39 +38,62 @@ export class ProductsService {
     createProductDto.uuid = v4();
     createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO el id de la compañia se debe sacar del token o la sesión de la solicitud
 
-    //find by id unitOfMeasure
-    const unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
-    if (!unitOfMeasure) {
-      throw new Error('Unit of Measure not found');
+    const session: ClientSession = await this.productModel.db.startSession();
+    session.startTransaction();
+
+    try {
+      //find by id unitOfMeasure
+      const unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
+      if (!unitOfMeasure) {
+        throw new Error('Unit of Measure not found');
+      }
+
+      //find by id tax
+      const tax = await this.taxesService.findOne(createProductDto.taxId);
+      if (!tax) {
+        throw new Error('tax not found');
+      }
+
+      createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
+      createProductDto.taxId = tax._id.toString();
+
+      const newProduct = new this.productModel(createProductDto);
+
+      const product = await newProduct.save();
+
+      //Creando el stock para el produto recién creado
+      const createStockDto: CreateStockDto = {
+        productId: newProduct._id.toString(),
+        quantity: createProductDto.quantity,
+        warehouseId: createProductDto.warehouseId,
+      }
+
+      await this.stockService.create(createStockDto);
+      return product;
+    } catch (error) {
+      // Rollback de la transacción en caso de error
+      await session.abortTransaction();
+      throw error; // Re-lanzar el error para manejarlo en el controlador o en otro lugar
+    } finally {
+      session.endSession();
     }
-
-    //find by id tax
-    const tax = await this.taxesService.findOne(createProductDto.taxId);
-    if (!tax) {
-      throw new Error('tax not found');
-    }
-  
-    createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
-    createProductDto.taxId = tax._id.toString();
-    
-    const newProduct = new this.productModel(createProductDto);
-
-    const product = await newProduct.save();
-
-    //Creando el stock para el produto recién creado
-    const createStockDto: CreateStockDto = {
-      productId: newProduct._id.toString(),
-      quantity: createProductDto.quantity,
-      warehouseId: createProductDto.warehouseId,
-    }
-
-    await this.stockService.create(createStockDto);
-    return product;
-
   }
 
-  async findAll(): Promise<Product[]> {
-    return this.productModel.find().exec();
+  async findAllByCompany(companyId: string): Promise<GetAllByCompanyProductsResponseDto[]> {
+    let response = [];
+    let products = await this.productModel.find({ companyId }).exec();
+    if (products.length === 0) {
+      throw new NotFoundException(`Products by company not found`);
+    }
+
+    for (let index = 0; index < products.length; index++) {
+      const product = products[index];
+      let category = await this.findProductCategoryByUuId(product.id_category);
+      let subCategory = await this.findProductSubCategoryByUuId(product.id_sub_category);
+      response.push(Object.assign(product.toObject(), { categoryName: category.name, subCategoryName: subCategory.name }))
+    }
+
+    return response as GetAllByCompanyProductsResponseDto[];
   }
 
   async findOne(id: string): Promise<Product> {
@@ -135,6 +159,10 @@ export class ProductsService {
     return this.productCategoryModel.findOne({ companyId }).exec();
   }
 
+  async findProductCategoryByUuId(uuid: string): Promise<ProductCategory> {
+    return this.productCategoryModel.findOne({ uuid }).exec();
+  }
+
   async updateProductCategory(id: string, updateCategoryDto: UpdateCategoryDto): Promise<ProductCategory> {
     const updatedProductCategory = await this.productCategoryModel.findByIdAndUpdate(id, updateCategoryDto, { new: true }).exec();
     if (!updatedProductCategory) {
@@ -152,6 +180,11 @@ export class ProductsService {
   async findProductSubCategorysByCategoryId(categoryId: string): Promise<ProductSubCategory[]> {
     return this.productSubCategoryModel.find({ categoryId }).exec();
   }
+
+  async findProductSubCategoryByUuId(uuid: string): Promise<ProductSubCategory> {
+    return this.productSubCategoryModel.findOne({ uuid }).exec();
+  }
+
 
   async updateProductSubCategory(id: string, updateProductSubCategoryDto: UpdateProductSubCategoryDto): Promise<ProductSubCategory> {
     const updatedProductSubCategoryDto = await this.productSubCategoryModel.findByIdAndUpdate(id, updateProductSubCategoryDto, { new: true }).exec();
