@@ -16,6 +16,7 @@ import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategor
 import { ProductSubCategory } from './subcategory/subcategory.schema';
 import { OracleCloudService } from '../oracle-cloud.service';
 import { globalConfigs } from 'configs';
+import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
 
 @ApiTags('products')
 @Controller('products')
@@ -44,7 +45,7 @@ export class ProductsController {
   @Get('/getAllByCompany')
   @ApiOperation({ summary: 'Obtener todos los productos de una compañía' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
-  async findAll(): Promise<Product[]> {
+  async findAll(): Promise<GetAllByCompanyProductsResponseDto[]> {
     return this.productService.findAllByCompany(this.mockupCompanyId);
   }
 

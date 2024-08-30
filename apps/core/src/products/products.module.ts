@@ -12,6 +12,7 @@ import { OracleCloudModule } from '../oracle-cloud.module';
 import { ProductValidationMiddleware } from './middlewares/product-validation.middleware';
 import { SettingsModule } from '../settings/settings.module';
 import { TaxesModule } from '../taxes/taxes.module';
+import { WarehouseModule } from '../warehouse/warehouse.module';
 
 @Module({
     imports: [
@@ -23,7 +24,8 @@ import { TaxesModule } from '../taxes/taxes.module';
         UnitOfMeasureModule, 
         OracleCloudModule,
         SettingsModule,
-        TaxesModule
+        TaxesModule,
+        WarehouseModule
       ],
       controllers:[ProductsController],
       providers:[ProductsService]

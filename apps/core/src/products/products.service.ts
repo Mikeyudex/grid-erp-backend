@@ -19,6 +19,7 @@ import { UnitOfMeasureService } from '../unit-of-measure/unit-of-measure.service
 import { SettingsService } from '../settings/settings.service';
 import { TaxesService } from '../taxes/taxes.service';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
+import { WarehouseService } from '../warehouse/warehouse.service';
 
 @Injectable()
 export class ProductsService {
@@ -31,7 +32,8 @@ export class ProductsService {
     private readonly stockService: StockService,
     private readonly unitOfMeasureService: UnitOfMeasureService,
     private readonly settingsService: SettingsService,
-    private readonly taxesService: TaxesService
+    private readonly taxesService: TaxesService,
+    private readonly warehouseService: WarehouseService,
   ) { this.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a" }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
@@ -90,7 +92,17 @@ export class ProductsService {
       const product = products[index];
       let category = await this.findProductCategoryByUuId(product.id_category);
       let subCategory = await this.findProductSubCategoryByUuId(product.id_sub_category);
-      response.push(Object.assign(product.toObject(), { categoryName: category.name, subCategoryName: subCategory.name }))
+      let warehouse = await this.warehouseService.findOne(product.warehouseId);
+
+      const transformedProduct = {
+        ...product.toObject(),
+        categoryName: category.name,
+        subCategoryName: subCategory.name,
+        warehouseName: warehouse.name,
+        attributes: product.attributes || {},
+        additionalConfigs: product.additionalConfigs || {}
+      }
+      response.push(transformedProduct)
     }
 
     return response as GetAllByCompanyProductsResponseDto[];

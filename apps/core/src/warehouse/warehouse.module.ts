@@ -9,6 +9,7 @@ import { WarehouseSchema } from './warehouse.schema';
     MongooseModule.forFeature([{ name: 'Warehouse', schema: WarehouseSchema }]),
   ],
   providers: [WarehouseService],
-  controllers: [WarehouseController]
+  controllers: [WarehouseController],
+  exports:[WarehouseService]
 })
 export class WarehouseModule {}

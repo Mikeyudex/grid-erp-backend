@@ -5,25 +5,25 @@ export class GetAllByCompanyProductsResponseDto {
   uuid?: string;
 
   @ApiProperty({ example: 'Codigo externo', description: '232324343' })
-  readonly externalId: string;
+  externalId: string;
 
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
   companyId: string;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
-  readonly warehouseId: string;
+  warehouseId: string;
 
   @ApiProperty({ example: 'Id del proovedor', description: '12234' })
-  readonly providerId: string;
+  providerId: string;
 
   @ApiProperty({ example: 'Camiseta', description: 'Nombre del producto' })
-  readonly name: string;
+  name: string;
 
   @ApiProperty({ example: 'Camiseta manga larga', description: 'Descripción del producto' })
-  readonly description: string;
+  description: string;
 
   @ApiProperty({ example: 'CAM123', description: 'SKU del producto' })
-  readonly sku: string;
+  sku: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la unidad de medida del producto' })
   unitOfMeasureId: string;
@@ -32,25 +32,28 @@ export class GetAllByCompanyProductsResponseDto {
   taxId: string;
 
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
-  readonly id_category: string;
+  id_category: string;
 
   @ApiProperty({ example: 'Transmisión', description: 'Nombre de la categoría del producto' })
-  readonly categoryName: string;
+  categoryName: string;
 
   @ApiProperty({ example: '873827sdd', description: 'Id de la subcategoría del producto' })
-  readonly id_sub_category: string;
+  id_sub_category: string;
 
   @ApiProperty({ example: 'Ejes', description: 'Nombre de la subcategoría del producto' })
-  readonly subCategoryName: string;
+  subCategoryName: string;
+
+  @ApiProperty({ example: 'Bodega 1', description: 'Nombre de la bodega del producto' })
+  warehouseName: string;
 
   @ApiProperty({ example: 10, description: 'Cantidad del producto' })
-  readonly quantity: number;
+  quantity: number;
 
   @ApiProperty({ example: 25.00, description: 'Precio de venta del producto' })
-  readonly salePrice: number;
+  salePrice: number;
 
   @ApiProperty({ example: 20.00, description: 'Precio de costo del producto' })
-  readonly costPrice: number;
+  costPrice: number;
 
   @ApiProperty({
     type: 'object',
@@ -58,7 +61,7 @@ export class GetAllByCompanyProductsResponseDto {
     example: { color: 'rojo', size: 'L' },
     description: 'Atributos personalizados del producto'
   })
-  readonly attributes: Record<string, any>;
+  attributes: Record<string, any>;
 
   @ApiProperty({
     type: 'object',
@@ -66,5 +69,5 @@ export class GetAllByCompanyProductsResponseDto {
     example: { hasBarcode: true, images: ["image1", "image2"] },
     description: 'Configuraciones adicionales al producto'
   })
-  readonly additionalConfigs: Record<string, any>;
+  additionalConfigs: Record<string, any>;
 }
