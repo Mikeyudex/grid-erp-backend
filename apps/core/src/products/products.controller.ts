@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Res, Query, UploadedFiles, UseInterceptors, UseFilters , BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Res, Query, UploadedFiles, UseInterceptors, UseFilters, BadRequestException, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -15,8 +15,9 @@ import { ProductCategory } from './category/category.schema';
 import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
 import { ProductSubCategory } from './subcategory/subcategory.schema';
 import { OracleCloudService } from '../oracle-cloud.service';
-import { globalConfigs } from 'configs';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
+import { ConfigType } from '@nestjs/config';
+import config from '../config';
 
 @ApiTags('products')
 @Controller('products')
@@ -27,11 +28,11 @@ export class ProductsController {
   constructor(
     private readonly productService: ProductsService,
     private readonly oracleCloudService: OracleCloudService,
-
+    @Inject(config.KEY) private configService: ConfigType<typeof config>,
   ) {
     this.mockupCompanyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
     this.defaultFolderProducts = `company-${this.mockupCompanyId}/products/images/`;
-    
+
   }
 
   @Post('/create')
@@ -45,8 +46,8 @@ export class ProductsController {
   @Get('/getAllByCompany')
   @ApiOperation({ summary: 'Obtener todos los productos de una compañía' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
-  async findAll(): Promise<GetAllByCompanyProductsResponseDto[]> {
-    return this.productService.findAllByCompany(this.mockupCompanyId);
+  async findAll(@Query('page') page: number, @Query('limit') limit: number): Promise<GetAllByCompanyProductsResponseDto[]> {
+    return this.productService.findAllByCompany(this.mockupCompanyId, page, limit);
   }
 
   @Get('/getProduct/:id')
@@ -210,7 +211,7 @@ export class ProductsController {
     }
 
     let file = files[0];
-    const bucketName = globalConfigs.OCI_BUCKET_NAME;
+    const bucketName = this.configService.oci.bucketName;
     const storageId = this.oracleCloudService.makeStorageId();
     const objectName = `${this.defaultFolderProducts}${storageId}`;
     const filePath = file.path;
@@ -226,7 +227,7 @@ export class ProductsController {
   async deleteFile(@Param('filename') filename: string) {
     try {
       const objectName = `${this.defaultFolderProducts}${filename}`;
-      await this.oracleCloudService.deleteFile(globalConfigs.OCI_BUCKET_NAME, objectName);
+      await this.oracleCloudService.deleteFile(this.configService.oci.bucketName, objectName);
       return {
         status: 'success',
         message: 'File deleted successfully',

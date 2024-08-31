@@ -1,14 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as oci from 'oci-sdk';
 import * as fs from 'fs';
-import { globalConfigs } from 'configs';
+import { ConfigType } from '@nestjs/config';
+import config from './config';
+
 
 @Injectable()
 export class OracleCloudService {
     private objectStorageClient: oci.objectstorage.ObjectStorageClient;
     private namespaceName: string;
 
-    constructor() {
+    constructor(
+        @Inject(config.KEY) private configService: ConfigType<typeof config>,
+    ) {
         const provider = new oci.ConfigFileAuthenticationDetailsProvider();
         this.objectStorageClient = new oci.objectstorage.ObjectStorageClient({
             authenticationDetailsProvider: provider,
@@ -21,7 +25,7 @@ export class OracleCloudService {
         this.namespaceName = getNamespaceResponse.value;
     }
 
-    async uploadFileToBucket(bucketName: string, objectName: string, filePath: string, mimetype:string): Promise<string> {
+    async uploadFileToBucket(bucketName: string, objectName: string, filePath: string, mimetype: string): Promise<string> {
         try {
             const fileStream = fs.createReadStream(filePath);
             const fileSizeInBytes = fs.statSync(filePath).size;
@@ -35,7 +39,7 @@ export class OracleCloudService {
                 contentType: mimetype
             };
 
-            let urlObject = `https://objectstorage.${globalConfigs.OCI_REGION}.oraclecloud.com/n/${this.namespaceName}/b/${bucketName}/o/${objectName}`
+            let urlObject = `https://objectstorage.${this.configService.oci.region}.oraclecloud.com/n/${this.namespaceName}/b/${bucketName}/o/${objectName}`
 
             await this.objectStorageClient.putObject(uploadDetails);
             this.cleanupFile(filePath).then(() => console.log('Archivo temporal eliminado:', filePath)).catch(e => console.log(e))

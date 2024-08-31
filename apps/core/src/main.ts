@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { CoreModule } from './core.module';
-import { globalConfigs } from 'configs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MongooseValidationFilter } from './mongoose-validation.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
+  const configsService = new ConfigService();
   const app = await NestFactory.create(CoreModule);
   app.useGlobalFilters(new MongooseValidationFilter());
   app.enableCors();
@@ -16,6 +17,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   
-  await app.listen(globalConfigs.PORT);
+  await app.listen(configsService.get('PORT'));
 }
 bootstrap();

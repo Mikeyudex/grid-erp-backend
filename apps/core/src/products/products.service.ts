@@ -81,9 +81,15 @@ export class ProductsService {
     }
   }
 
-  async findAllByCompany(companyId: string): Promise<GetAllByCompanyProductsResponseDto[]> {
+  async findAllByCompany(companyId: string, page: number = 1, limit: number = 50): Promise<GetAllByCompanyProductsResponseDto[]> {
+
     let response = [];
-    let products = await this.productModel.find({ companyId }).exec();
+    const skip = (page - 1) * limit;
+    let products = await this.productModel.find({ companyId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
     if (products.length === 0) {
       throw new NotFoundException(`Products by company not found`);
     }
