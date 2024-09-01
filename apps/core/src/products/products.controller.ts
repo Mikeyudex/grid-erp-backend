@@ -1,25 +1,48 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Res, Query, UploadedFiles, UseInterceptors, UseFilters, BadRequestException, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  Res,
+  Query,
+  UploadedFiles,
+  UseInterceptors,
+  UseFilters,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Inject,
+  UseGuards,
+  SetMetadata
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ConfigType } from '@nestjs/config';
+import { Response } from 'express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AttributeConfig } from './interfaces/attribute-config.interface';
 import { Product } from './interfaces/products.interface';
 import { CreateAttributeConfigDto } from './dto/create-attribute-config.dto';
-import { Response } from 'express';
 import { CreateCategoryDto } from './dto/category/create-category.dto';
 import { ProductCategory } from './category/category.schema';
 import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
 import { ProductSubCategory } from './subcategory/subcategory.schema';
 import { OracleCloudService } from '../oracle-cloud.service';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
-import { ConfigType } from '@nestjs/config';
 import config from '../config';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { PublicController } from '../auth/decorators/public.decorator';
 
 @ApiTags('products')
+@UseGuards(ApiKeyGuard) //Valida si el request esta autorizado
 @Controller('products')
 export class ProductsController {
   private defaultFolderProducts: string;
@@ -147,6 +170,25 @@ export class ProductsController {
     }
   }
 
+  // Endpoint para obtener las categorías en formato Select
+  @Get('/category/getCategoriesFullSelect')
+  async findProductCategoryFullSelect(@Query('companyId') companyId: string, @Res() res: Response) {
+    try {
+      let data = await this.productService.findProductCategoriesFullSelect(companyId);
+      return res.status(200).json({
+        success: true,
+        data,
+        errorMessage: ""
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: [],
+        errorMessage: "Internal Error"
+      });
+    }
+  }
+
   // Endpoint para crear una subcategoría
   @Post('/subcategory/create')
   async createProductSubCategory(
@@ -180,6 +222,7 @@ export class ProductsController {
     return { lastSku };
   }
 
+  @PublicController() //Este decorador sirve para desproteger una ruta en especifico si se tiene un guard en la raiz del controlador
   @Post('/upload')
   @UseInterceptors(
     FilesInterceptor('files', 10, {

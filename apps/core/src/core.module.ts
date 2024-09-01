@@ -15,6 +15,7 @@ import { StockModule } from './stock/stock.module';
 import { UnitOfMeasureModule } from './unit-of-measure/unit-of-measure.module';
 import { TaxesModule } from './taxes/taxes.module';
 import { environments } from './environments';
+import { AuthModule } from './auth/auth.module';
 import config from './config';
 
 @Module({
@@ -45,7 +46,8 @@ import config from './config';
     SettingsModule,
     StockModule,
     UnitOfMeasureModule,
-    TaxesModule
+    TaxesModule,
+    AuthModule
   ],
   controllers: [CoreController],
   providers: [CoreService],
