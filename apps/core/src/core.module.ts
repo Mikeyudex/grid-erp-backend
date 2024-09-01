@@ -16,6 +16,7 @@ import { UnitOfMeasureModule } from './unit-of-measure/unit-of-measure.module';
 import { TaxesModule } from './taxes/taxes.module';
 import { environments } from './environments';
 import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import config from './config';
 
 @Module({
@@ -29,6 +30,7 @@ import config from './config';
         MONGODB_URI: Joi.string().required(),
         OCI_BUCKET_NAME: Joi.string().required(),
         OCI_REGION: Joi.string().required(),
+        API_KEY: Joi.string().required(),
       })
     }),
     CompanyModule,
@@ -47,7 +49,8 @@ import config from './config';
     StockModule,
     UnitOfMeasureModule,
     TaxesModule,
-    AuthModule
+    AuthModule,
+    UsersModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

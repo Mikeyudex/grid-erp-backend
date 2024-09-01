@@ -11,6 +11,7 @@ export default registerAs('config', () => {
         oci: {
             bucketName: process.env.OCI_BUCKET_NAME,
             region: process.env.OCI_REGION,
-        }
+        },
+        apiKey: process.env.API_KEY
     }
 });
