@@ -31,6 +31,7 @@ import config from './config';
         OCI_BUCKET_NAME: Joi.string().required(),
         OCI_REGION: Joi.string().required(),
         API_KEY: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
       })
     }),
     CompanyModule,

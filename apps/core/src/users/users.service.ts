@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 
 import { User } from './users.schema';
 import { CreateUserDto, UpdateUserDto } from './dtos/users.dto';
+import { LoginResponseDto } from '../auth/dtos/login.dto';
 
 @Injectable()
 export class UsersService {
@@ -31,14 +32,7 @@ export class UsersService {
 
         const model = await newModel.save();
         const modelObject = model.toObject();
-        return {
-            id: modelObject._id,
-            email: modelObject.email,
-            phone: modelObject.phone,
-            role: modelObject.role,
-            companyId: modelObject.companyId,
-            active: modelObject.active
-        };
+        return new LoginResponseDto(modelObject);
     }
 
     findByEmail(email: string) {

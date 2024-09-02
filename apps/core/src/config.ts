@@ -12,6 +12,7 @@ export default registerAs('config', () => {
             bucketName: process.env.OCI_BUCKET_NAME,
             region: process.env.OCI_REGION,
         },
-        apiKey: process.env.API_KEY
+        apiKey: process.env.API_KEY,
+        jwtSecret: process.env.JWT_SECRET
     }
 });
