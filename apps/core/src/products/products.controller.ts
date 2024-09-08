@@ -38,11 +38,11 @@ import { ProductSubCategory } from './subcategory/subcategory.schema';
 import { OracleCloudService } from '../oracle-cloud.service';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
 import config from '../config';
-import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 import { PublicController } from '../auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @ApiTags('products')
-@UseGuards(ApiKeyGuard) //Valida si el request esta autorizado
+/* @UseGuards(JwtAuthGuard) */ //Valida si el Bearer token es válido.
 @Controller('products')
 export class ProductsController {
   private defaultFolderProducts: string;
@@ -81,7 +81,7 @@ export class ProductsController {
     return this.productService.findOne(id);
   }
 
-  @Put('/update:id')
+  @Put('/update/:id')
   @ApiOperation({ summary: 'Actualizar un producto por ID' })
   @ApiResponse({ status: 200, description: 'Producto actualizado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Producto no encontrado.' })

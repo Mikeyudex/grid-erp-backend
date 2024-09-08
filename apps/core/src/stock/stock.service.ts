@@ -7,7 +7,7 @@ import { UpdateStockDto } from './dto/update-stock.dto';
 
 @Injectable()
 export class StockService {
-  constructor(@InjectModel(Stock.name) private stockModel: Model<StockDocument>) {}
+  constructor(@InjectModel(Stock.name) private stockModel: Model<StockDocument>) { }
 
   async create(createStockDto: CreateStockDto): Promise<Stock> {
     const newStock = new this.stockModel(createStockDto);
@@ -26,12 +26,26 @@ export class StockService {
     return stock;
   }
 
+  async findOneByProductId(productId: string): Promise<StockDocument> {
+    const stock = await this.stockModel.findOne({ productId }).exec();
+    if (!stock) {
+      throw new NotFoundException(`Stock with productId ${productId} not found`);
+    }
+    return stock;
+  }
+
   async update(id: string, updateStockDto: UpdateStockDto): Promise<Stock> {
     const updatedStock = await this.stockModel.findByIdAndUpdate(id, updateStockDto, { new: true }).exec();
     if (!updatedStock) {
       throw new NotFoundException(`Stock with ID ${id} not found`);
     }
     return updatedStock;
+  }
+
+  async updateStock(productId: string, quantity: number): Promise<Stock> {
+    const stock = await this.findOneByProductId(productId);
+    stock.quantity = quantity;
+    return stock.save();
   }
 
   async remove(id: string): Promise<Stock> {

@@ -17,6 +17,7 @@ import { TaxesModule } from './taxes/taxes.module';
 import { environments } from './environments';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { MovementModule } from './movement/movement.module';
 import config from './config';
 
 @Module({
@@ -51,7 +52,8 @@ import config from './config';
     UnitOfMeasureModule,
     TaxesModule,
     AuthModule,
-    UsersModule
+    UsersModule,
+    MovementModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

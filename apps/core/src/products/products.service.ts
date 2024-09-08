@@ -99,12 +99,14 @@ export class ProductsService {
       let category = await this.findProductCategoryByUuId(product.id_category);
       let subCategory = await this.findProductSubCategoryByUuId(product.id_sub_category);
       let warehouse = await this.warehouseService.findOne(product.warehouseId);
+      let stockProduct = await this.stockService.findOneByProductId(product.id);
 
       const transformedProduct = {
         ...product.toObject(),
         categoryName: category.name,
         subCategoryName: subCategory.name,
         warehouseName: warehouse.name,
+        stock: stockProduct?.quantity ?? 0,
         attributes: product.attributes || {},
         additionalConfigs: product.additionalConfigs || {}
       }

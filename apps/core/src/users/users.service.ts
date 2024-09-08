@@ -39,6 +39,10 @@ export class UsersService {
         return this.userModel.findOne({ email }).exec();
     }
 
+    findById(id: string) {
+        return this.userModel.findById({ id }).exec();
+    }
+
     update(id: string, changes: UpdateUserDto) {
         return this.userModel
             .findByIdAndUpdate(id, { $set: changes }, { new: true })
