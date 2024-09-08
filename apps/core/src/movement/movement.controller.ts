@@ -8,7 +8,7 @@ import { Movement } from './movement.schema';
 export class MovementController {
   constructor(private readonly movementService: MovementService) {}
 
-  @Post()
+  @Post('/create')
   async createMovement(@Body() createMovementDto: CreateMovementDto): Promise<Movement> {
     return this.movementService.create(createMovementDto);
   }

@@ -5,12 +5,18 @@ import { Document, Types } from 'mongoose';
 
 export type MovementDocument = Movement & Document;
 
-@Schema({ timestamps: true })
+export enum TypeMovementEnum {
+    E = 'entry',
+    O = 'exit',
+    A = 'adjustment'
+}
+
+@Schema()
 export class Movement {
     @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
     productId: string;
 
-    @Prop({ type: String, enum: ['entry', 'exit', 'adjustment'], required: true })
+    @Prop({ type: String, enum: TypeMovementEnum, required: true })
     type: string;
 
     @Prop({ type: Number, required: true })

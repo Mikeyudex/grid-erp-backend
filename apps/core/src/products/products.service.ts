@@ -20,6 +20,7 @@ import { SettingsService } from '../settings/settings.service';
 import { TaxesService } from '../taxes/taxes.service';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
 import { WarehouseService } from '../warehouse/warehouse.service';
+import { Movement, TypeMovementEnum } from '../movement/movement.schema';
 
 @Injectable()
 export class ProductsService {
@@ -29,6 +30,7 @@ export class ProductsService {
     @InjectModel('AttributeConfig') private readonly attributeConfigModel: Model<AttributeConfig>,
     @InjectModel('ProductCategory') private readonly productCategoryModel: Model<ProductCategory>,
     @InjectModel('ProductSubCategory') private readonly productSubCategoryModel: Model<ProductSubCategory>,
+    @InjectModel('Movement') private readonly movementModel: Model<Movement>,
     private readonly stockService: StockService,
     private readonly unitOfMeasureService: UnitOfMeasureService,
     private readonly settingsService: SettingsService,
@@ -71,6 +73,7 @@ export class ProductsService {
       }
 
       await this.stockService.create(createStockDto);
+      await this.handleCreateMovement(createProductDto, product._id.toString())
       return product;
     } catch (error) {
       // Rollback de la transacción en caso de error
@@ -78,6 +81,23 @@ export class ProductsService {
       throw error; // Re-lanzar el error para manejarlo en el controlador o en otro lugar
     } finally {
       session.endSession();
+    }
+  }
+
+  async handleCreateMovement(createProductDto: CreateProductDto, idMongoProduct: string): Promise<void> {
+    try {
+      const { quantity } = createProductDto;
+      let createMovementDto = {
+        productId: idMongoProduct,
+        type: TypeMovementEnum.E,
+        quantity: quantity,
+        reason: 'Creation',
+        createdBy: '66d4ed2f825f2d54204555c1' //TODO se debe pasar el id del usuario, sacarlo del token jwt
+      }
+      await this.movementModel.create(createMovementDto);
+      return;
+    } catch (error) {
+      throw error;
     }
   }
 

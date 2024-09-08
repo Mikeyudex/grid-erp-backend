@@ -13,6 +13,7 @@ import { ProductValidationMiddleware } from './middlewares/product-validation.mi
 import { SettingsModule } from '../settings/settings.module';
 import { TaxesModule } from '../taxes/taxes.module';
 import { WarehouseModule } from '../warehouse/warehouse.module';
+import { MovementModule } from '../movement/movement.module';
 
 @Module({
     imports: [
@@ -25,7 +26,8 @@ import { WarehouseModule } from '../warehouse/warehouse.module';
         OracleCloudModule,
         SettingsModule,
         TaxesModule,
-        WarehouseModule
+        WarehouseModule,
+        MovementModule,
       ],
       controllers:[ProductsController],
       providers:[ProductsService]
