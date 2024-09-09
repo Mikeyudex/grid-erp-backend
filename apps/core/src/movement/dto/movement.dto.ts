@@ -1,11 +1,15 @@
 // create-movement.dto.ts
 import { IsString, IsNumber, IsNotEmpty, IsEnum, Min } from 'class-validator';
-import { Movement, MovementDocument, TypeMovementEnum } from '../movement.schema';
+import {  TypeMovementEnum } from '../movement.schema';
 
 export class CreateMovementDto {
-  @IsString({ message: 'El productId debe ser una cadena de texto.' })
-  @IsNotEmpty({ message: 'El productId es un campo requerido.' })
+  @IsString({ message: 'El atributo productId debe ser una cadena de texto.' })
+  @IsNotEmpty({ message: 'El atributo productId es un campo requerido.' })
   productId: string;
+
+  @IsString({ message: 'El atributo warehouseId debe ser una cadena de texto.' })
+  @IsNotEmpty({ message: 'El atributo warehouseId es un campo requerido.' })
+  warehouseId: string;
 
   @IsEnum(TypeMovementEnum)
   type: string;

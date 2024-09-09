@@ -18,6 +18,7 @@ import { environments } from './environments';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MovementModule } from './movement/movement.module';
+import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.module';
 import config from './config';
 
 @Module({
@@ -53,7 +54,8 @@ import config from './config';
     TaxesModule,
     AuthModule,
     UsersModule,
-    MovementModule
+    MovementModule,
+    StockAdjustmentModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

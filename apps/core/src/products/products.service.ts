@@ -89,8 +89,9 @@ export class ProductsService {
 
   async handleCreateMovement(createProductDto: CreateProductDto, idMongoProduct: string): Promise<void> {
     try {
-      const { quantity } = createProductDto;
+      const { quantity, warehouseId } = createProductDto;
       let createMovementDto = {
+        warehouseId: warehouseId,
         productId: idMongoProduct,
         type: TypeMovementEnum.E,
         quantity: quantity,

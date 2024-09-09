@@ -13,6 +13,9 @@ export enum TypeMovementEnum {
 
 @Schema()
 export class Movement {
+    @Prop({ required: true, type: String }) //Id de la bodega
+    warehouseId: string;
+    
     @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
     productId: string;
 

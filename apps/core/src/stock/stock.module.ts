@@ -10,6 +10,6 @@ import { Stock, StockSchema } from './stock.schema';
   ],
   providers: [StockService],
   controllers: [StockController],
-  exports:[StockService],
+  exports:[StockService, MongooseModule],
 })
 export class StockModule {}
