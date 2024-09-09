@@ -21,6 +21,8 @@ import { TaxesService } from '../taxes/taxes.service';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
 import { WarehouseService } from '../warehouse/warehouse.service';
 import { Movement, TypeMovementEnum } from '../movement/movement.schema';
+import { TypeProduct } from './typeProduct/typeProduct.schema';
+import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
 
 @Injectable()
 export class ProductsService {
@@ -31,6 +33,7 @@ export class ProductsService {
     @InjectModel('ProductCategory') private readonly productCategoryModel: Model<ProductCategory>,
     @InjectModel('ProductSubCategory') private readonly productSubCategoryModel: Model<ProductSubCategory>,
     @InjectModel('Movement') private readonly movementModel: Model<Movement>,
+    @InjectModel('TypeProduct') private readonly typeProductModel: Model<TypeProduct>,
     private readonly stockService: StockService,
     private readonly unitOfMeasureService: UnitOfMeasureService,
     private readonly settingsService: SettingsService,
@@ -275,5 +278,15 @@ export class ProductsService {
     let value = values.find(item => item.hasOwnProperty(keyToFind));
     return value ? true : false;
   };
+
+  async getTypesProduct() {
+    let typeProducts = await this.typeProductModel.find().lean();
+    return typeProducts;
+  }
+
+  async createTypesProduct(createTypesProductDto: CreateTypesProductDto) {
+    let typeProductDoc = new this.typeProductModel(createTypesProductDto)
+    return typeProductDoc.save();
+  }
 
 }

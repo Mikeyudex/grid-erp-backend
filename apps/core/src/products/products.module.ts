@@ -14,6 +14,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { TaxesModule } from '../taxes/taxes.module';
 import { WarehouseModule } from '../warehouse/warehouse.module';
 import { MovementModule } from '../movement/movement.module';
+import { TypeProductSchema } from './typeProduct/typeProduct.schema';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { MovementModule } from '../movement/movement.module';
         MongooseModule.forFeature([{ name: 'AttributeConfig', schema: AttributeConfigSchema }]),
         MongooseModule.forFeature([{ name: 'ProductCategory', schema: ProductCategorySchema }]),
         MongooseModule.forFeature([{ name: 'ProductSubCategory', schema: ProductSubCategorySchema }]),
+        MongooseModule.forFeature([{ name: 'TypeProduct', schema: TypeProductSchema }]),
         StockModule,
         UnitOfMeasureModule, 
         OracleCloudModule,

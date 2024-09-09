@@ -36,6 +36,11 @@ export class CreateProductDto {
   @IsString({ message: 'La descripción debe ser una cadena de texto.' })
   readonly description: string;
 
+  @ApiProperty({ example: 'Id del tipo de producto', description: '12234' })
+  @IsNotEmpty({ message: 'El id del tipo de producto es un campo requerido.' })
+  @IsString({ message: 'El id del tipo de producto debe ser una cadena de texto.' })
+  readonly id_type_product: string;
+
   @ApiProperty({ example: 'CAM123', description: 'SKU del producto' })
   @IsNotEmpty({ message: 'El sku es un campo requerido.' })
   @IsString({ message: 'El sku debe ser una cadena de texto.' })

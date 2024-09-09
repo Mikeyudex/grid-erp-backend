@@ -30,6 +30,9 @@ export class Product {
     @Prop()
     description: string;
 
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'TypeProduct', required: true })
+    id_type_product: string;
+
     @Prop()
     sku: string;
 

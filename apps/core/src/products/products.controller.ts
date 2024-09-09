@@ -40,6 +40,7 @@ import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-produc
 import config from '../config';
 import { PublicController } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
 
 @ApiTags('products')
 /* @UseGuards(JwtAuthGuard) */ //Valida si el Bearer token es válido.
@@ -187,6 +188,31 @@ export class ProductsController {
         errorMessage: "Internal Error"
       });
     }
+  }
+
+  // Endpoint para obtener los tipos de productos
+  @Get('/types-product/getAll')
+  async findTypeProduct(@Res() res: Response) {
+    try {
+      let data = await this.productService.getTypesProduct();
+      return res.status(200).json({
+        success: true,
+        data,
+        errorMessage: ""
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: [],
+        errorMessage: "Internal Error"
+      });
+    }
+  }
+
+  // Endpoint para crear un tipo de producto
+  @Post('/types-product/create')
+  async createTypeProduct(@Body() createTypesProductDto: CreateTypesProductDto) {
+    return this.productService.createTypesProduct(createTypesProductDto);
   }
 
   // Endpoint para crear una subcategoría
