@@ -18,7 +18,7 @@ export class StockAdjustmentService {
         private readonly movementModel: Model<Movement>,
     ) { }
 
-    // Obtener ajustes recientes
+    // Obtener ajustes recientes de stock
     async getRecentAdjustments(page: number = 1, limit: number = 10, companyId: string) {
         const skip = (page - 1) * limit;
         return this.stockAdjustmentModel
