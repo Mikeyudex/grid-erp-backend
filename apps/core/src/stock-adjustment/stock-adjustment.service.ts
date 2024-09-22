@@ -35,34 +35,35 @@ export class StockAdjustmentService {
         const session: ClientSession = await this.stockAdjustmentModel.db.startSession();
         session.startTransaction();
         try {
-            const { productId, quantity, adjustmentType } = createStockAdjustmentDto;
+            const { products } = createStockAdjustmentDto;
 
-            // Buscar el stock actual del producto
-            const stock = await this.stockModel.findOne({ productId });
+            let totalAdjustedValue = 0;
 
-            if (!stock) {
-                throw new NotFoundException('No se encontró stock para el producto.');
-            }
+            const adjustments = products.map(product => {
+                const { oldQuantity, newQuantity, costPrice } = product;
+                const adjustedQuantity = newQuantity - oldQuantity;
+                totalAdjustedValue += adjustedQuantity * costPrice;
 
-            // Ajustar el stock según el tipo de ajuste
-            if (adjustmentType === TypeAdjustment.I) {
-                stock.quantity += quantity;
-            } else if (adjustmentType === TypeAdjustment.D) {
-                if (stock.quantity < quantity) {
-                    throw new Error('Insufficient stock to perform adjustment.');
-                }
-                stock.quantity -= quantity;
-            }
+                return {
+                    productId: product.productId,
+                    oldQuantity,
+                    newQuantity,
+                    adjustedQuantity,
+                    costPrice: costPrice
+                };
+            });
+
+            createStockAdjustmentDto.products = adjustments;
 
             // Guardar el ajuste en la colección de ajustes de stock
             const newAdjustment = new this.stockAdjustmentModel(createStockAdjustmentDto);
             await newAdjustment.save();
 
-            // Actualizar el stock en la base de datos
-            await stock.save();
-
-            // Crear un movimiento de ajuste
+            // Crear movimientos de ajuste
             await this.handleCreateMovement(createStockAdjustmentDto);
+
+            // Actualizar stock de los productos
+            await this.updateProductStock(products);
 
             return newAdjustment;
         } catch (error) {
@@ -75,18 +76,37 @@ export class StockAdjustmentService {
 
     async handleCreateMovement(createStockAdjustmentDto: CreateStockAdjustmentDto): Promise<void> {
         try {
-            const { quantity, warehouseId, note, createdBy, productId } = createStockAdjustmentDto;
-            let createMovementDto = {
-                warehouseId: warehouseId,
-                productId: productId,
-                type: TypeMovementEnum.A,
-                quantity: quantity,
-                reason: note,
-                createdBy: createdBy
+            const { warehouseId, note, createdBy, products } = createStockAdjustmentDto;
+
+            for (const product of products) {
+             
+                let createMovementDto = {
+                    warehouseId: warehouseId,
+                    productId: product.productId,
+                    type: TypeMovementEnum.A,
+                    quantity: product.newQuantity - product.oldQuantity,
+                    reason: note,
+                    createdBy: createdBy
+                }
+                let movement = new this.movementModel(createMovementDto);
+                await movement.save();
             }
-            let movement = new this.movementModel(createMovementDto);
-            await movement.save();
-            return;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateProductStock(products: any[]): Promise<void> {
+        try {
+            for (const product of products) {
+                const { productId, newQuantity } = product;
+
+                await this.stockModel.findOneAndUpdate(
+                    { productId: productId },
+                    { $set: { quantity: newQuantity } },
+                    { new: true }
+                );
+            }
         } catch (error) {
             throw error;
         }

@@ -17,18 +17,31 @@ export class StockAdjustment {
 
     @Prop({ type: Types.ObjectId, ref: 'Warehouse', required: true }) //Id de la bodega
     warehouseId: string;
-    
-    @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
-    productId: string;
+
+    @Prop({
+        type: [
+            {
+                product: { type: Types.ObjectId, ref: 'Product', required: true },
+                oldQuantity: { type: Number, required: true },
+                newQuantity: { type: Number, required: true },
+                adjustedQuantity: { type: Number, required: true },
+            },
+        ],
+        required: true,
+    })
+    products: Array<{
+        productId: Types.ObjectId; // Relación con el producto ajustado
+        oldQuantity: number;     // Cantidad anterior al ajuste
+        newQuantity: number;     // Cantidad después del ajuste
+        adjustedQuantity: number;// Cantidad ajustada
+        costPrice: number;
+    }>;
 
     @Prop({ type: String, enum: TypeAdjustment, required: true })
     adjustmentType: string;
 
     @Prop({ type: Number, required: true })
     totalAdjustedPrice: number;
-
-    @Prop({ type: Number, required: true })
-    quantity: number;
 
     @Prop({ type: String })
     note: string;
@@ -42,5 +55,7 @@ export class StockAdjustment {
     @Prop({ default: null })
     updatedAt: Date;
 }
+
+
 
 export const StockAdjustmentSchema = SchemaFactory.createForClass(StockAdjustment);
