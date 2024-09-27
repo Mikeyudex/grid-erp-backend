@@ -37,9 +37,6 @@ export class StockAdjustment {
         costPrice: number;
     }>;
 
-    @Prop({ type: String, enum: TypeAdjustment, required: true })
-    adjustmentType: string;
-
     @Prop({ type: Number, required: true })
     totalAdjustedPrice: number;
 

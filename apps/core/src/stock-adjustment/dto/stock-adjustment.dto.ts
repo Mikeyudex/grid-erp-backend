@@ -1,6 +1,5 @@
 // create-stock-adjustment.dto.ts
-import { IsString, IsNotEmpty, IsNumber, IsEnum, IsArray } from 'class-validator';
-import { TypeAdjustment } from '../stock-adjustment.schema';
+import { IsString, IsNotEmpty, IsNumber, IsArray } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateStockAdjustmentDto {
@@ -19,13 +18,9 @@ export class CreateStockAdjustmentDto {
         productId: Types.ObjectId;
         oldQuantity: number;
         newQuantity: number;
-        adjustedQuantity: number;
+        adjustedQuantity?: number;
         costPrice: number;
     }>;
-
-    @IsEnum(TypeAdjustment)
-    @IsNotEmpty({ message: 'El atributo adjustmentType es un campo requerido.' })
-    adjustmentType: TypeAdjustment;
 
     @IsNumber()
     @IsNotEmpty({ message: 'El atributo totalAdjustedPrice es un campo requerido.' })

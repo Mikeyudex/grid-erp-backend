@@ -140,6 +140,41 @@ export class ProductsService {
     return response as GetAllByCompanyProductsResponseDto[];
   }
 
+  async findAllByWarehouse(warehouseId: string, page: number = 1, limit: number = 50): Promise<GetAllByCompanyProductsResponseDto[]> {
+
+    let response = [];
+    const skip = (page - 1) * limit;
+    let products = await this.productModel.find({ warehouseId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+    if (products.length === 0) {
+      throw new NotFoundException(`Products by warehouseId not found`);
+    }
+
+    for (let index = 0; index < products.length; index++) {
+      const product = products[index];
+      let category = await this.findProductCategoryByUuId(product.id_category);
+      let subCategory = await this.findProductSubCategoryByUuId(product.id_sub_category);
+      let warehouse = await this.warehouseService.findOne(product.warehouseId);
+      let stockProduct = await this.stockService.findOneByProductId(product.id);
+
+      const transformedProduct = {
+        ...product.toObject(),
+        categoryName: category.name,
+        subCategoryName: subCategory.name,
+        warehouseName: warehouse.name,
+        stock: stockProduct?.quantity ?? 0,
+        attributes: product.attributes || {},
+        additionalConfigs: product.additionalConfigs || {}
+      }
+      response.push(transformedProduct)
+    }
+
+    return response as GetAllByCompanyProductsResponseDto[];
+  }
+
   async findOne(id: string): Promise<Product> {
     const product = await this.productModel.findById(id).exec();
     if (!product) {

@@ -48,7 +48,7 @@ export class StockAdjustmentService {
                     productId: product.productId,
                     oldQuantity,
                     newQuantity,
-                    adjustedQuantity,
+                    adjustedQuantity: adjustedQuantity,
                     costPrice: costPrice
                 };
             });

@@ -74,6 +74,13 @@ export class ProductsController {
     return this.productService.findAllByCompany(this.mockupCompanyId, page, limit);
   }
 
+  @Get('/getAllByWarehouse/:warehouseId')
+  @ApiOperation({ summary: 'Obtener todos los productos de una bodega en especifico' })
+  @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
+  async findAllByWarehouse(@Query('page') page: number, @Query('limit') limit: number, @Param('warehouseId') warehouseId: string): Promise<GetAllByCompanyProductsResponseDto[]> {
+    return this.productService.findAllByWarehouse(warehouseId, page, limit);
+  }
+
   @Get('/getProduct/:id')
   @ApiOperation({ summary: 'Obtener un producto por ID' })
   @ApiResponse({ status: 200, description: 'Producto encontrado.' })
