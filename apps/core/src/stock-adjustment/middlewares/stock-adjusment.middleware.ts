@@ -2,14 +2,14 @@ import { Injectable, NestMiddleware, BadRequestException } from '@nestjs/common'
 import { Request, Response, NextFunction } from 'express';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { CreateProductDto } from '../dto/create-product.dto';
+import { CreateStockAdjustmentDto } from '../dto/stock-adjustment.dto';
 
 @Injectable()
-export class ProductValidationMiddleware implements NestMiddleware {
+export class StockAdjustmentValidationMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     
-    const productCreateDto = plainToInstance(CreateProductDto, req.body);
-    const errors = await validate(productCreateDto);
+    const createStockAdjustmentDto = plainToInstance(CreateStockAdjustmentDto, req.body);
+    const errors = await validate(createStockAdjustmentDto);
 
     if (errors.length > 0) {
       const errorMessages = errors.map(error => ({

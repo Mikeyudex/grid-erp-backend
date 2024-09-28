@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MongooseValidationFilter } from './mongoose-validation.filter';
 import { ConfigService } from '@nestjs/config';
 
+declare const module: any;
+
 async function bootstrap() {
   const configsService = new ConfigService();
   const app = await NestFactory.create(CoreModule);
@@ -18,5 +20,9 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   
   await app.listen(configsService.get('PORT'));
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
 }
 bootstrap();

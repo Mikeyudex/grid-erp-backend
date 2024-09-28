@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { v4 } from 'uuid';
-import { Warehouse } from './warehouse.schema';
+import { Warehouse, WharehouseDocument } from './warehouse.schema';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 
@@ -33,10 +33,10 @@ export class WarehouseService {
         let warehousesSelect = [];
         if (warehouses) {
             for (let index = 0; index < warehouses.length; index++) {
-                const warehouse: Warehouse = warehouses[index];
+                const warehouse = warehouses[index];
                 let warehouseSelect = {
                     label: warehouse.name,
-                    value: warehouse.uuid
+                    value: warehouse._id.toString()
                 };
 
                 warehousesSelect.push(warehouseSelect);
@@ -52,6 +52,15 @@ export class WarehouseService {
         }
         return warehouse;
     }
+
+    async findbyId(id: string): Promise<Warehouse> {
+        const warehouse = await this.warehouseModel.findById(id).lean();
+        if (!warehouse) {
+            throw new NotFoundException(`Warehouse with ID ${id} not found`);
+        }
+        return warehouse;
+    }
+
 
     async update(id: string, updateWarehouseDto: UpdateWarehouseDto): Promise<boolean> {
         const updatedWarehouse = await this.warehouseModel.updateOne({ uuid: id }, updateWarehouseDto, { new: true }).exec();

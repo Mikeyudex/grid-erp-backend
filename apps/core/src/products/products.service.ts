@@ -144,7 +144,8 @@ export class ProductsService {
 
     let response = [];
     const skip = (page - 1) * limit;
-    let products = await this.productModel.find({ warehouseId })
+    let warehouse = await this.warehouseService.findbyId(warehouseId);
+    let products = await this.productModel.find({ warehouseId: warehouse.uuid })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)

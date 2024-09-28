@@ -21,10 +21,11 @@ export class StockAdjustment {
     @Prop({
         type: [
             {
-                product: { type: Types.ObjectId, ref: 'Product', required: true },
+                productId: { type: Types.ObjectId, ref: 'Product', required: true },
                 oldQuantity: { type: Number, required: true },
                 newQuantity: { type: Number, required: true },
                 adjustedQuantity: { type: Number, required: true },
+                costPrice: { type: Number, required: true },
             },
         ],
         required: true,

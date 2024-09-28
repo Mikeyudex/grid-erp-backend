@@ -1,5 +1,5 @@
 // stock-adjustment.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { StockAdjustment, StockAdjustmentDocument, TypeAdjustment } from './stock-adjustment.schema';
@@ -9,6 +9,7 @@ import { CreateStockAdjustmentDto } from './dto/stock-adjustment.dto';
 
 @Injectable()
 export class StockAdjustmentService {
+    private readonly logger = new Logger(StockAdjustmentService.name);
     constructor(
         @InjectModel(StockAdjustment.name)
         private readonly stockAdjustmentModel: Model<StockAdjustmentDocument>,
@@ -20,14 +21,21 @@ export class StockAdjustmentService {
 
     // Obtener ajustes recientes de stock
     async getRecentAdjustments(page: number = 1, limit: number = 10, companyId: string) {
-        const skip = (page - 1) * limit;
-        return this.stockAdjustmentModel
+        try {
+            const skip = (page - 1) * limit;
+        let data = await this.stockAdjustmentModel
             .find({ companyId: companyId })
             .sort({ adjustmentDate: -1 })// Ordenar por fecha descendente
             .skip(skip)
             .limit(limit)
             .populate('warehouseId') // Opcional: para mostrar detalles de la bodega
             .exec();
+            return data;
+        } catch (error) {
+           this.logger.error(error);
+            throw new InternalServerErrorException(`Internal error`);
+        }
+        
     }
 
     // Método para crear un ajuste de stock
@@ -69,6 +77,7 @@ export class StockAdjustmentService {
         } catch (error) {
             console.log(error);
             await session.abortTransaction();
+            throw new InternalServerErrorException(`Internal error`);
         } finally {
             session.endSession();
         }
