@@ -8,13 +8,21 @@ export type MovementDocument = Movement & Document;
 export enum TypeMovementEnum {
     E = 'entry',
     O = 'exit',
-    A = 'adjustment'
+    A = 'adjustment',
+    T = 'transfer'
 }
 
 @Schema()
 export class Movement {
-    @Prop({ required: true, type: String }) //Id de la bodega
+
+    @Prop({ required: true, type: String }) //Id de la compañía
+    companyId: string;
+
+    @Prop({ required: true, type: String, ref: 'Warehouse' }) //Id de la bodega
     warehouseId: string;
+
+    @Prop({ type: String, default: null, ref: 'Warehouse' }) // Id de la bodega de destino (solo para transferencias)
+    destinationWarehouseId: string;
     
     @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
     productId: string;

@@ -7,9 +7,9 @@ import { CreateMovementDto } from '../dto/movement.dto';
 @Injectable()
 export class MovementValidationMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
-    
-    
-    const createMovementDto = plainToInstance(CreateMovementDto, req.body);
+
+    let createMovementDto = plainToInstance(CreateMovementDto, req.body);
+
     const errors = await validate(createMovementDto);
 
     if (errors.length > 0) {

@@ -34,6 +34,22 @@ export class StockService {
     return stock;
   }
 
+  async getStockByProductAndWarehouse(productId: string, warehouseId: string): Promise<number> {
+    const stock = await this.stockModel.findOne({ productId, warehouseId }).exec();
+    if (!stock) {
+      throw new NotFoundException(`Stock with productId ${productId} not found`);
+    }
+    return stock.quantity;
+  }
+
+  async getStockDataByProductAndWarehouse(productId: string, warehouseId: string): Promise<StockDocument> {
+    const stock = await this.stockModel.findOne({ productId, warehouseId }).exec();
+    if (!stock) {
+      throw new NotFoundException(`Stock with productId ${productId} not found`);
+    }
+    return stock;
+  }
+
   async update(id: string, updateStockDto: UpdateStockDto): Promise<Stock> {
     const updatedStock = await this.stockModel.findByIdAndUpdate(id, updateStockDto, { new: true }).exec();
     if (!updatedStock) {

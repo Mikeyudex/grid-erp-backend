@@ -7,18 +7,21 @@ import { MovementSchema, Movement } from './movement.schema';
 import { MovementValidationMiddleware } from './middlewares/movement-validation.middleware';
 
 @Module({
-  imports:[
+  imports: [
     StockModule,
     MongooseModule.forFeature([{ name: Movement.name, schema: MovementSchema }]),
   ],
   providers: [MovementService],
   controllers: [MovementController],
-  exports:[MovementService, MongooseModule]
+  exports: [MovementService, MongooseModule]
 })
 export class MovementModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(MovementValidationMiddleware)
-      .forRoutes({ path: 'movements/create', method: RequestMethod.POST });
+      .forRoutes(
+        { path: 'movements/create', method: RequestMethod.POST },
+        { path: 'movements/create-transfer', method: RequestMethod.POST }
+      );
   }
 }
