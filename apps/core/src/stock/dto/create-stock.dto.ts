@@ -11,8 +11,8 @@ export class CreateStockDto {
     quantity: number;
   
     @IsNotEmpty()
-    @IsString()
-    warehouseId: string;
+    @IsMongoId()
+    warehouseId: string | ObjectId;
   
     @IsOptional()
     @IsNumber()

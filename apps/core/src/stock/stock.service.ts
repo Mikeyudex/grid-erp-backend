@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Stock, StockDocument } from './stock.schema';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
@@ -43,7 +43,7 @@ export class StockService {
   }
 
   async getStockDataByProductAndWarehouse(productId: string, warehouseId: string): Promise<StockDocument> {
-    const stock = await this.stockModel.findOne({ productId, warehouseId }).exec();
+    const stock = await this.stockModel.findOne({ productId: productId, warehouseId: warehouseId }).exec();
     if (!stock) {
       throw new NotFoundException(`Stock with productId ${productId} not found`);
     }

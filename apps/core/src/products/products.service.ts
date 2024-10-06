@@ -326,4 +326,9 @@ export class ProductsService {
     return typeProductDoc.save();
   }
 
+  async getNameProductById(id: string) {
+    let product = await this.productModel.findById(id).projection({ name: 1 }).exec();
+    return product.name;
+  }
+
 }

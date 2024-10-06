@@ -53,9 +53,27 @@ export class CreateMovementDto {
   createdBy?: string; //Id del usuario que realiza la operación
 }
 
+export class ResponseMovementDto {
+  id: string;
+  companyId: string;
+  warehouseId: string;
+  warehouseName: string;
+  destinationWarehouseId: string;
+  destinationWarehouseName: string;
+  productId: string;
+  productName: string;
+  type: string;
+  quantity: number;
+  reason: string;
+  createdById: string;
+  createdByName: string;
+  createdByLastName: string;
+  createdAt: Date;
+}
+
 
 export class ResultDto {
-  productId: string;
+  product: string;
   status: string;
   message: string;
 }

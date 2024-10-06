@@ -12,7 +12,7 @@ export class Stock {
     @Prop({ required: true })
     quantity: number;
 
-    @Prop({ required: true })
+    @Prop({ type: Types.ObjectId, ref: 'Warehouse', required: true })
     warehouseId: string;
 
     @Prop()

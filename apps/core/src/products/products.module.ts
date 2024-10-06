@@ -32,7 +32,7 @@ import { TypeProductSchema } from './typeProduct/typeProduct.schema';
         MovementModule,
       ],
       controllers:[ProductsController],
-      providers:[ProductsService]
+      providers:[ProductsService],
 })
 
 export class ProductsModule implements NestModule {
