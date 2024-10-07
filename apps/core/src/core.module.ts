@@ -19,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MovementModule } from './movement/movement.module';
 import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.module';
+import { WoocommerceModule } from './woocommerce/woocommerce.module';
 import config from './config';
 
 @Module({
@@ -55,7 +56,8 @@ import config from './config';
     AuthModule,
     UsersModule,
     MovementModule,
-    StockAdjustmentModule
+    StockAdjustmentModule,
+    WoocommerceModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

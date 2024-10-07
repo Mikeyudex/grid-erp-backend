@@ -61,12 +61,21 @@ export class ProductsService {
         throw new Error('tax not found');
       }
 
+      const typeProduct = await this.getNameTypeProductById(createProductDto.id_type_product);
+      if(!typeProduct) {
+        throw new Error('typeProduct not found');
+      }
+
       createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
       createProductDto.taxId = tax._id.toString();
 
       const newProduct = new this.productModel(createProductDto);
 
       const product = await newProduct.save();
+
+      if(typeProduct !== 'Producto') {
+        return product;
+      }
 
       //Creando el stock para el produto recién creado
       const createStockDto: CreateStockDto = {
@@ -326,9 +335,14 @@ export class ProductsService {
     return typeProductDoc.save();
   }
 
-  async getNameProductById(id: string) {
+  async getNameProductById(id: string): Promise<string> {
     let product = await this.productModel.findById(id).projection({ name: 1 }).exec();
     return product.name;
+  }
+
+  async getNameTypeProductById(id: string): Promise<string> {
+    let typeProduct = await this.typeProductModel.findById(id).projection({ name: 1 }).exec();
+    return typeProduct.name;
   }
 
 }

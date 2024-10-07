@@ -1,7 +1,7 @@
 // movement.controller.ts
 import { Controller, Post, Body, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { MovementService } from './movement.service';
-import { CreateMovementDto, ResponseTransferDto } from './dto/movement.dto';
+import { CreateMovementDto, ResponseMovementDto, ResponseTransferDto } from './dto/movement.dto';
 import { Movement } from './movement.schema';
 
 @Controller('movements')
@@ -14,7 +14,7 @@ export class MovementController {
     @Query('limit', ParseIntPipe) limit: number,
     @Query('companyId') companyId: string,
     @Query('type') type: string,
-  ): Promise<Movement[]> {
+  ): Promise<ResponseMovementDto[]> {
     return this.movementService.getAll(page, limit, companyId, type);
   }
 
