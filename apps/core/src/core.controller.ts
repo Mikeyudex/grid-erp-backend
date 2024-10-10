@@ -5,8 +5,4 @@ import { CoreService } from './core.service';
 export class CoreController {
   constructor(private readonly coreService: CoreService) {}
 
-  @Get()
-  getHello(): string {
-    return this.coreService.getHello();
-  }
 }

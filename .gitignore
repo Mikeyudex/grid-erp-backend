@@ -46,6 +46,7 @@ lerna-debug.log*
 .temp
 .tmp
 /tmp
+/wordpress
 
 # Runtime data
 pids
