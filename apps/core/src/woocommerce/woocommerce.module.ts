@@ -10,7 +10,8 @@ import { MongooseModule } from '@nestjs/mongoose';
     MongooseModule.forFeature([{ name: 'Woocommerce', schema: WoocommerceSchema }]),
   ],
   providers: [WoocommerceService],
-  controllers: [WoocommerceController]
+  controllers: [WoocommerceController],
+  exports: [WoocommerceService]
 })
 export class WoocommerceModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

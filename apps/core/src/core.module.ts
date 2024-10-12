@@ -73,7 +73,8 @@ import config from './config';
     MovementModule,
     StockAdjustmentModule,
     WoocommerceModule,
-    CategoryMappingModule
+    CategoryMappingModule,
+    WoocommerceModule,
   ],
   controllers: [CoreController],
   providers: [CoreService],

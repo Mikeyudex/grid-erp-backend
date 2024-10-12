@@ -1,26 +1,83 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { WoocommerceService } from './woocommerce/woocommerce.service';
 
 @Injectable()
 export class CoreService {
-  constructor(@Inject('WOOCOMMERCE_SERVICE') private readonly client: ClientProxy) { }
+  private readonly logger = new Logger(CoreService.name);
+  constructor(
+    @Inject('WOOCOMMERCE_SERVICE') private readonly client: ClientProxy,
+    private readonly woocommerceService: WoocommerceService,
+  ) { }
 
   async createProductForCompany(companyId: string, productData: any) {
-    // Obtener credenciales de la compañía (puedes obtenerlas desde la base de datos)
-    /* const company = await this.getCompany(companyId); // Método que implementa la lógica para obtener la compañía
+    const woocommerceConfigs = await this.woocommerceService.findByCompanyId(companyId);
 
-    const wooCommerceUrl = company.wooCommerceUrl;
-    const consumerKey = company.wooCommerceConsumerKey;
-    const consumerSecret = company.wooCommerceConsumerSecret; */
+    const wooCommerceUrl = woocommerceConfigs.wooCommerceUrl;
+    const consumerKey = woocommerceConfigs.wooCommerceConsumerKey;
+    const consumerSecret = woocommerceConfigs.wooCommerceConsumerSecret;
 
     const payload = {
-      wooCommerceUrl:"",
-      consumerKey:"",
-      consumerSecret:"",
-      productData:{},
+      wooCommerceUrl: wooCommerceUrl,
+      consumerKey: consumerKey,
+      consumerSecret: consumerSecret,
+      productData: productData,
     };
 
-    return this.client.send({ cmd: 'create-product' }, payload).toPromise();
+    this.client.send({ cmd: 'create-product' }, payload)
+      .subscribe((response: any) => {
+        console.log('Producto creado');
+        this.logger.log(response);
+        return response;
+      });
+  }
+
+  async getCategoriesWoocommerce(companyId: string) {
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        const woocommerceConfigs = await this.woocommerceService.findByCompanyId(companyId);
+
+        const wooCommerceUrl = woocommerceConfigs.wooCommerceUrl;
+        const consumerKey = woocommerceConfigs.wooCommerceConsumerKey;
+        const consumerSecret = woocommerceConfigs.wooCommerceConsumerSecret;
+
+        const payload = {
+          wooCommerceUrl: wooCommerceUrl,
+          consumerKey: consumerKey,
+          consumerSecret: consumerSecret
+        };
+
+        this.client.send({ cmd: 'get-categories' }, payload)
+          .subscribe((response: any) => {
+            console.log('Categorías obtenidas');
+            resolve(response);
+          });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async getProductsWoocommerce(companyId: string) {
+    const woocommerceConfigs = await this.woocommerceService.findByCompanyId(companyId);
+
+    const wooCommerceUrl = woocommerceConfigs.wooCommerceUrl;
+    const consumerKey = woocommerceConfigs.wooCommerceConsumerKey;
+    const consumerSecret = woocommerceConfigs.wooCommerceConsumerSecret;
+
+    const payload = {
+      wooCommerceUrl: wooCommerceUrl,
+      consumerKey: consumerKey,
+      consumerSecret: consumerSecret
+    };
+
+    this.client.send({ cmd: 'get-products' }, payload)
+      .subscribe((response: any) => {
+        console.log('Productos obtenidos');
+        this.logger.log(response);
+        return response;
+      });
   }
 
 }

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CreateCategoryMappingDto, UpdateCategoryMappingDto } from './dto/category-mapping.dto';
+import { CreateCategoryMappingDto, CreateCategoryMappingsDto, UpdateCategoryMappingDto } from './dto/category-mapping.dto';
 import { CategoryMapping } from './category-mapping.schema';
 import { CategoryMappingService } from './category-mapping.service';
 
@@ -10,10 +10,10 @@ export class CategoryMappingController {
     constructor(private readonly categoryMappingService: CategoryMappingService) { }
 
     @Post('/create')
-    @ApiOperation({ summary: 'Crear un registro' })
+    @ApiOperation({ summary: 'Crear mapeo de categorpias, se recibe un array de objetos.' })
     @ApiResponse({ status: 201, description: 'El mapeo de categorías ha sido creado exitosamente.' })
-    async create(@Body() createCategoryMappingDto: CreateCategoryMappingDto): Promise<CategoryMapping> {
-        return this.categoryMappingService.create(createCategoryMappingDto);
+    async create(@Body() createCategoryMappingsDto: CreateCategoryMappingsDto): Promise<CategoryMapping[]> {
+        return this.categoryMappingService.create(createCategoryMappingsDto.mappings);
     }
 
     @Get('getAll')

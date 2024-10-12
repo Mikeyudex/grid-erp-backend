@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
 
 export class CreateCategoryMappingDto {
@@ -23,6 +24,13 @@ export class CreateCategoryMappingDto {
     createdBy: string;
 }
 
+
+export class CreateCategoryMappingsDto {
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreateCategoryMappingDto)
+    mappings: CreateCategoryMappingDto[];
+  }
 
 export class UpdateCategoryMappingDto {
     @IsString({ message: 'El atributo internalCategoryId debe ser un string.' })
