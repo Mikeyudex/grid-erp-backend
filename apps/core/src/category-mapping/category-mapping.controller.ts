@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CreateCategoryMappingDto, CreateCategoryMappingsDto, UpdateCategoryMappingDto } from './dto/category-mapping.dto';
+import { CreateCategoryMappingsDto, UpdateCategoryMappingDto } from './dto/category-mapping.dto';
 import { CategoryMapping } from './category-mapping.schema';
 import { CategoryMappingService } from './category-mapping.service';
 

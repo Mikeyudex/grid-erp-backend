@@ -2,13 +2,13 @@ import { Injectable, NestMiddleware, BadRequestException } from '@nestjs/common'
 import { Request, Response, NextFunction } from 'express';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { CreateCategoryMappingDto } from '../dto/category-mapping.dto';
+import { CreateCategoryMappingsDto } from '../dto/category-mapping.dto';
 
 @Injectable()
 export class CategoryMappingValidationMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
 
-        let dto = plainToInstance(CreateCategoryMappingDto, req.body);
+        let dto = plainToInstance(CreateCategoryMappingsDto, req.body);
 
         const errors = await validate(dto);
 

@@ -24,7 +24,6 @@ export class CategoryMappingService {
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
-
     }
 
     async findAll(): Promise<CategoryMapping[]> {
