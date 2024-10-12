@@ -4,9 +4,13 @@ import { CategoryMappingController } from './category-mapping.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CategoryMapping, CategoryMappingSchema } from './category-mapping.schema';
 import { CategoryMappingValidationMiddleware } from './middlewares/category-mapping-validation.middleware';
+import { ApiWoocommerceModule } from '../api-woocommerce.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: CategoryMapping.name, schema: CategoryMappingSchema }]),],
+  imports: [
+    MongooseModule.forFeature([{ name: CategoryMapping.name, schema: CategoryMappingSchema }]),
+    ApiWoocommerceModule,
+  ],
   providers: [CategoryMappingService],
   controllers: [CategoryMappingController]
 })

@@ -18,6 +18,12 @@ export class WooCommerceCategoryImageDto {
     name?: string;
 }
 
+export class WooCommerceCategoryLinksDto {
+    @ApiProperty({ example: 'http://localhost:8000/wp-json/wc/v3/products/categories/18' })
+    @IsString({ message: 'El atributo href debe ser una cadena de texto.' })
+    @IsNotEmpty({ message: 'El atributo href es un campo requerido.' })
+    href: string;
+}
 
 export class CreateWooCommerceCategoryDto {
 
@@ -50,4 +56,55 @@ export class CreateWooCommerceCategoryDto {
     @IsString({ message: 'El atributo image debe ser de tipo object.' })
     @IsOptional()
     image?: WooCommerceCategoryImageDto;
+}
+
+export class ResponseWooCommerceCategoryDto {
+    @ApiProperty({ example: 18 })
+    id: number;
+
+    @ApiProperty({ example: 'CARDANES' })
+    name: string;
+
+    @ApiProperty({ example: 'cardanes' })
+    slug: string;
+
+    @ApiProperty({ example: 17 })
+    parent: number;
+
+    @ApiProperty({ example: '' })
+    description: string;
+
+    @ApiProperty({ example: 'default' })
+    display: string;
+
+    @ApiProperty({ example: null, nullable: true })
+    image: WooCommerceCategoryImageDto;
+
+    @ApiProperty({ example: 0 })
+    menu_order: number;
+
+    @ApiProperty({ example: 1 })
+    count: number;
+
+    @ApiProperty({
+        type: () => WooCommerceCategoryLinksDto,
+        description: 'Link to the current category resource',
+        isArray: true,
+    })
+    self: WooCommerceCategoryLinksDto[];
+
+    @ApiProperty({
+        type: () => WooCommerceCategoryLinksDto,
+        description: 'Link to the collection of categories',
+        isArray: true,
+    })
+    collection: WooCommerceCategoryLinksDto[];
+
+    @ApiProperty({
+        type: () => WooCommerceCategoryLinksDto,
+        description: 'Link to the parent category',
+        isArray: true,
+        nullable: true,
+    })
+    up?: WooCommerceCategoryLinksDto[];
 }

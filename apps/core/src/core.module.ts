@@ -23,22 +23,10 @@ import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.modul
 import { WoocommerceModule } from './woocommerce/woocommerce.module';
 import { CategoryMappingModule } from './category-mapping/category-mapping.module';
 import config from './config';
+import { ApiWoocommerceModule } from './api-woocommerce.module';
 
 @Module({
-  imports: [
-    ClientsModule.register([
-      {
-        name: 'WOOCOMMERCE_SERVICE',
-        transport: Transport.REDIS,
-        options: {
-          host: 'localhost',
-          port: 6379,
-          //password: 'myRedisPassword', // Si tu servidor Redis necesita autenticación
-          retryAttempts: 5,            // Número de intentos de reconexión
-          retryDelay: 3000,            // Tiempo de espera entre intentos (en milisegundos)
-        },
-      },
-    ]),
+  imports: [ 
     ConfigModule.forRoot({
       envFilePath: environments[process.env.NODE_ENV] || '.env',
       load: [config],
@@ -72,9 +60,8 @@ import config from './config';
     UsersModule,
     MovementModule,
     StockAdjustmentModule,
-    WoocommerceModule,
     CategoryMappingModule,
-    WoocommerceModule,
+    ApiWoocommerceModule
   ],
   controllers: [CoreController],
   providers: [CoreService],

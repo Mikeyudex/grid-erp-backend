@@ -1,14 +1,16 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CoreService } from './core.service';
+import { ApiWoocommerceService } from './api-woocommerce.service';
 
 @Controller()
 export class CoreController {
-  constructor(private readonly coreService: CoreService) {}
+  constructor(
+    private readonly apiWoocommerceService: ApiWoocommerceService,
+  ) {}
 
   @Get('getCategoriesWoocommerce/:companyId')
   async getCategoriesWoocommerce(@Param('companyId') companyId: string) {
     try {
-    const response = await this.coreService.getCategoriesWoocommerce(companyId);
+    const response = await this.apiWoocommerceService.getCategoriesWoocommerce(companyId);
     return { success: true, result: response };
     } catch (error) {
       console.error('Error al obtener categorías con WooCommerce:', error);
@@ -16,14 +18,14 @@ export class CoreController {
     }
   }
 
-  @Post('createProduct')
+  @Post('createProductWoocommerce/:companyId')
   async createProduct(@Param('companyId') companyId: string, @Body() productData: any) {
-    return this.coreService.createProductForCompany(companyId, productData);
+    return this.apiWoocommerceService.createProductForCompany(companyId, productData);
   }
 
-  @Get('getProductsWoocommerce')
+  @Get('getProductsWoocommerce/:companyId')
   async getProductsWoocommerce(@Param('companyId') companyId: string) {
-    return this.coreService.getProductsWoocommerce(companyId);
+    return this.apiWoocommerceService.getProductsWoocommerce(companyId);
   }
 
 }

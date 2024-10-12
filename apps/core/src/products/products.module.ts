@@ -15,6 +15,7 @@ import { TaxesModule } from '../taxes/taxes.module';
 import { WarehouseModule } from '../warehouse/warehouse.module';
 import { MovementModule } from '../movement/movement.module';
 import { TypeProductSchema } from './typeProduct/typeProduct.schema';
+import { WoocommerceModule } from '../woocommerce/woocommerce.module';
 
 @Module({
     imports: [
@@ -30,6 +31,7 @@ import { TypeProductSchema } from './typeProduct/typeProduct.schema';
         TaxesModule,
         WarehouseModule,
         MovementModule,
+        WoocommerceModule
       ],
       controllers:[ProductsController],
       providers:[ProductsService],
