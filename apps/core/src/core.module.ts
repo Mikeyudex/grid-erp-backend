@@ -22,6 +22,8 @@ import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.modul
 import config from './config';
 import { ApiWoocommerceModule } from './api-woocommerce/api-woocommerce.module';
 import { CategoryMappingModule } from './category-mapping/category-mapping.module';
+import { BullModule } from '@nestjs/bull';
+import { RedisConfig } from './common/config/redis.config';
 
 @Module({
   imports: [ 
@@ -46,6 +48,12 @@ import { CategoryMappingModule } from './category-mapping/category-mapping.modul
         uri: configService.database.uri, // Obtiene la URI de las variables de entorno
       }),
       inject: [config.KEY], // Inyecta config.KEY para usarlo en useFactory
+    }),
+    BullModule.forRootAsync({
+      useClass: RedisConfig,
+    }),
+    BullModule.registerQueue({
+      name: 'sync-products-woocommerce',
     }),
     CompanyModule,
     WarehouseModule,

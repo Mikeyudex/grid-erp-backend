@@ -1,5 +1,8 @@
 import { Injectable, Inject, Logger, forwardRef } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
+
 import { WoocommerceService } from '../woocommerce/woocommerce.service';
 import { CreateWooCommerceCategoryDto, ResponseWooCommerceCategoryDto } from '../woocommerce/dto/Category.dto';
 import { CreateProductDto } from '../products/dto/create-product.dto';
@@ -16,6 +19,7 @@ export class ApiWoocommerceService {
         private readonly woocommerceService: WoocommerceService,
         @Inject(forwardRef(() => CategoryMappingService))
         private readonly categoryMappingService: CategoryMappingService,
+        @InjectQueue('sync-products-woocommerce') private readonly syncQueue: Queue
     ) { }
 
     async createProductForCompany(companyId: string, productData: any) {
@@ -142,6 +146,16 @@ export class ApiWoocommerceService {
         } catch (error) {
             console.log(error);
             throw new Error('Error al crear producto en WooCommerce');
+        }
+    }
+
+    async syncProductsingleQueue(companyId: string, createProductDto: CreateProductDto) {
+        try {
+            // Añadir el trabajo de sincronización a la cola
+            await this.syncQueue.add('sync-product-woocommerce', { companyId, createProductDto });
+            return { message: 'Producto en cola de sincronización.' };
+        } catch (error) {
+            throw new Error('Error al encolar la sincronización.');
         }
     }
 

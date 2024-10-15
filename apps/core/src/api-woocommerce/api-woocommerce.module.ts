@@ -4,6 +4,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { WoocommerceModule } from '../woocommerce/woocommerce.module';
 import { CategoryMappingModule } from '../category-mapping/category-mapping.module';
 import { ApiWoocommerceController } from './api-woocommerce.controller';
+import { BullModule } from '@nestjs/bull';
+import { SyncQueueProcessor } from './queues/sync-queue.processor';
 
 @Module({
     imports: [
@@ -20,11 +22,14 @@ import { ApiWoocommerceController } from './api-woocommerce.controller';
                 },
             },
         ]),
+        BullModule.registerQueue({
+            name: 'sync-products-woocommerce',  // Registrar la cola de sincronización
+        }),
         WoocommerceModule,
         forwardRef(() => CategoryMappingModule),
     ],
     controllers: [ApiWoocommerceController],
-    providers: [ApiWoocommerceService],
+    providers: [ApiWoocommerceService, SyncQueueProcessor],
     exports: [ApiWoocommerceService],
 })
 export class ApiWoocommerceModule { }

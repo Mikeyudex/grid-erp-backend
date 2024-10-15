@@ -35,6 +35,16 @@ export class ApiWoocommerceController {
         this.apiWoocommerceService.syncProductSingle(companyId, createProductDto);
     }
 
+    @Post('/queue/syncProduct/:companyId')
+    async queueSyncProduct(
+        @Param('companyId') companyId: string,
+        @Body() createProductDto: CreateProductDto,
+        @Res() res: Response,
+    ) {
+        res.status(200).json({ success: true, message: 'Solicitud recibida, se notificará cuando se haya completado la sincronización' });
+        this.apiWoocommerceService.syncProductsingleQueue(companyId, createProductDto);
+    }
+
     @Get('/getProductsWoocommerce/:companyId')
     async getProductsWoocommerce(@Param('companyId') companyId: string) {
         return this.apiWoocommerceService.getProductsWoocommerce(companyId);
