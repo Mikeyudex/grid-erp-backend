@@ -62,7 +62,7 @@ export class ProductsService {
       }
 
       const typeProduct = await this.getNameTypeProductById(createProductDto.id_type_product);
-      if(!typeProduct) {
+      if (!typeProduct) {
         throw new Error('typeProduct not found');
       }
 
@@ -73,7 +73,7 @@ export class ProductsService {
 
       const product = await newProduct.save();
 
-      if(typeProduct !== 'Producto') {
+      if (typeProduct !== 'Producto') {
         return product;
       }
 
@@ -98,8 +98,9 @@ export class ProductsService {
 
   async handleCreateMovement(createProductDto: CreateProductDto, idMongoProduct: string): Promise<void> {
     try {
-      const { quantity, warehouseId } = createProductDto;
+      const { quantity, warehouseId, companyId } = createProductDto;
       let createMovementDto = {
+        companyId: companyId,
         warehouseId: warehouseId,
         productId: idMongoProduct,
         type: TypeMovementEnum.E,
@@ -336,12 +337,12 @@ export class ProductsService {
   }
 
   async getNameProductById(id: string): Promise<string> {
-    let product = await this.productModel.findById(id).projection({ name: 1 }).exec();
+    let product = await this.productModel.findById(id, { name: 1 }).exec();
     return product.name;
   }
 
   async getNameTypeProductById(id: string): Promise<string> {
-    let typeProduct = await this.typeProductModel.findById(id).projection({ name: 1 }).exec();
+    let typeProduct = await this.typeProductModel.findById(id, { name: 1 }).exec();
     return typeProduct.name;
   }
 

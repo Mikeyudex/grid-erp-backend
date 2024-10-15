@@ -289,7 +289,7 @@ export class ProductsController {
     let file = files[0];
     const bucketName = this.configService.oci.bucketName;
     const storageId = this.oracleCloudService.makeStorageId();
-    const objectName = `${this.defaultFolderProducts}${storageId}`;
+    const objectName = `${this.defaultFolderProducts}${storageId}.${file.mimetype.split('/')[1]}`;
     const filePath = file.path;
     try {
       const urlObject = await this.oracleCloudService.uploadFileToBucket(bucketName, objectName, filePath, file?.mimetype);

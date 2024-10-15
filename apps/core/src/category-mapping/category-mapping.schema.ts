@@ -11,7 +11,7 @@ export class CategoryMapping {
     @Prop({ required: true, type: String, ref: 'Company', refPath: 'uuid'}) //Id de la compañía
     companyId: string;
 
-    @Prop({ type: Types.ObjectId, ref: 'ProductCategory', required: true })
+    @Prop({ type: Types.ObjectId, ref: 'ProductCategory', required: true, refPath: 'uuid' })
     internalCategoryId: Types.ObjectId;
 
     @Prop({ type: String, required: true })

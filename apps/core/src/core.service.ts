@@ -4,6 +4,4 @@ import { Injectable, Logger } from '@nestjs/common';
 export class CoreService {
   private readonly logger = new Logger(CoreService.name);
   constructor() { }
-
-
 }

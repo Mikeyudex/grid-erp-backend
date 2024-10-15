@@ -1,15 +1,16 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CategoryMapping } from './category-mapping.schema';
 import { CreateCategoryMappingDto, UpdateCategoryMappingDto } from './dto/category-mapping.dto';
-import { ApiWoocommerceService } from '../api-woocommerce.service';
+import { ApiWoocommerceService } from '../api-woocommerce/api-woocommerce.service';
 import { CreateWooCommerceCategoryDto } from '../woocommerce/dto/Category.dto';
 
 @Injectable()
 export class CategoryMappingService {
     constructor(
         @InjectModel('CategoryMapping') private readonly categoryMappingModel: Model<CategoryMapping>,
+        @Inject(forwardRef(() => ApiWoocommerceService))
         private readonly apiWooCommerceService: ApiWoocommerceService,
     ) { }
 
@@ -59,33 +60,38 @@ export class CategoryMappingService {
     }
 
     async syncCategoryMappingsWithWooCommerce(companyId: string, internalCategoryId: string): Promise<string> {
-        const mapping = await this.categoryMappingModel.findOne({ companyId, internalCategoryId }).populate('internalCategoryId').exec();
+        try {
+            const mapping = await this.categoryMappingModel.findOne({ companyId, internalCategoryId }).populate('internalCategoryId').exec();
 
-        if (!mapping) {
-            // Llamada al servicio de WooCommerce para sincronizar categoría
-            let createCategoryDto: CreateWooCommerceCategoryDto = {
-                name: (mapping.internalCategoryId as any).name,
-                slug: (mapping.internalCategoryId as any).name,
-                parent: 0,
-                description: 'Categoría creada por el sistema de gestión de productos',
-                display: "default",
-                image: {
-                    src: 'https://via.placeholder.com/150',
-                    id: null,
-                    name: null
-                },
-            };
-            let newCategoryWoo = await this.apiWooCommerceService.createProductCategoryWoocommerce(companyId, createCategoryDto);
-            const newMapping = new this.categoryMappingModel({
-                companyId,
-                internalCategoryId,
-                woocommerceCategoryId: String(newCategoryWoo?.id)
-            });
-            await newMapping.save();
-            return String(newCategoryWoo?.id);
+            if (!mapping) {
+                // Llamada al servicio de WooCommerce para sincronizar categoría
+                let createCategoryDto: CreateWooCommerceCategoryDto = {
+                    name: (mapping.internalCategoryId as any).name,
+                    slug: (mapping.internalCategoryId as any).name,
+                    parent: 0,
+                    description: 'Categoría creada por el sistema de gestión de productos',
+                    display: "default",
+                    image: {
+                        src: 'https://via.placeholder.com/150',
+                        id: null,
+                        name: null
+                    },
+                };
+                let newCategoryWoo = await this.apiWooCommerceService.createProductCategoryWoocommerce(companyId, createCategoryDto);
+                const newMapping = new this.categoryMappingModel({
+                    companyId,
+                    internalCategoryId,
+                    woocommerceCategoryId: String(newCategoryWoo?.id)
+                });
+                await newMapping.save();
+                return String(newCategoryWoo?.id);
+            }
+
+            return mapping.woocommerceCategoryId;
+        } catch (error) {
+            throw new Error('Error al realizar mapping de categorías con WooCommerce');
         }
 
-        return mapping.woocommerceCategoryId;
     }
 
 }

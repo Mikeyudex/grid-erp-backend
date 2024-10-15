@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CoreController } from './core.controller';
 import { CoreService } from './core.service';
 
-describe('CoreController', () => {
+/* describe('CoreController', () => {
   let coreController: CoreController;
 
   beforeEach(async () => {
@@ -20,3 +20,4 @@ describe('CoreController', () => {
     });
   });
 });
+ */

@@ -14,7 +14,7 @@ export class CreateProductDto {
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
   @IsOptional()
   @IsString({ message: 'El id de la empresa debe ser una cadena de texto.' })
-  companyId: string;
+  companyId?: string;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
   @IsNotEmpty({ message: 'El id de la bodega es un campo requerido.' })

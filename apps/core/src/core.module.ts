@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as Joi from 'joi';
 import { ConfigType } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 
 import { CoreController } from './core.controller';
 import { CoreService } from './core.service';
@@ -20,10 +19,9 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MovementModule } from './movement/movement.module';
 import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.module';
-import { WoocommerceModule } from './woocommerce/woocommerce.module';
-import { CategoryMappingModule } from './category-mapping/category-mapping.module';
 import config from './config';
-import { ApiWoocommerceModule } from './api-woocommerce.module';
+import { ApiWoocommerceModule } from './api-woocommerce/api-woocommerce.module';
+import { CategoryMappingModule } from './category-mapping/category-mapping.module';
 
 @Module({
   imports: [ 
@@ -60,8 +58,7 @@ import { ApiWoocommerceModule } from './api-woocommerce.module';
     UsersModule,
     MovementModule,
     StockAdjustmentModule,
-    CategoryMappingModule,
-    ApiWoocommerceModule
+    ApiWoocommerceModule,
   ],
   controllers: [CoreController],
   providers: [CoreService],

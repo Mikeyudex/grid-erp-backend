@@ -1,7 +1,9 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ApiWoocommerceService } from './api-woocommerce.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { WoocommerceModule } from './woocommerce/woocommerce.module';
+import { WoocommerceModule } from '../woocommerce/woocommerce.module';
+import { CategoryMappingModule } from '../category-mapping/category-mapping.module';
+import { ApiWoocommerceController } from './api-woocommerce.controller';
 
 @Module({
     imports: [
@@ -19,7 +21,9 @@ import { WoocommerceModule } from './woocommerce/woocommerce.module';
             },
         ]),
         WoocommerceModule,
+        forwardRef(() => CategoryMappingModule),
     ],
+    controllers: [ApiWoocommerceController],
     providers: [ApiWoocommerceService],
     exports: [ApiWoocommerceService],
 })
