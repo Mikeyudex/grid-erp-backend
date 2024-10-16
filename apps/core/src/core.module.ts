@@ -21,9 +21,9 @@ import { MovementModule } from './movement/movement.module';
 import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.module';
 import config from './config';
 import { ApiWoocommerceModule } from './api-woocommerce/api-woocommerce.module';
-import { CategoryMappingModule } from './category-mapping/category-mapping.module';
 import { BullModule } from '@nestjs/bull';
 import { RedisConfig } from './common/config/redis.config';
+import { BullBoardService } from './common/config/bull-board.config';
 
 @Module({
   imports: [ 
@@ -69,6 +69,6 @@ import { RedisConfig } from './common/config/redis.config';
     ApiWoocommerceModule,
   ],
   controllers: [CoreController],
-  providers: [CoreService],
+  providers: [CoreService, BullBoardService],
 })
 export class CoreModule { }
