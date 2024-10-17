@@ -1,7 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { ApiWoocommerceService } from '../api-woocommerce.service';
-import { CreateProductWooDto } from '../../woocommerce/dto/CreateProduct.dto';
+import { CreateProductDto } from '../../products/dto/create-product.dto';
 
 @Processor('sync-products-woocommerce')
 export class SyncQueueProcessor {
@@ -9,12 +9,18 @@ export class SyncQueueProcessor {
 
     @Process('sync-product-woocommerce')
     async processHandleSyncProduct(job: Job) {
-        const { payload, companyId } = job.data;
+        const data = job.data;
         try {
-            const result = await this.apiWoocommerceService.syncProductSingle(companyId, payload);
+            const result = await this.apiWoocommerceService.syncProductSingle(data?.companyId, data?.createProductDto);
+            job.log('Producto sincronizado con WooCommerce');
+            job.progress(100);
+            job.isCompleted();
             return result;
         } catch (error) {
-            throw new Error('Error durante la sincronización: ' + error.message);
+            job.log('Error durante la sincronización: ' + JSON.stringify(error));
+            job.isFailed();
+            job.progress(0);
+            throw new Error('Error durante la sincronización: ' + JSON.stringify(error) + ' - JobID: ' + job.id);
         }
     }
 }

@@ -23,31 +23,33 @@ export class ApiWoocommerceService {
     ) { }
 
     async createProductForCompany(companyId: string, productData: any) {
-        const woocommerceConfigs = await this.woocommerceService.findByCompanyId(companyId);
+        return new Promise(async (resolve, reject) => {
+            const woocommerceConfigs = await this.woocommerceService.findByCompanyId(companyId);
 
-        const wooCommerceUrl = woocommerceConfigs.wooCommerceUrl;
-        const consumerKey = woocommerceConfigs.wooCommerceConsumerKey;
-        const consumerSecret = woocommerceConfigs.wooCommerceConsumerSecret;
+            const wooCommerceUrl = woocommerceConfigs.wooCommerceUrl;
+            const consumerKey = woocommerceConfigs.wooCommerceConsumerKey;
+            const consumerSecret = woocommerceConfigs.wooCommerceConsumerSecret;
 
-        const payload = {
-            wooCommerceUrl: wooCommerceUrl,
-            consumerKey: consumerKey,
-            consumerSecret: consumerSecret,
-            payload: productData,
-        };
+            const payload = {
+                wooCommerceUrl: wooCommerceUrl,
+                consumerKey: consumerKey,
+                consumerSecret: consumerSecret,
+                payload: productData,
+            };
 
-        this.client.send({ cmd: 'create-product' }, payload)
-            .subscribe((response: HttpResponseWooDto) => {
-                if (response.success) {
-                    console.log('Producto creado');
-                    this.logger.log(response.dataWoo);
-                    //TODO notificar al usuario que el producto se ha creado correctamente en woocommerce
-                    return response;
-                } else {
-                    this.logger.log(JSON.stringify(response));
-                    return response;
-                }
-            });
+            this.client.send({ cmd: 'create-product' }, payload)
+                .subscribe((response: HttpResponseWooDto) => {
+                    if (response.success) {
+                        console.log('Producto creado');
+                        //this.logger.log(response.dataWoo);
+                        //TODO notificar al usuario que el producto se ha creado correctamente en woocommerce
+                        resolve(response);
+                    } else {
+                        this.logger.log(JSON.stringify(response));
+                        reject(response);
+                    }
+                });
+        });
     }
 
     async createProductCategoryWoocommerce(companyId: string, createCategoryDto: CreateWooCommerceCategoryDto): Promise<ResponseWooCommerceCategoryDto> {
@@ -141,18 +143,16 @@ export class ApiWoocommerceService {
         const wooCategoryId = await this.categoryMappingService.syncCategoryMappingsWithWooCommerce(companyId, createProductDto.id_category);
         const createProductWooDto = this.homologateProduct(createProductDto);
         createProductWooDto.categories = [{ id: Number(wooCategoryId) }];
-        try {
-            return this.createProductForCompany(companyId, createProductWooDto);
-        } catch (error) {
-            console.log(error);
-            throw new Error('Error al crear producto en WooCommerce');
-        }
+        return this.createProductForCompany(companyId, createProductWooDto);
     }
 
     async syncProductsingleQueue(companyId: string, createProductDto: CreateProductDto) {
         try {
             // Añadir el trabajo de sincronización a la cola
-            await this.syncQueue.add('sync-product-woocommerce', { companyId, createProductDto });
+            await this.syncQueue.add(
+                'sync-product-woocommerce',
+                { companyId, createProductDto },
+                { attempts: 3, backoff: { type: 'exponential', delay: 60000 }, });
             return { message: 'Producto en cola de sincronización.' };
         } catch (error) {
             throw new Error('Error al encolar la sincronización.');
