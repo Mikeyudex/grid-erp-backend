@@ -12,13 +12,22 @@ export class CategoryMapping {
     companyId: string;
 
     @Prop({ type: Types.ObjectId, ref: 'ProductCategory', required: true, refPath: 'uuid' })
-    internalCategoryId: Types.ObjectId;
+    internalCategoryId: string;
+
+    @Prop({ type: Types.ObjectId, ref: 'ProductSubCategory', required: false, refPath: 'uuid' })
+    internalSubCategoryId: string;
 
     @Prop({ type: String, required: true })
     woocommerceCategoryId: string;
 
     @Prop({ type: String, required: false })
+    woocommerceSubCategoryId: string; 
+
+    @Prop({ type: String, required: false })
     meliCategoryId: string;
+
+    @Prop({ type: String, required: false })
+    meliSubCategoryId: string;
 
     @Prop({ type: Types.ObjectId, ref: 'User' })
     createdBy: string;

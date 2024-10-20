@@ -16,11 +16,11 @@ export class CategoryMappingController {
         return this.categoryMappingService.create(createCategoryMappingsDto.mappings);
     }
 
-    @Get('getAll')
+    @Get('/getAll/:companyId')
     @ApiOperation({ summary: 'Obtener todos los registros' })
-    @ApiResponse({ status: 200, description: 'Lista de empresas obtenida exitosamente.' })
-    async findAll(): Promise<CategoryMapping[]> {
-        return this.categoryMappingService.findAll();
+    @ApiResponse({ status: 200, description: 'registros encontrados.' })
+    async findAll(@Param('companyId') companyId: string): Promise<CategoryMapping[]> {
+        return this.categoryMappingService.findAllByCompany(companyId);
     }
 
     @Get('get/:id')

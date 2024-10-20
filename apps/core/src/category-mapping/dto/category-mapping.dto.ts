@@ -11,13 +11,25 @@ export class CreateCategoryMappingDto {
     @IsNotEmpty({ message: 'El atributo internalCategoryId es un campo requerido.' })
     internalCategoryId: string;
 
+    @IsString({ message: 'El atributo internalSubCategoryId debe ser un string.' })
+    @IsOptional()
+    internalSubCategoryId?: string;
+
     @IsString({ message: 'El atributo woocommerceCategoryId debe ser un string.' })
     @IsNotEmpty({ message: 'El atributo woocommerceCategoryId es un campo requerido.' })
     woocommerceCategoryId: string;
 
+    @IsString({ message: 'El atributo woocommerceSubCategoryId debe ser un string.' })
+    @IsOptional()
+    woocommerceSubCategoryId?: string;
+
     @IsString({ message: 'El atributo meliCategoryId debe ser un string.' })
     @IsOptional()
-    meliCategoryId: string;
+    meliCategoryId?: string;
+
+    @IsString({ message: 'El atributo meliSubCategoryId debe ser un string.' })
+    @IsOptional()
+    meliSubCategoryId?: string;
 
     @IsString({ message: 'El atributo createdBy debe ser un string.' })
     @IsNotEmpty({ message: 'El atributo createdBy es un campo requerido.' })

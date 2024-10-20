@@ -140,9 +140,9 @@ export class ApiWoocommerceService {
     }
 
     async syncProductSingle(companyId: string, createProductDto: CreateProductDto) {
-        const wooCategoryId = await this.categoryMappingService.syncCategoryMappingsWithWooCommerce(companyId, createProductDto.id_category);
+        const wooCategoriesId = await this.categoryMappingService.syncCategoryMappingsWithWooCommerce(companyId, createProductDto.id_category, createProductDto.id_sub_category);
         const createProductWooDto = this.homologateProduct(createProductDto);
-        createProductWooDto.categories = [{ id: Number(wooCategoryId) }];
+        createProductWooDto.categories = wooCategoriesId;
         return this.createProductForCompany(companyId, createProductWooDto);
     }
 
