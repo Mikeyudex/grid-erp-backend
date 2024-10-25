@@ -115,7 +115,7 @@ export class ProductsService {
     }
   }
 
-  async findAllByCompany(companyId: string, page: number = 1, limit: number = 50): Promise<GetAllByCompanyProductsResponseDto[]> {
+  async findAllByCompany(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
 
     let response = [];
     const skip = (page - 1) * limit;
@@ -147,7 +147,12 @@ export class ProductsService {
       response.push(transformedProduct)
     }
 
-    return response as GetAllByCompanyProductsResponseDto[];
+    const totalRowCount = await this.productModel.countDocuments({ companyId })
+
+    return {
+      totalRowCount: totalRowCount,
+      data: response as GetAllByCompanyProductsResponseDto[]
+    }
   }
 
   async findAllByWarehouse(warehouseId: string, page: number = 1, limit: number = 50): Promise<GetAllByCompanyProductsResponseDto[]> {

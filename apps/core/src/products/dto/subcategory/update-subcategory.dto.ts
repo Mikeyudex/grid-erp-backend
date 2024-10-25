@@ -8,6 +8,9 @@ export class UpdateProductSubCategoryDto {
     @ApiPropertyOptional({ example: 'subcategoría de prueba', description: 'Descripción de la subcategoría' })
     readonly description: string;
 
+    @ApiPropertyOptional({ example: '100', description: 'Código corto de la subcategoría' })
+    readonly shortCode: string;
+
     @ApiPropertyOptional({ example: true, description: 'estado de la subcategoría' })
     readonly active: boolean;
 

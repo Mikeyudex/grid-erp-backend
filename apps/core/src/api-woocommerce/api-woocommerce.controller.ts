@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { Types } from 'mongoose';
+
 import { ApiWoocommerceService } from './api-woocommerce.service';
 import { CreateProductDto } from '../products/dto/create-product.dto';
 
@@ -20,29 +22,34 @@ export class ApiWoocommerceController {
         }
     }
 
-    @Post('/createProductWoocommerce/:companyId')
-    async createProduct(@Param('companyId') companyId: string, @Body() productData: any) {
-        return this.apiWoocommerceService.createProductForCompany(companyId, productData);
+    @Post('/createProductWoocommerce/:companyId/:productId')
+    async createProduct(
+        @Param('companyId') companyId: string,
+        @Param('productId') productId: Types.ObjectId,
+        @Body() productData: any) {
+        return this.apiWoocommerceService.createProductForCompany(companyId, productData, productId);
     }
 
-    @Post('/syncProduct/:companyId')
+    @Post('/syncProduct/:companyId/:productId')
     async syncProduct(
         @Param('companyId') companyId: string,
+        @Param('productId') productId: Types.ObjectId,
         @Body() createProductDto: CreateProductDto,
         @Res() res: Response,
     ) {
         res.status(200).json({ success: true, message: 'Solicitud recibida, se notificará cuando se haya completado la sincronización' });
-        this.apiWoocommerceService.syncProductSingle(companyId, createProductDto);
+        this.apiWoocommerceService.syncProductSingle(companyId, createProductDto, productId);
     }
 
-    @Post('/queue/syncProduct/:companyId')
+    @Post('/queue/syncProduct/:companyId/:productId')
     async queueSyncProduct(
         @Param('companyId') companyId: string,
+        @Param('productId') productId: Types.ObjectId,
         @Body() createProductDto: CreateProductDto,
         @Res() res: Response,
     ) {
         res.status(200).json({ success: true, message: 'Solicitud recibida, se notificará cuando se haya completado la sincronización' });
-        this.apiWoocommerceService.syncProductsingleQueue(companyId, createProductDto);
+        this.apiWoocommerceService.syncProductsingleQueue(companyId, createProductDto, productId);
     }
 
     @Get('/getProductsWoocommerce/:companyId')

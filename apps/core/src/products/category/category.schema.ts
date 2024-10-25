@@ -18,6 +18,9 @@ export class ProductCategory {
     @Prop({required: false })
     description: string;
 
+    @Prop({required: false })
+    shortCode: string;
+
     @Prop({ type: Boolean, default: true })
     active: boolean;
 

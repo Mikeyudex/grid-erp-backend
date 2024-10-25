@@ -16,6 +16,7 @@ import { WarehouseModule } from '../warehouse/warehouse.module';
 import { MovementModule } from '../movement/movement.module';
 import { TypeProductSchema } from './typeProduct/typeProduct.schema';
 import { WoocommerceModule } from '../woocommerce/woocommerce.module';
+import { ImportsProductsModule } from './imports.module';
 
 @Module({
     imports: [
@@ -31,10 +32,12 @@ import { WoocommerceModule } from '../woocommerce/woocommerce.module';
         TaxesModule,
         WarehouseModule,
         MovementModule,
-        WoocommerceModule
+        WoocommerceModule,
+        ImportsProductsModule,
       ],
       controllers:[ProductsController],
       providers:[ProductsService],
+      exports:[MongooseModule, ProductsService]
 })
 
 export class ProductsModule implements NestModule {

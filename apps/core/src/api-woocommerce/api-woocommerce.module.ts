@@ -6,6 +6,8 @@ import { CategoryMappingModule } from '../category-mapping/category-mapping.modu
 import { ApiWoocommerceController } from './api-woocommerce.controller';
 import { BullModule } from '@nestjs/bull';
 import { SyncQueueProcessor } from './queues/sync-queue.processor';
+import { ProductsModule } from '../products/products.module';
+import { QueuesEnum } from '../common/config/queues.enum';
 
 @Module({
     imports: [
@@ -23,10 +25,11 @@ import { SyncQueueProcessor } from './queues/sync-queue.processor';
             },
         ]),
         BullModule.registerQueue({
-            name: 'sync-products-woocommerce',  // Registrar la cola de sincronización
+            name: QueuesEnum.SyncWoo,  // Registrar la cola de sincronización
         }),
         WoocommerceModule,
         forwardRef(() => CategoryMappingModule),
+        ProductsModule,
     ],
     controllers: [ApiWoocommerceController],
     providers: [ApiWoocommerceService, SyncQueueProcessor],

@@ -2,6 +2,7 @@ import { Injectable, Inject, Logger, forwardRef } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
+import { Model, Types } from 'mongoose';
 
 import { WoocommerceService } from '../woocommerce/woocommerce.service';
 import { CreateWooCommerceCategoryDto, ResponseWooCommerceCategoryDto } from '../woocommerce/dto/Category.dto';
@@ -9,6 +10,9 @@ import { CreateProductDto } from '../products/dto/create-product.dto';
 import { CreateProductWooDto } from '../woocommerce/dto/CreateProduct.dto';
 import { CategoryMappingService } from '../category-mapping/category-mapping.service';
 import { HttpResponseWooDto } from './dto/HttpResponseWoo.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { ProductDocument } from '../products/product.schema';
+import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 
 @Injectable()
 export class ApiWoocommerceService {
@@ -19,10 +23,11 @@ export class ApiWoocommerceService {
         private readonly woocommerceService: WoocommerceService,
         @Inject(forwardRef(() => CategoryMappingService))
         private readonly categoryMappingService: CategoryMappingService,
-        @InjectQueue('sync-products-woocommerce') private readonly syncQueue: Queue
+        @InjectQueue('sync-products-woocommerce') private readonly syncQueue: Queue,
+        @InjectModel('Product') private readonly productModel: Model<ProductDocument>,
     ) { }
 
-    async createProductForCompany(companyId: string, productData: any) {
+    async createProductForCompany(companyId: string, productData: any, productId: Types.ObjectId) {
         return new Promise(async (resolve, reject) => {
             const woocommerceConfigs = await this.woocommerceService.findByCompanyId(companyId);
 
@@ -38,14 +43,30 @@ export class ApiWoocommerceService {
             };
 
             this.client.send({ cmd: 'create-product' }, payload)
-                .subscribe((response: HttpResponseWooDto) => {
-                    if (response.success) {
-                        console.log('Producto creado');
-                        //this.logger.log(response.dataWoo);
-                        //TODO notificar al usuario que el producto se ha creado correctamente en woocommerce
-                        resolve(response);
-                    } else {
-                        this.logger.log(JSON.stringify(response));
+                .subscribe(async (response: HttpResponseWooDto) => {
+                    try {
+                        if (response.success) {
+
+                            console.log('Producto creado');
+                            const product = await this.productModel.findById(productId).exec();
+
+                            if (!product) {
+                                throw new Error('Producto no encontrado');
+                            }
+                            // Actualizar solo la parte de WooCommerce en syncInfo
+                            product.syncInfo.woocommerce.synced = true;
+                            product.syncInfo.woocommerce.productId = String(response.dataWoo.id);
+                            product.syncInfo.woocommerce.lastSyncedAt = getCurrentUTCDate();
+                            await product.save();
+                            
+                            //this.logger.log(response.dataWoo);
+                            //TODO notificar al usuario que el producto se ha creado correctamente en woocommerce
+                            resolve(response);
+                        } else {
+                            this.logger.log(JSON.stringify(response));
+                            reject(response);
+                        }
+                    } catch (error) {
                         reject(response);
                     }
                 });
@@ -139,19 +160,19 @@ export class ApiWoocommerceService {
             });
     }
 
-    async syncProductSingle(companyId: string, createProductDto: CreateProductDto) {
+    async syncProductSingle(companyId: string, createProductDto: CreateProductDto, productId: Types.ObjectId) {
         const wooCategoriesId = await this.categoryMappingService.syncCategoryMappingsWithWooCommerce(companyId, createProductDto.id_category, createProductDto.id_sub_category);
         const createProductWooDto = this.homologateProduct(createProductDto);
         createProductWooDto.categories = wooCategoriesId;
-        return this.createProductForCompany(companyId, createProductWooDto);
+        return this.createProductForCompany(companyId, createProductWooDto, productId);
     }
 
-    async syncProductsingleQueue(companyId: string, createProductDto: CreateProductDto) {
+    async syncProductsingleQueue(companyId: string, createProductDto: CreateProductDto, productId: Types.ObjectId) {
         try {
             // Añadir el trabajo de sincronización a la cola
             await this.syncQueue.add(
                 'sync-product-woocommerce',
-                { companyId, createProductDto },
+                { companyId, createProductDto, productId },
                 { attempts: 3, backoff: { type: 'exponential', delay: 60000 }, });
             return { message: 'Producto en cola de sincronización.' };
         } catch (error) {

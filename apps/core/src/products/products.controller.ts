@@ -16,10 +16,11 @@ import {
   HttpStatus,
   Inject,
   UseGuards,
-  SetMetadata
+  SetMetadata,
+  UploadedFile
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ConfigType } from '@nestjs/config';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
@@ -41,6 +42,7 @@ import config from '../config';
 import { PublicController } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
+import { ImportsService } from './imports.service';
 
 @ApiTags('products')
 /* @UseGuards(JwtAuthGuard) */ //Valida si el Bearer token es válido.
@@ -53,6 +55,7 @@ export class ProductsController {
     private readonly productService: ProductsService,
     private readonly oracleCloudService: OracleCloudService,
     @Inject(config.KEY) private configService: ConfigType<typeof config>,
+    private readonly importsService: ImportsService,
   ) {
     this.mockupCompanyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
     this.defaultFolderProducts = `company-${this.mockupCompanyId}/products/images/`;
@@ -70,7 +73,7 @@ export class ProductsController {
   @Get('/getAllByCompany')
   @ApiOperation({ summary: 'Obtener todos los productos de una compañía' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
-  async findAll(@Query('page') page: number, @Query('limit') limit: number): Promise<GetAllByCompanyProductsResponseDto[]> {
+  async findAll(@Query('page') page: number, @Query('limit') limit: number): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
     return this.productService.findAllByCompany(this.mockupCompanyId, page, limit);
   }
 
@@ -312,4 +315,12 @@ export class ProductsController {
       throw new HttpException('File not found or deletion failed', HttpStatus.NOT_FOUND);
     }
   }
+
+  @Post('/import-xlsx/:companyId')
+  @UseInterceptors(FileInterceptor('file'))
+  async importProducts(@UploadedFile() file: Express.Multer.File, @Res() res: Response, @Param('companyId') companyId: string) {
+    res.status(200).json({ success: true, message: 'Solicitud recibida, se notificará cuando se haya completado la importación' });
+    this.importsService.importProductsFromXlsxQueue(file, companyId);
+  }
+
 }

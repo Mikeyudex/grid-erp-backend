@@ -16,6 +16,9 @@ export class CreateProductSubCategoryDto {
     @ApiProperty({ example: 'subcategoría de prueba', description: 'Descripción de la subcategoría' })
     readonly description: string;
 
+    @ApiProperty({ example: '100', description: 'Código corto de la subcategoría' })
+    readonly shortCode: string;
+
     @ApiProperty({ example: true, description: 'estado de la subcategoría' })
     readonly active: boolean;
 

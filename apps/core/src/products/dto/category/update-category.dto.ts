@@ -11,6 +11,9 @@ export class UpdateCategoryDto {
     @ApiPropertyOptional({ example: 'Categoría de prueba', description: 'Descripción de la categoría' })
     readonly description: string;
 
+    @ApiPropertyOptional({ example: '100', description: 'Código corto de la categoría' })
+    readonly shortCode: string;
+
     @ApiPropertyOptional({ example: true, description: 'estado de la categoría' })
     readonly active: boolean;
 

@@ -70,4 +70,23 @@ export class GetAllByCompanyProductsResponseDto {
     description: 'Configuraciones adicionales al producto'
   })
   additionalConfigs: Record<string, any>;
+
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: true,
+    example: { woocommerce: { synced: true, productId: "123", lastSyncedAt: "2023-10-15T11:45:29.673Z" } },
+    description: 'Datos de sincronización'
+  })
+  syncInfo: {
+    woocommerce?: {
+      synced: { type: Boolean, default: false },
+      productId: { type: String, default: null },
+      lastSyncedAt: { type: Date, default: null },
+    },
+    meli?: {
+      synced: { type: Boolean, default: false },
+      productId: { type: String, default: null },
+      lastSyncedAt: { type: Date, default: null },
+    },
+  };
 }
