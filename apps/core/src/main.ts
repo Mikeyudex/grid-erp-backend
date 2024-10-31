@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 import { CoreModule } from './core.module';
 import { MongooseValidationFilter } from './mongoose-validation.filter';
@@ -28,7 +29,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
+  app.useWebSocketAdapter(new WsAdapter(app));
   await app.listen(configsService.get('PORT'));
   if (module.hot) {
     module.hot.accept();

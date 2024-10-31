@@ -9,7 +9,7 @@ import { UpdateUnitOfMeasureDto } from './dto/update-unit-of-measure.dto';
 export class UnitOfMeasureService {
   constructor(
     @InjectModel(UnitOfMeasure.name) private readonly unitOfMeasureModel: Model<UnitOfMeasureDocument>,
-  ) {}
+  ) { }
 
   // Crear una nueva unidad de medida
   async create(createUnitOfMeasureDto: CreateUnitOfMeasureDto): Promise<UnitOfMeasure> {
@@ -29,6 +29,18 @@ export class UnitOfMeasureService {
       throw new NotFoundException(`Unit of Measure with ID ${id} not found`);
     }
     return unit;
+  }
+
+  async getIdFromShortCode(value: string): Promise<string> {
+    try {
+      let unitOfMeasureId = await this.unitOfMeasureModel.findOne({ shortCode: value }).lean();
+      if (!unitOfMeasureId) {
+        throw new NotFoundException(`Unit of Measure with ShortCode ${value} not found`);
+      }
+      return unitOfMeasureId._id.toString();
+    } catch (error) {
+      throw new NotFoundException(`Unit of Measure with ShortCode ${value} not found`);
+    }
   }
 
   // Actualizar una unidad de medida por ID

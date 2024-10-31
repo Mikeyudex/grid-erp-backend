@@ -24,14 +24,17 @@ import { ApiWoocommerceModule } from './api-woocommerce/api-woocommerce.module';
 import { BullModule } from '@nestjs/bull';
 import { RedisConfig } from './common/config/redis.config';
 import { BullBoardService } from './common/config/bull-board.config';
+import { QueuesEnum } from './common/config/queues.enum';
+import { ImportsProductsModule } from './products/imports.module';
+import { WebsocketGateway } from './websocket/websocket.gateway';
 
 @Module({
-  imports: [ 
+  imports: [
     ConfigModule.forRoot({
       envFilePath: environments[process.env.NODE_ENV] || '.env',
       load: [config],
       isGlobal: true,
-      validationSchema:Joi.object({
+      validationSchema: Joi.object({
         PORT: Joi.number().required(),
         MONGODB_URI: Joi.string().required(),
         OCI_BUCKET_NAME: Joi.string().required(),
@@ -53,7 +56,10 @@ import { BullBoardService } from './common/config/bull-board.config';
       useClass: RedisConfig,
     }),
     BullModule.registerQueue({
-      name: 'sync-products-woocommerce',
+      name: QueuesEnum.SyncWoo,
+    }),
+    BullModule.registerQueue({
+      name: QueuesEnum.Imports,
     }),
     CompanyModule,
     WarehouseModule,
@@ -67,8 +73,9 @@ import { BullBoardService } from './common/config/bull-board.config';
     MovementModule,
     StockAdjustmentModule,
     ApiWoocommerceModule,
+    ImportsProductsModule,
   ],
   controllers: [CoreController],
-  providers: [CoreService, BullBoardService],
+  providers: [CoreService, BullBoardService, WebsocketGateway],
 })
 export class CoreModule { }

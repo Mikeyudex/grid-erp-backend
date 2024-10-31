@@ -13,6 +13,10 @@ export default registerAs('config', () => {
             region: process.env.OCI_REGION,
         },
         apiKey: process.env.API_KEY,
-        jwtSecret: process.env.JWT_SECRET
+        jwtSecret: process.env.JWT_SECRET,
+        socketIo: {
+            port: process.env.SOCKET_IO_PORT,
+            cors: { origin: process.env.SOCKET_IO_CORS.split(',') }
+        }
     }
 });

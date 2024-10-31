@@ -24,7 +24,7 @@ export class TaxesService {
     }
 
     async findAllByCompany(): Promise<TaxDocument[]> {
-        return this.taxModel.find({companyId: this.companyId}).exec();
+        return this.taxModel.find({ companyId: this.companyId }).exec();
     }
 
     async findOne(id: string): Promise<TaxDocument> {
@@ -33,6 +33,18 @@ export class TaxesService {
             throw new NotFoundException(`Tax with ID ${id} not found`);
         }
         return tax;
+    }
+
+    async getIdFromShortCode(value: string): Promise<string> {
+        try {
+            let tax = await this.taxModel.findOne({ shortCode: value }).lean();
+            if (!tax) {
+                throw new NotFoundException(`Tax with ShortCode ${value} not found`);
+            }
+            return tax._id.toString();
+        } catch (error) {
+            throw new NotFoundException(`Tax with ShortCode ${value} not found`);
+        }
     }
 
     async update(id: string, updateTaxDto: UpdateTaxDto): Promise<TaxDocument> {

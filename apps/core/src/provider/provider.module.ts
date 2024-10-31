@@ -9,6 +9,7 @@ import { ProviderErpSchema } from './provider.schema';
     MongooseModule.forFeature([{ name: 'ProviderErp', schema: ProviderErpSchema }]),
   ],
   providers: [ProviderService],
-  controllers: [ProviderController]
+  controllers: [ProviderController],
+  exports:[ProviderService]
 })
 export class ProviderModule {}

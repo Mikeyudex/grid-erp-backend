@@ -19,6 +19,9 @@ export class Tax {
     @Prop()
     description?: string;
 
+    @Prop({ required: true })
+    shortCode: string;
+
     @Prop({ default: true })
     active?: boolean;
 

@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProductSchema } from './product.schema';
 import { AttributeConfigSchema } from './attribute-config.schema';
@@ -33,7 +33,7 @@ import { ImportsProductsModule } from './imports.module';
         WarehouseModule,
         MovementModule,
         WoocommerceModule,
-        ImportsProductsModule,
+        forwardRef(() => ImportsProductsModule),
       ],
       controllers:[ProductsController],
       providers:[ProductsService],

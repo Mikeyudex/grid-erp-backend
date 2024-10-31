@@ -235,8 +235,23 @@ export class ProductsService {
     return newProductCategory.save();
   }
 
-  async findProductCategorysByCompanyId(companyId: string): Promise<ProductCategory[]> {
-    return this.productCategoryModel.find({ companyId }).exec();
+  async findProductCategorysByCompanyId(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: ProductCategory[] }> {
+    const skip = (page - 1) * limit;
+    let categories = await this.productCategoryModel.find({ companyId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+    if (categories.length === 0) {
+      throw new NotFoundException(`Categories by companyId not found`);
+    }
+
+    const totalRowCount = await this.productCategoryModel.countDocuments({ companyId })
+
+    return {
+      totalRowCount: totalRowCount,
+      data: categories as ProductCategory[]
+    }
   }
 
   async findProductCategoriesFull(companyId: string): Promise<any> {

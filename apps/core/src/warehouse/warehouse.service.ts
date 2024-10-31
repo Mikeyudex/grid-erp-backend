@@ -53,6 +53,19 @@ export class WarehouseService {
         return warehouse;
     }
 
+    async getIdFromShortCode(value: string): Promise<string> {
+        try {
+            let warehouseId = await this.warehouseModel.findOne({ shortCode: value }).lean();
+            if (!warehouseId) {
+                throw new NotFoundException(`Warehouse with ShortCode ${value} not found`);
+            }
+            return warehouseId.uuid;
+        } catch (error) {
+            console.log(error);
+            throw new NotFoundException(`Warehouse with ShortCode ${value} not found`);
+        }
+    }
+
     async findbyId(id: string): Promise<Warehouse> {
         const warehouse = await this.warehouseModel.findById(id).lean();
         if (!warehouse) {

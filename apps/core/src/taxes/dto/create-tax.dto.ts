@@ -17,6 +17,10 @@ export class CreateTaxDto {
   @IsString({ message: 'El campo description debe ser una cadena de texto.' })
   description?: string;
 
+  @IsNotEmpty({ message: 'El shortCode es un campo requerido.' })
+  @IsString({ message: 'El shortCode debe ser una cadena de texto.' })
+  shortCode?: string;
+
   @IsOptional()
   @IsBoolean({ message: 'El campo description debe ser de tipo booleano.' })
   active: boolean;

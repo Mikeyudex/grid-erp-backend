@@ -145,21 +145,8 @@ export class ProductsController {
 
   // Endpoint para obtener las categorías
   @Get('/category/getByCompanyId/:companyId')
-  async findProductCategory(@Param('companyId') companyId: string, @Res() res: Response) {
-    try {
-      let data = await this.productService.findProductCategorysByCompanyId(companyId);
-      return res.status(200).json({
-        success: true,
-        data,
-        errorMessage: ""
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        data: [],
-        errorMessage: "Internal Error"
-      });
-    }
+  async findProductCategory(@Param('companyId') companyId: string, @Res() res: Response, @Query('page') page: number, @Query('limit') limit: number) {
+    return this.productService.findProductCategorysByCompanyId(companyId, page, limit);
   }
 
   // Endpoint para obtener las categorías
@@ -317,7 +304,27 @@ export class ProductsController {
   }
 
   @Post('/import-xlsx/:companyId')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: join(process.cwd(), 'tmp'),
+        filename: (req, file, cb) => {
+          // Generar un nombre único para el archivo
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+          cb(null, filename);
+        },
+      }),
+      fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(xlsx)$/)) {
+          cb(new Error('Solo se admiten archivos .xlsx'), false);
+        } else {
+          cb(null, true);
+        }
+      },
+    }),
+  )
   async importProducts(@UploadedFile() file: Express.Multer.File, @Res() res: Response, @Param('companyId') companyId: string) {
     res.status(200).json({ success: true, message: 'Solicitud recibida, se notificará cuando se haya completado la importación' });
     this.importsService.importProductsFromXlsxQueue(file, companyId);
