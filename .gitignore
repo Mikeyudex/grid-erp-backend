@@ -2,6 +2,11 @@
 /dist
 /node_modules
 /build
+/cache
+/apps/@shared/**/*.js
+/apps/@shared/**/*.js.map
+/apps/core/utils/*.js
+/apps/core/utils/*.js.map
 
 # Logs
 logs

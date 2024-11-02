@@ -33,7 +33,7 @@ import { ImportsProductsModule } from './imports.module';
         WarehouseModule,
         MovementModule,
         WoocommerceModule,
-        forwardRef(() => ImportsProductsModule),
+        /* forwardRef(() => ImportsProductsModule), */
       ],
       controllers:[ProductsController],
       providers:[ProductsService],
