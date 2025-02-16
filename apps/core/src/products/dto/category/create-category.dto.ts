@@ -14,7 +14,7 @@ export class CreateCategoryDto {
     readonly description: string;
 
     @ApiProperty({ example: '100', description: 'Código corto de la categoría' })
-    readonly shortCode: string;
+    shortCode: string;
 
     @ApiProperty({ example: true, description: 'estado de la categoría' })
     readonly active: boolean;

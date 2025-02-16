@@ -16,7 +16,6 @@ import { WarehouseModule } from '../warehouse/warehouse.module';
 import { MovementModule } from '../movement/movement.module';
 import { TypeProductSchema } from './typeProduct/typeProduct.schema';
 import { WoocommerceModule } from '../woocommerce/woocommerce.module';
-import { ImportsProductsModule } from './imports.module';
 
 @Module({
     imports: [
@@ -33,7 +32,6 @@ import { ImportsProductsModule } from './imports.module';
         WarehouseModule,
         MovementModule,
         WoocommerceModule,
-        /* forwardRef(() => ImportsProductsModule), */
       ],
       controllers:[ProductsController],
       providers:[ProductsService],

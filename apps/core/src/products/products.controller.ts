@@ -42,7 +42,6 @@ import config from '../config';
 import { PublicController } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
-import { ImportsService } from './imports.service';
 
 @ApiTags('products')
 /* @UseGuards(JwtAuthGuard) */ //Valida si el Bearer token es válido.
@@ -55,7 +54,6 @@ export class ProductsController {
     private readonly productService: ProductsService,
     private readonly oracleCloudService: OracleCloudService,
     @Inject(config.KEY) private configService: ConfigType<typeof config>,
-    private readonly importsService: ImportsService,
   ) {
     this.mockupCompanyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
     this.defaultFolderProducts = `company-${this.mockupCompanyId}/products/images/`;
@@ -146,14 +144,19 @@ export class ProductsController {
   // Endpoint para obtener las categorías
   @Get('/category/getByCompanyId/:companyId')
   async findProductCategory(@Param('companyId') companyId: string, @Res() res: Response, @Query('page') page: number, @Query('limit') limit: number) {
-    return this.productService.findProductCategorysByCompanyId(companyId, page, limit);
+    let response = await this.productService.findProductCategorysByCompanyId(companyId, page, limit);
+    return res.status(200).json({
+      success: true,
+      data: response.data,
+      errorMessage: ""
+    });
   }
 
   // Endpoint para obtener las categorías
   @Get('/category/getCategoriesFull')
-  async findProductCategoryFull(@Query('companyId') companyId: string, @Res() res: Response) {
+  async findProductCategoryFull(@Query('companyId') companyId: string, @Query('page') page: number, @Query('limit') limit: number, @Res() res: Response) {
     try {
-      let data = await this.productService.findProductCategoriesFull(companyId);
+      let data = await this.productService.findProductCategoriesFull(companyId, page, limit);
       return res.status(200).json({
         success: true,
         data,
@@ -302,32 +305,4 @@ export class ProductsController {
       throw new HttpException('File not found or deletion failed', HttpStatus.NOT_FOUND);
     }
   }
-
-  @Post('/import-xlsx/:companyId')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: join(process.cwd(), 'tmp'),
-        filename: (req, file, cb) => {
-          // Generar un nombre único para el archivo
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-          cb(null, filename);
-        },
-      }),
-      fileFilter(req, file, cb) {
-        if (!file.originalname.match(/\.(xlsx)$/)) {
-          cb(new Error('Solo se admiten archivos .xlsx'), false);
-        } else {
-          cb(null, true);
-        }
-      },
-    }),
-  )
-  async importProducts(@UploadedFile() file: Express.Multer.File, @Res() res: Response, @Param('companyId') companyId: string) {
-    res.status(200).json({ success: true, message: 'Solicitud recibida, se notificará cuando se haya completado la importación' });
-    this.importsService.importProductsFromXlsxQueue(file, companyId);
-  }
-
 }

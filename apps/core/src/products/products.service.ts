@@ -231,8 +231,19 @@ export class ProductsService {
 
   async createProductCategory(createCategoryDto: CreateCategoryDto): Promise<ProductCategory> {
     createCategoryDto.uuid = v4();
+    let lastShortCode = await this.getLastShortCodeCategory(createCategoryDto.companyId);
+    createCategoryDto.shortCode = lastShortCode;
     const newProductCategory = new this.productCategoryModel(createCategoryDto);
     return newProductCategory.save();
+  }
+
+  async getLastShortCodeCategory(companyId: string): Promise<string | null> {
+    const lastProductCategory = await this.productCategoryModel
+      .findOne({ companyId })
+      .sort({ shortCode: -1 })
+      .select('shortCode')
+      .exec();
+    return lastProductCategory ? String(Number(lastProductCategory.shortCode) + 100) : "1000000";
   }
 
   async findProductCategorysByCompanyId(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: ProductCategory[] }> {
@@ -245,17 +256,20 @@ export class ProductsService {
     if (categories.length === 0) {
       throw new NotFoundException(`Categories by companyId not found`);
     }
-
     const totalRowCount = await this.productCategoryModel.countDocuments({ companyId })
-
     return {
       totalRowCount: totalRowCount,
       data: categories as ProductCategory[]
     }
   }
 
-  async findProductCategoriesFull(companyId: string): Promise<any> {
-    let categories = await this.productCategoryModel.find({ companyId }).lean();
+  async findProductCategoriesFull(companyId: string, page: number = 1, limit: number = 10): Promise<any> {
+    const skip = (page - 1) * limit;
+    let categories = await this.productCategoryModel.find({ companyId })
+    .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
     let categoriesFull = [];
     for (let index = 0; index < categories.length; index++) {
       const category: ProductCategory = categories[index];
