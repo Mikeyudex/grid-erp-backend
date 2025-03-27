@@ -26,6 +26,7 @@ import { RedisConfig } from './common/config/redis.config';
 import { BullBoardService } from './common/config/bull-board.config';
 import { QueuesEnum } from './common/config/queues.enum';
 import { WebsocketGateway } from './websocket/websocket.gateway';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { WebsocketGateway } from './websocket/websocket.gateway';
     MovementModule,
     StockAdjustmentModule,
     ApiWoocommerceModule,
+    CustomersModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],
