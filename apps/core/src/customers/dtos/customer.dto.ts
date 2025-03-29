@@ -1,8 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsArray, IsEmail, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 
 export class CreateCustomerDto {
+    @IsMongoId() // Valida que sea un ObjectId válido en formato string
+    typeCustomerId: string;
+
     @IsString( { message: 'El nombre del cliente debe ser un string.' })
     @IsNotEmpty( { message: 'El nombre del cliente no puede estar vacío.' })
     @ApiProperty({ description: "nomber del cliente" })
@@ -57,7 +60,7 @@ export class CreateCustomerDto {
     billingCity: string;
 
     @IsString( { message: 'La propiedad billingPostalCode debe ser un string.' })
-    @IsNotEmpty( { message: 'La propiedad billingPostalCode no puede estar vacío.' })
+    @IsOptional()
     @ApiProperty({ description: "código postal del cliente de facturación" })
     billingPostalCode: string;
 

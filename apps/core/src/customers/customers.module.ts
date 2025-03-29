@@ -5,10 +5,12 @@ import { Customer, CustomerSchema } from './customers.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomerDAO } from './dao/customer.dao';
 import { CustomerValidationMiddleware } from './middlewares/customer.middleware';
+import { TypeCustomer, TypeCustomerSchema } from './typeCustomer.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Customer.name, schema: CustomerSchema }]),
+    MongooseModule.forFeature([{ name: TypeCustomer.name, schema: TypeCustomerSchema }]),
   ],
   providers: [CustomersService, CustomerDAO],
   controllers: [CustomersController],

@@ -42,7 +42,7 @@ export class Customer {
     @Prop({ required: true })
     documento: string;
 
-    @Prop({ required: truncate })
+    @Prop({ required: true })
     billingName: string;
 
     @Prop({ required: true })

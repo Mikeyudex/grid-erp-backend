@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Document } from 'mongoose';
 
-export type CustomerDocument = TypeCustomer & Document;
+export type TypeCustomerDocument = TypeCustomer & Document;
 
 @Schema()
 export class TypeCustomer {
