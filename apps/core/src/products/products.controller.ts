@@ -75,6 +75,13 @@ export class ProductsController {
     return this.productService.findAllByCompany(this.mockupCompanyId, page, limit);
   }
 
+  @Get('/getAllByCompanyLite')
+  @ApiOperation({ summary: 'Obtener todos los productos de una compañía solo devuelve el nombre y el id' })
+  @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
+  async findAllLite(@Query('page') page: number, @Query('limit') limit: number) {
+    return this.productService.findAllByCompanyLite(this.mockupCompanyId, page, limit);
+  }
+
   @Get('/getAllByWarehouse/:warehouseId')
   @ApiOperation({ summary: 'Obtener todos los productos de una bodega en especifico' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })

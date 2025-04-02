@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { Product, ProductDocument } from './product.schema';
@@ -155,6 +155,37 @@ export class ProductsService {
     }
   }
 
+  async findAllByCompanyLite(companyId: string, page: number = 1, limit: number = 10) {
+    try {
+      const skip = (page - 1) * limit;
+      let products = await this.productModel.find({ companyId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+      if (products.length === 0) {
+        throw new NotFoundException(`Products by company not found`);
+      }
+
+      let productsMap = products.map((product: ProductDocument) => {
+        return {
+          name: product.name,
+          id: product._id.toString()
+        }
+      });
+
+      return {
+        data: productsMap
+      }
+    } catch (error) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
+    }
+  }
+
   async findAllByWarehouse(warehouseId: string, page: number = 1, limit: number = 50): Promise<GetAllByCompanyProductsResponseDto[]> {
 
     let response = [];
@@ -266,7 +297,7 @@ export class ProductsService {
   async findProductCategoriesFull(companyId: string, page: number = 1, limit: number = 10): Promise<any> {
     const skip = (page - 1) * limit;
     let categories = await this.productCategoryModel.find({ companyId })
-    .sort({ createdAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
