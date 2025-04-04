@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Model } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './product.schema';
 import { AttributeConfig } from './attribute-config.schema';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -170,7 +170,8 @@ export class ProductsService {
       let productsMap = products.map((product: ProductDocument) => {
         return {
           name: product.name,
-          id: product._id.toString()
+          id: product._id.toString(),
+          salePrice: product.salePrice,
         }
       });
 
@@ -222,7 +223,7 @@ export class ProductsService {
     return response as GetAllByCompanyProductsResponseDto[];
   }
 
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string | Types.ObjectId): Promise<Product> {
     const product = await this.productModel.findById(id).exec();
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);

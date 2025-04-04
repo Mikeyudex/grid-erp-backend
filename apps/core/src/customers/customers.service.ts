@@ -49,6 +49,19 @@ export class CustomersService {
         }
     }
 
+    async getAllByFields(page: number, limit: number, fields: string[]) {
+        try {
+            let customers = await this.customerDao.findPaginatedByFields(page, limit, fields);
+            return ApiResponse.success('Clientes obtenidos con éxito', customers);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async getAllTypeCustomers() {
         try {
             let typesCustomer = await this.typeCustomerModel.find().lean().exec();

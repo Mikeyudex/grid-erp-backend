@@ -27,6 +27,8 @@ import { BullBoardService } from './common/config/bull-board.config';
 import { QueuesEnum } from './common/config/queues.enum';
 import { WebsocketGateway } from './websocket/websocket.gateway';
 import { CustomersModule } from './customers/customers.module';
+import { TypeOfPieceModule } from './type-of-piece/type-of-piece.module';
+import { PreciosTapeteMaterialModule } from './precios-tapete-material/precios-tapete-material.module';
 
 @Module({
   imports: [
@@ -74,6 +76,8 @@ import { CustomersModule } from './customers/customers.module';
     StockAdjustmentModule,
     ApiWoocommerceModule,
     CustomersModule,
+    TypeOfPieceModule,
+    PreciosTapeteMaterialModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],

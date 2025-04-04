@@ -1,25 +1,25 @@
 import { Model, FilterQuery, UpdateQuery, QueryOptions, SaveOptions } from 'mongoose';
- 
+
 export abstract class DAO<T> {
-  constructor(protected readonly model: Model<T>) {}
- 
+  constructor(protected readonly model: Model<T>) { }
+
   async create(doc: Partial<T>, options?: SaveOptions) {
     const createdDoc = new this.model(doc);
     return createdDoc.save(options);
   }
- 
+
   async find(filter: FilterQuery<T> = {}, options?: QueryOptions) {
     return this.model.find(filter, null, options).lean();
   }
- 
+
   async findOne(filter: FilterQuery<T>, options?: QueryOptions) {
     return this.model.findOne(filter, null, options).lean();
   }
- 
+
   async updateOne(filter: FilterQuery<T>, update: UpdateQuery<T>, options?: QueryOptions) {
     return this.model.findOneAndUpdate(filter, update, { new: true, ...options });
   }
- 
+
   async deleteOne(filter: FilterQuery<T>, options?: QueryOptions) {
     return this.model.findOneAndDelete(filter, options);
   }
@@ -29,6 +29,18 @@ export abstract class DAO<T> {
   }
 
   async findPaginated(page: number, limit: number, options?: QueryOptions) {
-    return this.model.find(options).populate('typeCustomerId').lean().skip(page * limit).limit(limit);
+    return this.model.find(options)
+      .populate('typeCustomerId')
+      .lean()
+      .skip(page * limit)
+      .limit(limit)
+  }
+
+  async findPaginatedByFields(page: number, limit: number, fields: string[], options?: QueryOptions) {
+    return this.model.find(options)
+      .lean()
+      .skip(page * limit)
+      .limit(limit)
+      .select(fields.join(' '));
   }
 }

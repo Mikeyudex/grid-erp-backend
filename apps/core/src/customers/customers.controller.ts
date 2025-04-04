@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dtos/customer.dto';
 import { CreateTypesCustomerDto } from './dtos/types-customer.dto';
@@ -14,10 +14,16 @@ export class CustomersController {
     }
 
     @Get('getAll')
-    async getAll(@Param('page') page: number, @Param('limit') limit: number) {
+    async getAll(@Query('page') page: number, @Query('limit') limit: number) {
         return this.customersService.getAll(page, limit);
     }
 
+    @Get('getAllByFields')
+    async getAllByFields(@Query('page') page: number, @Query('limit') limit: number, @Query('fields') fields: string) {
+        let fieldsArray = fields.split(',');
+        return this.customersService.getAllByFields(page, limit, fieldsArray);
+    }
+    
     @Get('getTypes')
     async typesCustomer() {
         return this.customersService.getAllTypeCustomers();
