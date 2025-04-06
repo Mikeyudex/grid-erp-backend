@@ -29,6 +29,7 @@ import { WebsocketGateway } from './websocket/websocket.gateway';
 import { CustomersModule } from './customers/customers.module';
 import { TypeOfPieceModule } from './type-of-piece/type-of-piece.module';
 import { PreciosTapeteMaterialModule } from './precios-tapete-material/precios-tapete-material.module';
+import { PurchaseOrderModule } from './purchase-order/purchase-order.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { PreciosTapeteMaterialModule } from './precios-tapete-material/precios-t
     CustomersModule,
     TypeOfPieceModule,
     PreciosTapeteMaterialModule,
+    PurchaseOrderModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],

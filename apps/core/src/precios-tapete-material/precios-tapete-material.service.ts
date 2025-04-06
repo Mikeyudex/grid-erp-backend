@@ -45,9 +45,6 @@ export class PreciosTapeteMaterialService {
 
             const precioSeleccionado = data.filter((item) => item.tipo_tapete === tipoTapete && item.tipo_material === material)[0];
 
-            console.log(precioBase);
-            console.log(precioSeleccionado);
-
             if (!precioBase || !precioSeleccionado) return 0;
 
             // Calcular factor de ajuste

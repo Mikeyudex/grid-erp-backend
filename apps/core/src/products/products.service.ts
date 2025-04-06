@@ -210,9 +210,9 @@ export class ProductsService {
 
       const transformedProduct = {
         ...product.toObject(),
-        categoryName: category.name,
-        subCategoryName: subCategory.name,
-        warehouseName: warehouse.name,
+        categoryName: category?.name,
+        subCategoryName: subCategory?.name,
+        warehouseName: warehouse?.name,
         stock: stockProduct?.quantity ?? 0,
         attributes: product.attributes || {},
         additionalConfigs: product.additionalConfigs || {}
