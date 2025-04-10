@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
+import * as dayjs from 'dayjs';
 import { Document, Types } from 'mongoose';
+
+import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
 
 export type PurchaseOrderDocument = PurchaseOrder & Document;
@@ -40,7 +42,7 @@ export class PurchaseOrderItem {
 @Schema()
 export class PurchaseOrder {
 
-    @Prop({ required: true, unique: true })
+    @Prop({ unique: true })
     orderNumber: number;
 
     @Prop({ type: Types.ObjectId, ref: 'Customer', required: true })
@@ -98,6 +100,10 @@ PurchaseOrderSchema.pre<PurchaseOrderDocument>('save', async function (next) {
             { new: true, upsert: true }
         );
         this.orderNumber = counter.seq;
+    }
+    // Asignar fecha de entrega si no existe
+    if (!this.deliveryDate) {
+        this.deliveryDate = dayjs().add(7, 'day').toDate(); // Sumar 7 días a hoy
     }
     next();
 });

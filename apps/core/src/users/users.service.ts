@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types as MongooseTypes } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './users.schema';
 import { CreateUserDto, UpdateUserDto } from './dtos/users.dto';
 import { LoginResponseDto } from '../auth/dtos/login.dto';
+import { Types } from 'joi';
 
 @Injectable()
 export class UsersService {
@@ -19,7 +20,7 @@ export class UsersService {
         return this.userModel.find().exec();
     }
 
-    async findOne(id: string) {
+    async findOne(id: MongooseTypes.ObjectId | string) {
         return this.userModel.findById(id);
     }
 

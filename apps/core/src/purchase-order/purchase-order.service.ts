@@ -11,6 +11,7 @@ import { PurchaseOrderDAO } from './purchase-order.dao';
 import { ProductsService } from '../products/products.service';
 import { PurchaseOrderActions } from './enums/purchase-order-actions.enum';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -21,6 +22,7 @@ export class PurchaseOrderService {
         private readonly purchaseOrderModel: Model<PurchaseOrderDocument>,
         private readonly purchaseOrderDAO: PurchaseOrderDAO,
         private readonly productsService: ProductsService,
+        private readonly usersService: UsersService,
     ) { }
 
     async create(createPurchaseOrderDto: CreatePurchaseOrderDto) {
@@ -71,6 +73,7 @@ export class PurchaseOrderService {
             let orderIdCasted = new Types.ObjectId(id);
             let order = await this.purchaseOrderModel.findById(orderIdCasted).populate('clientId').lean();
             let detailsNew = [];
+            let historyNew = [];
             for (let index = 0; index < order.details.length; index++) {
                 let product = await this.productsService.findOne(order.details[index].productId);
                 detailsNew.push({
@@ -78,7 +81,16 @@ export class PurchaseOrderService {
                     productName: product.name,
                 });
             }
+            for (let index = 0; index < order.history.length; index++) {
+                let userId = new Types.ObjectId(order.history[index].userId);
+                let user = await this.usersService.findOne(userId);
+                historyNew.push({
+                    ...order.history[index],
+                    userName: user.name + ' ' + user.lastname,
+                });
+            }
             order.details = detailsNew;
+            order.history = historyNew;
             return ApiResponse.success('Orden obtenida con éxito', order);
         } catch (error) {
             throw new InternalServerErrorException({

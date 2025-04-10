@@ -8,6 +8,7 @@ import { PurchaseOrderDAO } from './purchase-order.dao';
 import { ProductsModule } from '../products/products.module';
 import { Counter, CounterSchema } from './counter.schema';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
+import { UsersModule } from '../users/users.module';
 
 
 @Module({
@@ -16,6 +17,7 @@ import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-ord
     MongooseModule.forFeature([{ name: Counter.name, schema: CounterSchema }]),
     MongooseModule.forFeature([{ name: PurchaseOrderHistory.name, schema: PurchaseOrderHistorySchema }]),
     ProductsModule,
+    UsersModule,
   ],
   providers: [PurchaseOrderService, PurchaseOrderDAO],
   controllers: [PurchaseOrderController]
