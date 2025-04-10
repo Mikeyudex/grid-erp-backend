@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateTypesCustomerDto {
     @IsString({ message: 'El nombre del tipo de cliente debe ser un string.' })
@@ -21,4 +21,8 @@ export class CreateTypesCustomerDto {
     @IsOptional()
     @ApiProperty({ description: "estado del tipo de cliente" })
     readonly active: boolean;
+
+    @IsNumber()
+    @ApiProperty({ description: "porcentaje de descuento del tipo de cliente" })
+    readonly percentDiscount: number;
 }

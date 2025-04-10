@@ -4,12 +4,14 @@ import { PreciosTapeteMaterialController } from './precios-tapete-material.contr
 import { MongooseModule } from '@nestjs/mongoose';
 import { MatMaterialPrices, MatMaterialPricesSchema } from './precios-tapete-material.schema';
 import { ProductsModule } from '../products/products.module';
+import { CustomersModule } from '../customers/customers.module';
 
 @Module({
 
   imports: [
     MongooseModule.forFeature([{ name: MatMaterialPrices.name, schema: MatMaterialPricesSchema }]),
-    ProductsModule
+    ProductsModule,
+    CustomersModule,
   ],
   providers: [PreciosTapeteMaterialService],
   controllers: [PreciosTapeteMaterialController],

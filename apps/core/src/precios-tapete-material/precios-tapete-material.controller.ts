@@ -33,10 +33,16 @@ export class PreciosTapeteMaterialController {
         return this.preciosTapeteMaterialService.delete(id);
     }
 
-    @Get('/calcular-precio-final/:productId/:tipoTapete/:material/:cantidad')
-    async calcularPrecioFinal(@Param('productId') productId: string, @Param('tipoTapete') tipoTapete: string, @Param('material') material: string, @Param('cantidad') cantidad: number) {
+    @Get('/calcular-precio-final/:productId/:tipoTapete/:material/:cantidad/:typeCustomerId')
+    async calcularPrecioFinal(
+        @Param('productId') productId: string,
+        @Param('tipoTapete') tipoTapete: string,
+        @Param('material') material: string,
+        @Param('cantidad') cantidad: number,
+        @Param('typeCustomerId') typeCustomerId: string
+    ) {
         try {
-            return this.preciosTapeteMaterialService.calcularPrecioFinal(productId, tipoTapete, material, cantidad);
+            return this.preciosTapeteMaterialService.calcularPrecioFinal(productId, tipoTapete, material, cantidad, typeCustomerId);
         } catch (error) {
             console.log(error);
             throw new InternalServerErrorException({

@@ -5,6 +5,7 @@ import { MatMaterialPrices, MatMaterialPricesDocument } from './precios-tapete-m
 import { ProductsService } from '../products/products.service';
 import { ApiResponse } from '../common/api-response';
 import { CreatePrecioTapeteMaterialDto, UpdatePrecioTapeteMaterialDto } from './precios-tapete-material.dto';
+import { CustomersService } from '../customers/customers.service';
 
 
 @Injectable()
@@ -13,7 +14,8 @@ export class PreciosTapeteMaterialService {
 
     constructor(
         @InjectModel(MatMaterialPrices.name) private readonly matMaterialPricesModel: Model<MatMaterialPricesDocument>,
-        private readonly productsServicee: ProductsService
+        private readonly productsServicee: ProductsService,
+        private readonly customersServicee: CustomersService
     ) { }
 
     async findAll(): Promise<MatMaterialPrices[]> {
@@ -64,18 +66,20 @@ export class PreciosTapeteMaterialService {
         }
     }
 
-    async calcularPrecioFinal(productId: string, tipoTapete: string, material: string, cantidad: number) {
+    async calcularPrecioFinal(productId: string, tipoTapete: string, material: string, cantidad: number, typeCustomerId: string) {
         try {
-            if (!Types.ObjectId.isValid(productId)) {
+            if (!Types.ObjectId.isValid(productId) || !Types.ObjectId.isValid(typeCustomerId)) {
                 throw new InternalServerErrorException({
                     statusCode: HttpStatus.BAD_REQUEST,
-                    message: 'productId no es un ObjectId válido',
+                    message: 'productId o typeCustomerId no es un ObjectId válido',
                 });
             }
             let productIdCasted = new Types.ObjectId(productId);
             const producto = await this.productsServicee.findOne(productIdCasted);
 
             if (!producto) return 0;
+
+            let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
             //Se valida que el tipo de material seleccionado aplique para ajuste de precio
             let tipoMaterialNoAplican = ["PR-KANT ADH", "PR-BEIGE LISO", "PR-BEIGE ADH", "PR-ALFOMBRA"];
@@ -84,6 +88,10 @@ export class PreciosTapeteMaterialService {
                 try {
                     const precioBase = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
                     const precioFinal = precioBase * cantidad;
+                    if (typeCustomerData.percentDiscount > 0) {
+                        const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                        return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                    }
                     return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
                 } catch (error) {
                     this.logger.error('Error al calcular el precio final', error);
@@ -96,6 +104,10 @@ export class PreciosTapeteMaterialService {
 
             const precioAjustado = Math.round(producto.salePrice * factorAjuste / 1000) * 1000;
             const precioFinal = precioAjustado * cantidad;
+            if (typeCustomerData.percentDiscount > 0) {
+                const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+            }
             return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
         } catch (error) {
             this.logger.error('Error al calcular el precio final', error);

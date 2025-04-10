@@ -19,6 +19,9 @@ export class TypeCustomer {
     @Prop({ default: true })
     active?: boolean;
 
+    @Prop({ required: true })
+    percentDiscount: number;
+
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
 

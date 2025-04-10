@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Document, Types } from 'mongoose';
+import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
 
 export type PurchaseOrderDocument = PurchaseOrder & Document;
 
@@ -39,6 +40,9 @@ export class PurchaseOrderItem {
 @Schema()
 export class PurchaseOrder {
 
+    @Prop({ required: true, unique: true })
+    orderNumber: number;
+
     @Prop({ type: Types.ObjectId, ref: 'Customer', required: true })
     clientId: Types.ObjectId;
 
@@ -60,6 +64,15 @@ export class PurchaseOrder {
     @Prop({ type: [PurchaseOrderItem], required: true })
     details: PurchaseOrderItem[];
 
+    @Prop({ type: String, required: false, default: "" })
+    notes: string;
+
+    @Prop({ type: Date, required: false, default: null })
+    deliveryDate: Date;
+
+    @Prop({ type: [PurchaseOrderHistorySchema], default: [] })
+    history: PurchaseOrderHistory[];
+
     @Prop({ required: true, ref: 'User', type: Types.ObjectId }) //Id del usuario que crea la orden
     createdBy: Types.ObjectId;
 
@@ -75,3 +88,16 @@ export class PurchaseOrder {
 
 
 export const PurchaseOrderSchema = SchemaFactory.createForClass(PurchaseOrder);
+
+PurchaseOrderSchema.pre<PurchaseOrderDocument>('save', async function (next) {
+    if (this.isNew && !this.orderNumber) {
+        const counterModel = this.db.model('Counter');
+        const counter = await counterModel.findOneAndUpdate(
+            { entity: 'purchaseOrder' },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        this.orderNumber = counter.seq;
+    }
+    next();
+});

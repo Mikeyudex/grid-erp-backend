@@ -87,4 +87,22 @@ export class CustomersService {
             });
         }
     }
+
+    async getCustomerById(id: string) {
+        try {
+            let customer = await this.customerDao.findById(id);
+            return customer;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    async getTypeCustomerById(id: string) {
+        try {
+            let typeCustomer = await this.typeCustomerModel.findById(id);
+            return typeCustomer;
+        } catch (error) {
+            return null;
+        }
+    }
 }       
