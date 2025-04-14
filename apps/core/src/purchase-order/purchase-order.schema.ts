@@ -103,7 +103,7 @@ PurchaseOrderSchema.pre<PurchaseOrderDocument>('save', async function (next) {
     }
     // Asignar fecha de entrega si no existe
     if (!this.deliveryDate) {
-        this.deliveryDate = dayjs().add(7, 'day').toDate(); // Sumar 7 días a hoy
+        this.deliveryDate = dayjs().add(3, 'day').toDate(); // Sumar 3 días a hoy
     }
     next();
 });

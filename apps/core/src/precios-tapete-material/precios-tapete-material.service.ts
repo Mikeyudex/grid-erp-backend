@@ -119,4 +119,55 @@ export class PreciosTapeteMaterialService {
         }
 
     }
+
+    async calcularPrecioFinalDesdePrecioBase(basePrice: string, tipoTapete: string, material: string, cantidad: number, typeCustomerId: string) {
+
+        try {
+            if (!Types.ObjectId.isValid(typeCustomerId)) {
+                throw new InternalServerErrorException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'typeCustomerId no es un ObjectId válido',
+                });
+            }
+            let salePrice = parseInt(basePrice);
+            let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
+
+            //Se valida que el tipo de material seleccionado aplique para ajuste de precio
+            let tipoMaterialNoAplican = ["PR-KANT ADH", "PR-BEIGE LISO", "PR-BEIGE ADH", "PR-ALFOMBRA"];
+
+            if (tipoMaterialNoAplican.includes(material)) {
+                try {
+                    const precioBase = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
+                    const precioFinal = precioBase * cantidad;
+                    if (typeCustomerData.percentDiscount > 0) {
+                        const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                        return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                    }
+                    return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+                } catch (error) {
+                    this.logger.error('Error al calcular el precio final', error);
+                    return ApiResponse.success('Precio final calculado correctamente', { precioFinal: salePrice, errorMessage: error }, HttpStatus.OK);
+                }
+            }
+
+            const factorAjuste = await this.calcularFactorAjuste(material, tipoTapete);
+            if (!factorAjuste) return 0;
+
+            const precioAjustado = Math.round(salePrice * factorAjuste / 1000) * 1000;
+            const precioFinal = precioAjustado * cantidad;
+            if (typeCustomerData.percentDiscount > 0) {
+                const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+            }
+            return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+
+        } catch (error) {
+            this.logger.error('Error al calcular el precio final', error);
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
 }
