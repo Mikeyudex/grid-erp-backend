@@ -93,6 +93,11 @@ export class CreateProductDto {
   @IsOptional()
   readonly attributes: Record<string, any>;
 
+  @ApiProperty({ type: 'array', example: ['Conductor', 'Copiloto'], description: 'Tipos de pieza' })
+  @IsOptional()
+  @IsArray()
+  typeOfPieces: string[];
+
   @ApiProperty({
     type: 'object',
     additionalProperties: true,

@@ -1,9 +1,11 @@
-import { HttpStatus, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
     PurchaseOrder,
     PurchaseOrderDocument,
+    PurchaseOrderItem,
+    PurchaseOrderItemDocument,
 } from './purchase-order.schema';
 import { CreatePurchaseOrderDto } from './purchase-order.dto';
 import { ApiResponse } from '../common/api-response';
@@ -12,6 +14,7 @@ import { ProductsService } from '../products/products.service';
 import { PurchaseOrderActions } from './enums/purchase-order-actions.enum';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { UsersService } from '../users/users.service';
+import { ItemStatusEnum } from './enums/itemStatus.enum';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -20,6 +23,8 @@ export class PurchaseOrderService {
     constructor(
         @InjectModel(PurchaseOrder.name)
         private readonly purchaseOrderModel: Model<PurchaseOrderDocument>,
+        @InjectModel(PurchaseOrderItem.name)
+        private readonly purchaseOrderItemModel: Model<PurchaseOrderItemDocument>,
         private readonly purchaseOrderDAO: PurchaseOrderDAO,
         private readonly productsService: ProductsService,
         private readonly usersService: UsersService,
@@ -49,9 +54,9 @@ export class PurchaseOrderService {
         }
     }
 
-    async findAll(page: number, limit: number, fields: string[]) {
+    async findAll(page: number, limit: number) {
         try {
-            let orders = await this.purchaseOrderDAO.findPaginatedByFields(page, limit, fields);
+            let orders = await this.purchaseOrderDAO.findPaginated(page, limit);
             return ApiResponse.success('Ordenes obtenidas con éxito', orders);
         } catch (error) {
             throw new InternalServerErrorException({
@@ -62,6 +67,51 @@ export class PurchaseOrderService {
         }
     }
 
+    /**
+   * Obtiene todas las ordenes de pedido desde la vista de producción.
+   * @param page Número de página a mostrar
+   * @param limit Cantidad de elementos por página
+   */
+    async findAllByViewProduction(page: number, limit: number) {
+        try {
+            let orders = await this.purchaseOrderDAO.findFromViewProduction(page, limit, {});
+            if (!orders || orders.length === 0) {
+                throw new NotFoundException(`No se encontraron ordenes de pedido desde la vista de producción`);
+            }
+            let ordersNew = [];
+            for (let index = 0; index < orders.length; index++) {
+                let order: any = orders[index];
+                const { clientId, details, ...restOrder } = order;
+                let product = await this.productsService.findOne(details[index].productId);
+                ordersNew.push({
+                    ...restOrder,
+                    cliente: {
+                        nombre: `${order.clientId?.name} ${order.clientId?.lastname}`,
+                        email: order.clientId?.email,
+                        empresa: order.clientId?.commercialName,
+                    },
+                    details: details.map((detail: any) => {
+                        return {
+                            ...detail,
+                            productName: product.name,
+                        };
+                    }),
+                });
+            }
+            return ApiResponse.success('Ordenes obtenidas con éxito', ordersNew);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    /**
+   * Obtiene una orden de pedido por su ID.
+   * @param id ID de la orden de pedido
+   */
     async getById(id: string) {
         try {
             if (!Types.ObjectId.isValid(id)) {
@@ -127,6 +177,12 @@ export class PurchaseOrderService {
         );
     }
 
+    /**
+   * Actualiza el estado de una orden de pedido.
+   * @param orderId ID de la orden de pedido
+   * @param status Estado de la orden (ej: "pendiente", "procesado", "cancelado")
+   * @param userId ID del usuario que realiza la acción
+   */
     async updateOrderStatus(orderId: string, status: string, userId: string) {
         if (!Types.ObjectId.isValid(orderId)) {
             throw new InternalServerErrorException({
@@ -151,6 +207,89 @@ export class PurchaseOrderService {
             await this.addHistoryEntry(orderId, `Estado actualizado a ${status}`, userId);
         }
 
+        return updatedOrder;
+    }
+
+    /**
+   * Asigna un item de una orden de pedido a un operador de producción.
+   * @param orderId ID de la orden de pedido
+   * @param itemId ID del item
+   * @param operatorId ID del operador de producción
+   */
+    async assignItemToProductionOperator(orderId: string, itemId: string, operatorId: string) {
+        try {
+            await this.purchaseOrderModel.findByIdAndUpdate(
+                orderId,
+                {
+                    $set: {
+                        'details.$[item].assignedId': operatorId,
+                        'details.$[item].itemStatus': ItemStatusEnum.FABRICATION,
+                        'details.$[item].updatedAt': getCurrentUTCDate(),
+                        'details.$[item].assignedAt': getCurrentUTCDate(),
+                    },
+                    status: ItemStatusEnum.FABRICATION,
+                },
+                { new: true, arrayFilters: [{ 'item._id': itemId }] },
+            );
+
+            this.usersService.findOne(operatorId)
+                .then(operator => {
+                    this.addHistoryEntry(orderId, `Item asignado a ${operator.name}`, operatorId);
+                })
+            return ApiResponse.success('Item asignado con éxito a operador de producción', null, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    /**
+   * Actualiza el estado de un item de una orden de pedido.
+   * @param orderId ID de la orden de pedido
+   * @param itemId ID del item
+   * @param userId ID del usuario que realiza la acción
+   * @param status Estado del item (ej: "pendiente", "fabricacion", "inventario", "finalizado")
+   */
+    async updateItemStatus(orderId: string, itemId: string, userId: string, status: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new InternalServerErrorException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'orderId no es un ObjectId válido',
+            });
+        }
+
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new InternalServerErrorException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'userId no es un ObjectId válido',
+            });
+        }
+
+        if (!ItemStatusEnum[status]) {
+            throw new InternalServerErrorException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'status no es un ItemStatusEnum válido',
+            });
+        }
+
+        const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
+            orderId,
+            {
+                $set: {
+                    'details.$[item].updatedBy': userId,
+                    'details.$[item].itemStatus': ItemStatusEnum.FABRICATION,
+                    'details.$[item].updatedAt': getCurrentUTCDate()
+                },
+            },
+            { new: true, arrayFilters: [{ 'item._id': itemId }] }
+        );
+
+        if (updatedOrder) {
+            await this.addHistoryEntry(orderId, `Estado actualizado a ${status}`, userId);
+        }
         return updatedOrder;
     }
 }

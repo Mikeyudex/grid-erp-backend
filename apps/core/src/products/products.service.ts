@@ -66,16 +66,19 @@ export class ProductsService {
         throw new Error('typeProduct not found');
       }
 
+      const typeOfPiecesObjectId = createProductDto.typeOfPieces.map(t => new Types.ObjectId(t));
+
       createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
       createProductDto.taxId = tax._id.toString();
 
       const newProduct = new this.productModel(createProductDto);
+      newProduct.typeOfPieces = typeOfPiecesObjectId;
 
       const product = await newProduct.save();
 
-      if (typeProduct !== 'Producto') {
+      /* if (typeProduct !== 'Producto') {
         return product;
-      }
+      } */
 
       //Creando el stock para el produto recién creado
       const createStockDto: CreateStockDto = {
@@ -83,7 +86,7 @@ export class ProductsService {
         quantity: createProductDto.quantity,
         warehouseId: createProductDto.warehouseId,
       }
-
+      
       await this.stockService.create(createStockDto);
       await this.handleCreateMovement(createProductDto, product._id.toString())
       return product;
@@ -159,6 +162,7 @@ export class ProductsService {
     try {
       const skip = (page - 1) * limit;
       let products = await this.productModel.find({ companyId })
+        .populate('typeOfPieces')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -172,6 +176,12 @@ export class ProductsService {
           name: product.name,
           id: product._id.toString(),
           salePrice: product.salePrice,
+          typeOfPieces: product.typeOfPieces.map((type: any) => {
+            return {
+              _id: type._id.toString(),
+              name: type?.name,
+            }
+          }),
         }
       });
 

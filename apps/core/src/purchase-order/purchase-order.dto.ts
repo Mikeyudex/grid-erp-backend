@@ -68,7 +68,6 @@ export class CreatePurchaseOrderDto {
   discount?: number;
 
   @IsOptional()
-  @IsEnum(['pendiente', 'procesado', 'cancelado'])
   status?: string;
 
   @IsArray()

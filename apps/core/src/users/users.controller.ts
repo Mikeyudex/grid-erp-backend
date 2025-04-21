@@ -6,6 +6,7 @@ import {
     Body,
     Put,
     Delete,
+    Query,
   } from '@nestjs/common';
   import { ApiOperation, ApiTags } from '@nestjs/swagger';
   
@@ -21,8 +22,8 @@ import {
     @ApiOperation({
       summary: 'List of users',
     })
-    findAll() {
-      return this.usersService.findAll();
+    findAll(@Query('filter') filter: string, @Query('value') value: string) {
+      return this.usersService.findAll(filter, value);
     }
   
     @Get(':id')

@@ -66,6 +66,15 @@ export class Product {
     @Prop({ type: Map, of: mongoose.Schema.Types.Mixed })
     additionalConfigs: Record<string, any>;
 
+    @Prop({
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'TypeOfPiece'
+        }],
+        default: []
+    })
+    typeOfPieces: Types.ObjectId[];
+
     // Objeto de sincronización multi-marketplace
     @Prop({
         type: {

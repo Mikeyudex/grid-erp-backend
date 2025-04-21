@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { PurchaseOrderService } from './purchase-order.service';
 import { PurchaseOrderController } from './purchase-order.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { PurchaseOrder, PurchaseOrderSchema } from './purchase-order.schema';
+import { PurchaseOrder, PurchaseOrderItem, PurchaseOrderSchema } from './purchase-order.schema';
 import { PurchaseOrderValidationMiddleware } from './purchase-order.middleware';
 import { PurchaseOrderDAO } from './purchase-order.dao';
 import { ProductsModule } from '../products/products.module';
@@ -16,6 +16,7 @@ import { UsersModule } from '../users/users.module';
     MongooseModule.forFeature([{ name: PurchaseOrder.name, schema: PurchaseOrderSchema }]),
     MongooseModule.forFeature([{ name: Counter.name, schema: CounterSchema }]),
     MongooseModule.forFeature([{ name: PurchaseOrderHistory.name, schema: PurchaseOrderHistorySchema }]),
+    MongooseModule.forFeature([{ name: PurchaseOrderItem.name, schema: PurchaseOrderSchema }]),
     ProductsModule,
     UsersModule,
   ],

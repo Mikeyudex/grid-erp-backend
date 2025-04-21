@@ -6,8 +6,9 @@ import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
 
 export type PurchaseOrderDocument = PurchaseOrder & Document;
+export type PurchaseOrderItemDocument = PurchaseOrderItem & Document;
 
-@Schema({ _id: false })
+@Schema()
 export class PurchaseOrderItem {
     @Prop({ required: true, type: String })//tipo de tapete
     matType: string;
@@ -36,6 +37,21 @@ export class PurchaseOrderItem {
 
     @Prop({ required: false, default: "", type: String }) //Observaciones del producto
     observations: string;
+
+    @Prop({ enum: ['pendiente', 'fabricacion', 'inventario', 'finalizado'], default: 'pendiente' })
+    itemStatus: string;
+
+    @Prop({ required: false, ref: 'User', type: Types.ObjectId })
+    assignedId: Types.ObjectId;
+
+    @Prop({ required: false })
+    assignedAt: Date;
+
+    @Prop({ required: false, ref: 'User', type: Types.ObjectId })
+    updatedBy: Types.ObjectId;
+
+    @Prop({ required: false })
+    updatedAt: Date;
 }
 
 
