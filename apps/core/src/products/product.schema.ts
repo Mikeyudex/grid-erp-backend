@@ -42,11 +42,11 @@ export class Product {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tax', required: true })
     taxId: Types.ObjectId;
 
-    @Prop({ required: true })
-    id_category: string;
+    @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'ProductCategory' })
+    id_category: Types.ObjectId;
 
-    @Prop({ required: true })
-    id_sub_category: string;
+    @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
+    id_sub_category: Types.ObjectId;
 
     @Prop({ required: true })
     salePrice: number;

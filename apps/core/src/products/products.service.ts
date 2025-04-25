@@ -123,6 +123,8 @@ export class ProductsService {
     let response = [];
     const skip = (page - 1) * limit;
     let products = await this.productModel.find({ companyId })
+      .populate('id_category')
+      .populate('id_sub_category')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -132,16 +134,14 @@ export class ProductsService {
     }
 
     for (let index = 0; index < products.length; index++) {
-      const product = products[index];
-      let category = await this.findProductCategoryByUuId(product.id_category);
-      let subCategory = await this.findProductSubCategoryByUuId(product.id_sub_category);
+      const product : any = products[index];
       let warehouse = await this.warehouseService.findOne(product.warehouseId);
       let stockProduct = await this.stockService.findOneByProductId(product.id);
 
       const transformedProduct = {
         ...product.toObject(),
-        categoryName: category.name,
-        subCategoryName: subCategory.name,
+        categoryName: product.id_category.name,
+        subCategoryName: product.id_sub_category.name,
         warehouseName: warehouse.name,
         stock: stockProduct?.quantity ?? 0,
         attributes: product.attributes || {},
@@ -203,6 +203,8 @@ export class ProductsService {
     const skip = (page - 1) * limit;
     let warehouse = await this.warehouseService.findbyId(warehouseId);
     let products = await this.productModel.find({ warehouseId: warehouse.uuid })
+      .populate('id_category')
+      .populate('id_sub_category')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -212,16 +214,14 @@ export class ProductsService {
     }
 
     for (let index = 0; index < products.length; index++) {
-      const product = products[index];
-      let category = await this.findProductCategoryByUuId(product.id_category);
-      let subCategory = await this.findProductSubCategoryByUuId(product.id_sub_category);
+      const product : any = products[index];
       let warehouse = await this.warehouseService.findOne(product.warehouseId);
       let stockProduct = await this.stockService.findOneByProductId(product.id);
 
       const transformedProduct = {
         ...product.toObject(),
-        categoryName: category?.name,
-        subCategoryName: subCategory?.name,
+        categoryName: product.id_category?.name,
+        subCategoryName: product.id_sub_category?.name,
         warehouseName: warehouse?.name,
         stock: stockProduct?.quantity ?? 0,
         attributes: product.attributes || {},
@@ -234,7 +234,11 @@ export class ProductsService {
   }
 
   async findOne(id: string | Types.ObjectId): Promise<Product> {
-    const product = await this.productModel.findById(id).exec();
+    const product = await this.productModel.findById(id)
+    .populate('id_category')
+    .populate('id_sub_category')
+    .exec();
+
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
@@ -314,8 +318,8 @@ export class ProductsService {
       .lean();
     let categoriesFull = [];
     for (let index = 0; index < categories.length; index++) {
-      const category: ProductCategory = categories[index];
-      let subCat = await this.findProductSubCategorysByCategoryId(category.uuid);
+      const category = categories[index];
+      let subCat = await this.findProductSubCategorysByCategoryId(category._id.toString());
       categoriesFull.push(Object.assign({ ...category, subcategories: subCat }));
     }
     return categoriesFull;
@@ -355,6 +359,7 @@ export class ProductsService {
 
   async createProductSubCategory(createProductSubCategoryDto: CreateProductSubCategoryDto): Promise<ProductSubCategory> {
     createProductSubCategoryDto.uuid = v4();
+    createProductSubCategoryDto.categoryId = new Types.ObjectId(createProductSubCategoryDto.categoryId);
     const newProductSubCategory = new this.productSubCategoryModel(createProductSubCategoryDto);
     return newProductSubCategory.save();
   }

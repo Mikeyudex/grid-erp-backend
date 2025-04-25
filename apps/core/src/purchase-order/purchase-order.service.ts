@@ -82,20 +82,17 @@ export class PurchaseOrderService {
             for (let index = 0; index < orders.length; index++) {
                 let order: any = orders[index];
                 const { clientId, details, ...restOrder } = order;
-                let product = await this.productsService.findOne(details[index].productId);
+                let detailsNew = await this.constructDetails(details);
                 ordersNew.push({
                     ...restOrder,
                     cliente: {
                         nombre: `${order.clientId?.name} ${order.clientId?.lastname}`,
                         email: order.clientId?.email,
                         empresa: order.clientId?.commercialName,
+                        ciudad: order.clientId?.billingCity,
+                        direccion: order.clientId?.billingAddress,
                     },
-                    details: details.map((detail: any) => {
-                        return {
-                            ...detail,
-                            productName: product.name,
-                        };
-                    }),
+                    details: detailsNew,
                 });
             }
             return ApiResponse.success('Ordenes obtenidas con éxito', ordersNew);
@@ -106,6 +103,20 @@ export class PurchaseOrderService {
                 error: error.message || 'Unknown error',
             });
         }
+    }
+
+    async constructDetails(details: any[]) {
+        let detailsNew = [];
+        for (let index = 0; index < details.length; index++) {
+            let product: any = await this.productsService.findOne(details[index].productId);
+            detailsNew.push({
+                ...details[index],
+                productName: product?.name,
+                marca: product.id_category?.name,
+                linea: product.id_sub_category?.name,
+            });
+        }
+        return detailsNew;
     }
 
     /**
@@ -268,19 +279,23 @@ export class PurchaseOrderService {
             });
         }
 
-        if (!ItemStatusEnum[status]) {
+
+        function isValidItemStatus(status: string): status is ItemStatusEnum {
+            return Object.values(ItemStatusEnum).includes(status as ItemStatusEnum);
+        }
+
+        if (!isValidItemStatus(status)) {
             throw new InternalServerErrorException({
                 statusCode: HttpStatus.BAD_REQUEST,
                 message: 'status no es un ItemStatusEnum válido',
             });
         }
-
         const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
             orderId,
             {
                 $set: {
                     'details.$[item].updatedBy': userId,
-                    'details.$[item].itemStatus': ItemStatusEnum.FABRICATION,
+                    'details.$[item].itemStatus': status,
                     'details.$[item].updatedAt': getCurrentUTCDate()
                 },
             },
@@ -289,6 +304,16 @@ export class PurchaseOrderService {
 
         if (updatedOrder) {
             await this.addHistoryEntry(orderId, `Estado actualizado a ${status}`, userId);
+            // 🔍 Verificar si todos los items tienen el mismo estado
+            const allStatusesEqual = updatedOrder.details.every(item => item.itemStatus === status);
+
+            if (allStatusesEqual) {
+                // ✏️ Actualizar estado de la orden
+                updatedOrder.status = status;
+                await updatedOrder.save();
+
+                await this.addHistoryEntry(orderId, `Estado de orden actualizado a ${status}.`, userId);
+            }
         }
         return updatedOrder;
     }

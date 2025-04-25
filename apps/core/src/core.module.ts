@@ -75,7 +75,7 @@ import { PurchaseOrderModule } from './purchase-order/purchase-order.module';
     UsersModule,
     MovementModule,
     StockAdjustmentModule,
-    ApiWoocommerceModule,
+    //ApiWoocommerceModule,
     CustomersModule,
     TypeOfPieceModule,
     PreciosTapeteMaterialModule,

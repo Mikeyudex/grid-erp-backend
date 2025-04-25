@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Types } from 'mongoose';
 
 export class CreateProductSubCategoryDto {
     @ApiPropertyOptional({ example: '232324gg44545', description: 'ID de la subcategoría' })
@@ -8,7 +9,7 @@ export class CreateProductSubCategoryDto {
     readonly companyId: string;
 
     @ApiProperty({ example: 'AHGG', description: 'id de la categoría' })
-    readonly categoryId: string;
+    categoryId: string | Types.ObjectId;
 
     @ApiProperty({ example: 'Herramientas', description: 'Nombre de la subcategoría' })
     readonly name: string;

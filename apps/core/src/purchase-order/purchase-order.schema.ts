@@ -4,6 +4,8 @@ import { Document, Types } from 'mongoose';
 
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
+import { ItemStatusEnum } from './enums/itemStatus.enum';
+import { PurchaseStatusEnum } from './enums/purchaseStatus.enum';
 
 export type PurchaseOrderDocument = PurchaseOrder & Document;
 export type PurchaseOrderItemDocument = PurchaseOrderItem & Document;
@@ -38,7 +40,7 @@ export class PurchaseOrderItem {
     @Prop({ required: false, default: "", type: String }) //Observaciones del producto
     observations: string;
 
-    @Prop({ enum: ['pendiente', 'fabricacion', 'inventario', 'finalizado'], default: 'pendiente' })
+    @Prop({ enum: ItemStatusEnum, default: 'pendiente' })
     itemStatus: string;
 
     @Prop({ required: false, ref: 'User', type: Types.ObjectId })
@@ -76,7 +78,7 @@ export class PurchaseOrder {
     @Prop({ required: false, default: 0 })
     discount: number;
 
-    @Prop({ enum: ['pendiente', 'procesado', 'cancelado'], default: 'pendiente' })
+    @Prop({ enum: PurchaseStatusEnum, default: PurchaseStatusEnum.PENDING })
     status: string;
 
     @Prop({ type: [PurchaseOrderItem], required: true })
