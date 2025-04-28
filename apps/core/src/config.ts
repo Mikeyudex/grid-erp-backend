@@ -14,9 +14,13 @@ export default registerAs('config', () => {
         },
         apiKey: process.env.API_KEY,
         jwtSecret: process.env.JWT_SECRET,
+        encryptionKey: process.env.ENCRYPTION_KEY,
+        iv: process.env.IV,
         socketIo: {
             port: process.env.SOCKET_IO_PORT,
             cors: { origin: process.env.SOCKET_IO_CORS.split(',') }
-        }
+        },
+        urlBackOffice: process.env.URL_BACKOFFICE,
+        pathResetPassword: process.env.PATH_RESET_PASSWORD
     }
 });
