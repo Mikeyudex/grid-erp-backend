@@ -47,12 +47,14 @@ export class CreateProductDto {
   readonly sku: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la unidad de medida del producto' })
-  @IsNotEmpty({ message: 'La unidad de medida es un campo requerido.' })
+  /*   @IsNotEmpty({ message: 'La unidad de medida es un campo requerido.' }) */
+  @IsOptional()
   @IsString({ message: 'El id de la unidad de medida debe ser una cadena de texto.' })
   unitOfMeasureId: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la lista de impuestos' })
-  @IsNotEmpty({ message: 'taxId es un campo requerido.' })
+  /* @IsNotEmpty({ message: 'taxId es un campo requerido.' }) */
+  @IsOptional()
   @IsString({ message: 'taxId debe ser una cadena.' })
   taxId: string;
 
@@ -62,9 +64,10 @@ export class CreateProductDto {
   readonly id_category: string;
 
   @ApiProperty({ example: '873827sdd', description: 'Id de la subcategoría del producto' })
-  @IsNotEmpty({ message: 'La subcategoría es un campo requerido.' })
+  /* @IsNotEmpty({ message: 'La subcategoría es un campo requerido.' }) */
+  @IsOptional()
   @IsString({ message: 'El id de la subategoría debe ser una cadena de texto.' })
-  readonly id_sub_category: string;
+  id_sub_category: string;
 
   @ApiProperty({ example: 10, description: 'Cantidad del producto' })
   @IsNotEmpty({ message: 'La cantidad es un campo requerido.' })

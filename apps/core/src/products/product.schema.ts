@@ -36,16 +36,16 @@ export class Product {
     @Prop()
     sku: string;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UnitOfMeasure', required: true })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UnitOfMeasure', required: false })
     unitOfMeasureId: Types.ObjectId;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tax', required: true })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tax', required: false })
     taxId: Types.ObjectId;
 
     @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'ProductCategory' })
     id_category: Types.ObjectId;
 
-    @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
+    @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
     id_sub_category: Types.ObjectId;
 
     @Prop({ required: true })

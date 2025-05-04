@@ -80,6 +80,10 @@ export class CreatePurchaseOrderDto {
   notes?: string;
 
   @IsOptional()
+  @IsMongoId()
+  zoneId?: string;
+
+  @IsOptional()
   @IsDate()
   deliveryDate?: Date;
 

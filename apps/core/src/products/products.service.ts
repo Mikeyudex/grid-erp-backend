@@ -49,16 +49,23 @@ export class ProductsService {
     session.startTransaction();
 
     try {
+      let unitOfMeasure = null;
+      let tax = null;
+
       //find by id unitOfMeasure
-      const unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
-      if (!unitOfMeasure) {
-        throw new Error('Unit of Measure not found');
+      if (createProductDto.unitOfMeasureId) {
+        unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
+        if (!unitOfMeasure) {
+          throw new Error('Unit of Measure not found');
+        }
       }
 
       //find by id tax
-      const tax = await this.taxesService.findOne(createProductDto.taxId);
-      if (!tax) {
-        throw new Error('tax not found');
+      if (createProductDto.taxId) {
+        tax = await this.taxesService.findOne(createProductDto.taxId);
+        if (!tax) {
+          throw new Error('tax not found');
+        }
       }
 
       const typeProduct = await this.getNameTypeProductById(createProductDto.id_type_product);
@@ -68,8 +75,12 @@ export class ProductsService {
 
       const typeOfPiecesObjectId = createProductDto.typeOfPieces.map(t => new Types.ObjectId(t));
 
-      createProductDto.unitOfMeasureId = unitOfMeasure._id.toString();
-      createProductDto.taxId = tax._id.toString();
+      createProductDto.unitOfMeasureId = unitOfMeasure ? unitOfMeasure._id.toString() : null;
+      createProductDto.taxId = tax ? tax._id.toString() : null;
+
+      if (!createProductDto.id_sub_category) {
+        createProductDto.id_sub_category = "680aaf320d033722d44d4bff";
+      }
 
       const newProduct = new this.productModel(createProductDto);
       newProduct.typeOfPieces = typeOfPiecesObjectId;
@@ -86,11 +97,12 @@ export class ProductsService {
         quantity: createProductDto.quantity,
         warehouseId: createProductDto.warehouseId,
       }
-      
+
       await this.stockService.create(createStockDto);
       await this.handleCreateMovement(createProductDto, product._id.toString())
       return product;
     } catch (error) {
+      console.log(error);
       // Rollback de la transacción en caso de error
       await session.abortTransaction();
       throw error; // Re-lanzar el error para manejarlo en el controlador o en otro lugar
@@ -134,7 +146,7 @@ export class ProductsService {
     }
 
     for (let index = 0; index < products.length; index++) {
-      const product : any = products[index];
+      const product: any = products[index];
       let warehouse = await this.warehouseService.findOne(product.warehouseId);
       let stockProduct = await this.stockService.findOneByProductId(product.id);
 
@@ -214,7 +226,7 @@ export class ProductsService {
     }
 
     for (let index = 0; index < products.length; index++) {
-      const product : any = products[index];
+      const product: any = products[index];
       let warehouse = await this.warehouseService.findOne(product.warehouseId);
       let stockProduct = await this.stockService.findOneByProductId(product.id);
 
@@ -235,9 +247,9 @@ export class ProductsService {
 
   async findOne(id: string | Types.ObjectId): Promise<Product> {
     const product = await this.productModel.findById(id)
-    .populate('id_category')
-    .populate('id_sub_category')
-    .exec();
+      .populate('id_category')
+      .populate('id_sub_category')
+      .exec();
 
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);

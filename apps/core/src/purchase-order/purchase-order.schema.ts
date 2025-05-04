@@ -78,7 +78,7 @@ export class PurchaseOrder {
     @Prop({ required: false, default: 0 })
     discount: number;
 
-    @Prop({ enum: PurchaseStatusEnum, default: PurchaseStatusEnum.PENDING })
+    @Prop({ enum: PurchaseStatusEnum, default: PurchaseStatusEnum.LIBRE })
     status: string;
 
     @Prop({ type: [PurchaseOrderItem], required: true })
@@ -86,6 +86,9 @@ export class PurchaseOrder {
 
     @Prop({ type: String, required: false, default: "" })
     notes: string;
+
+    @Prop({ required: false, ref: 'Zone', type: Types.ObjectId })
+    zoneId: Types.ObjectId;
 
     @Prop({ type: Date, required: false, default: null })
     deliveryDate: Date;

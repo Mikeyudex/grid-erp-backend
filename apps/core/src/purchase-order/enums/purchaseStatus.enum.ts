@@ -1,8 +1,8 @@
 
 
 export enum PurchaseStatusEnum {
-    PENDING = 'pendiente',
-    FABRICATION = 'fabricacion',
-    INVENTORY = 'inventario',
-    FINISHED = 'finalizado',
+    LIBRE = 'libre',
+    ASIGNADO = 'asignado',
+    FABRICACION = 'fabricacion',
+    DESPACHADO = 'despachado',
 }
