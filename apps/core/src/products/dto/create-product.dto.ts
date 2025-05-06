@@ -50,13 +50,13 @@ export class CreateProductDto {
   /*   @IsNotEmpty({ message: 'La unidad de medida es un campo requerido.' }) */
   @IsOptional()
   @IsString({ message: 'El id de la unidad de medida debe ser una cadena de texto.' })
-  unitOfMeasureId: string;
+  unitOfMeasureId?: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la lista de impuestos' })
   /* @IsNotEmpty({ message: 'taxId es un campo requerido.' }) */
   @IsOptional()
   @IsString({ message: 'taxId debe ser una cadena.' })
-  taxId: string;
+  taxId?: string;
 
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
   @IsNotEmpty({ message: 'La categoría es un campo requerido.' })
@@ -67,7 +67,7 @@ export class CreateProductDto {
   /* @IsNotEmpty({ message: 'La subcategoría es un campo requerido.' }) */
   @IsOptional()
   @IsString({ message: 'El id de la subategoría debe ser una cadena de texto.' })
-  id_sub_category: string;
+  id_sub_category?: string;
 
   @ApiProperty({ example: 10, description: 'Cantidad del producto' })
   @IsNotEmpty({ message: 'La cantidad es un campo requerido.' })
@@ -94,12 +94,12 @@ export class CreateProductDto {
     description: 'Atributos personalizados del producto'
   })
   @IsOptional()
-  readonly attributes: Record<string, any>;
+  readonly attributes?: Record<string, any>;
 
   @ApiProperty({ type: 'array', example: ['Conductor', 'Copiloto'], description: 'Tipos de pieza' })
   @IsOptional()
   @IsArray()
-  typeOfPieces: string[];
+  typeOfPieces?: string[];
 
   @ApiProperty({
     type: 'object',
@@ -108,5 +108,5 @@ export class CreateProductDto {
     description: 'Configuraciones adicionales al producto'
   })
   @IsOptional()
-  readonly additionalConfigs: Record<string, any>;
+  readonly additionalConfigs?: Record<string, any>;
 }

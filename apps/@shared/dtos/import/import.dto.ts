@@ -76,5 +76,80 @@ export class ExcelPayloadDto {
 
     @IsString()
     @IsOptional()
-    imagenes: {text:string, hyperlink:string};
+    imagenes: { text: string, hyperlink: string };
 }
+
+export class ExcelPayloadDtoTapete {
+    @IsString()
+    @IsNotEmpty()
+    tipo: string;
+
+    @IsString()
+    @IsNotEmpty()
+    marca: string;
+
+    @IsString()
+    @IsNotEmpty()
+    linea: string;
+
+    @IsString()
+    @IsNotEmpty()
+    piezas: string;
+
+    @IsString()
+    @IsOptional()
+    tipo_tapete: string;
+
+    @IsString()
+    @IsOptional()
+    material: string;
+
+    @IsString()
+    @IsOptional()
+    cantidad: string;
+
+    @IsString()
+    @IsOptional()
+    descripcion: string;
+
+    @IsString()
+    @IsOptional()
+    cod_externo: string;
+
+    @IsString()
+    @IsNotEmpty()
+    precio_mayorista: string;
+
+    @IsString()
+    @IsNotEmpty()
+    precio_base: string;
+
+    @IsString()
+    @IsOptional()
+    valor_total: string;
+
+    @IsString()
+    @IsOptional()
+    observaciones_cliente: string;
+
+    @IsString()
+    @IsOptional()
+    pieza_1: string;
+
+    @IsString()
+    @IsOptional()
+    pieza_2: string;
+
+    @IsString()
+    @IsOptional()
+    pieza_3: string;
+
+    @IsString()
+    @IsOptional()
+    pieza_4: string;
+
+    @IsString()
+    @IsOptional()
+    pieza_5: string;
+}
+
