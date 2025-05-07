@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
+import { getCurrentUTCDate } from '../../core/utils/getUtcDate';
 import { Document } from 'mongoose';
 
 export type TypeOfPieceDocument = TypeOfPiece & Document;

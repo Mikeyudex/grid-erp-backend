@@ -19,14 +19,14 @@ export class PurchaseOrderController {
 
 
     @Get('findAllFromViewProduction')
-    async findAllFromViewProduction(@Query('page') page: number, @Query('limit') limit: number) {
+    async findAllFromViewProduction(@Query('page') page: number, @Query('limit') limit: number, @Query('zoneId') zoneId: string) {
         if(!page || !limit) {
             throw new BadRequestException('Faltan parámetros');
         }
         if(page < 1 || limit < 1) {
             throw new BadRequestException('page y limit deben ser mayores a 1');
         }
-        return this.purchaseOrderService.findAllByViewProduction(page, limit);
+        return this.purchaseOrderService.findAllByViewProduction(page, limit, zoneId);
     }
 
     @Get('getById/:id')

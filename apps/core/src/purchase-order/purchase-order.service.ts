@@ -72,9 +72,12 @@ export class PurchaseOrderService {
    * @param page Número de página a mostrar
    * @param limit Cantidad de elementos por página
    */
-    async findAllByViewProduction(page: number, limit: number) {
+    async findAllByViewProduction(page: number, limit: number, zoneId: string) {
         try {
-            let orders = await this.purchaseOrderDAO.findFromViewProduction(page, limit, {});
+            let filter = {
+                zoneId: new Types.ObjectId(zoneId),
+            }
+            let orders = await this.purchaseOrderDAO.findFromViewProduction(page, limit, filter, {});
             if (!orders || orders.length === 0) {
                 throw new NotFoundException(`No se encontraron ordenes de pedido desde la vista de producción`);
             }
@@ -108,13 +111,17 @@ export class PurchaseOrderService {
     async constructDetails(details: any[]) {
         let detailsNew = [];
         for (let index = 0; index < details.length; index++) {
-            let product: any = await this.productsService.findOne(details[index].productId);
-            detailsNew.push({
-                ...details[index],
-                productName: product?.name,
-                marca: product.id_category?.name,
-                linea: product.id_sub_category?.name,
-            });
+            try {
+                let product: any = await this.productsService.findOne(details[index].productId);
+                detailsNew.push({
+                    ...details[index],
+                    productName: product?.name,
+                    marca: product.id_category?.name,
+                    linea: product.id_sub_category?.name,
+                });
+            } catch (error) {
+                console.log(error);
+            }
         }
         return detailsNew;
     }
