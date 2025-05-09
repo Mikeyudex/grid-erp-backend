@@ -133,6 +133,11 @@ export class UsersService {
         return ApiResponse.success('Success', zone);
     }
 
+    async getZoneByIdInternal(id: string) {
+        const zone = await this.zoneModel.findById(id).exec();
+        return zone;
+    }
+
     /**
      * Restablece la contraseña si el token es válido
      */

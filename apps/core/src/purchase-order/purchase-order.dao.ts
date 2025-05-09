@@ -29,6 +29,7 @@ export class PurchaseOrderDAO extends DAO<PurchaseOrderDocument> {
             .skip((page - 1) * limit)
             .limit(limit)
             .populate('clientId')
+            .populate('zoneId')
             .lean();
     }
 }

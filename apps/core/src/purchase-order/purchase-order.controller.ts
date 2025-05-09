@@ -56,6 +56,20 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.assignItemToProductionOperator(orderId, itemId, userId);
     }
 
+    @Put('assign-order-to-zone/:orderId/:zoneId/:userId')
+    async assignOrderToZone(@Param('orderId') orderId: string, @Param('zoneId') zoneId: string, @Param('userId') userId: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestException('orderId no es un ObjectId válido');
+        }
+        if (!Types.ObjectId.isValid(zoneId)) {
+            throw new BadRequestException('zoneId no es un ObjectId válido');
+        }
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException('userId no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.assignOrderToZone(orderId, zoneId, userId);
+    }
+
     @Put('update-item-status/:orderId/:itemId/:userId')
     async updateItemStatus(@Param('orderId') orderId: string, @Param('itemId') itemId: string, @Param('userId') userId: string, @Body() dto: { status: string }) {
         return this.purchaseOrderService.updateItemStatus(orderId, itemId, userId, dto.status);

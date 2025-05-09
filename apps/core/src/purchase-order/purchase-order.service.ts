@@ -15,6 +15,7 @@ import { PurchaseOrderActions } from './enums/purchase-order-actions.enum';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { UsersService } from '../users/users.service';
 import { ItemStatusEnum } from './enums/itemStatus.enum';
+import { PurchaseStatusEnum } from './enums/purchaseStatus.enum';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -75,8 +76,12 @@ export class PurchaseOrderService {
     async findAllByViewProduction(page: number, limit: number, zoneId: string) {
         try {
             let filter = {
-                zoneId: new Types.ObjectId(zoneId),
-            }
+                $or: [
+                    { zoneId: new Types.ObjectId(zoneId) },
+                    { zoneId: null },
+                    { zoneId: { $exists: false } }
+                ]
+            };
             let orders = await this.purchaseOrderDAO.findFromViewProduction(page, limit, filter, {});
             if (!orders || orders.length === 0) {
                 throw new NotFoundException(`No se encontraron ordenes de pedido desde la vista de producción`);
@@ -297,6 +302,7 @@ export class PurchaseOrderService {
                 message: 'status no es un ItemStatusEnum válido',
             });
         }
+
         const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
             orderId,
             {
@@ -315,13 +321,66 @@ export class PurchaseOrderService {
             const allStatusesEqual = updatedOrder.details.every(item => item.itemStatus === status);
 
             if (allStatusesEqual) {
+                let newStatusOrder = null;
+                if (status === ItemStatusEnum.FABRICATION) {
+                    newStatusOrder = PurchaseStatusEnum.FABRICACION
+                }
+
+                switch (status) {
+                    case ItemStatusEnum.FABRICATION:
+                        newStatusOrder = PurchaseStatusEnum.FABRICACION;
+                        break;
+                    case ItemStatusEnum.FINISHED:
+                        newStatusOrder = PurchaseStatusEnum.DESPACHADO;
+                        break;
+                    default:
+                        newStatusOrder = PurchaseStatusEnum.ASIGNADO;
+                        break;
+                }
                 // ✏️ Actualizar estado de la orden
-                updatedOrder.status = status;
+                updatedOrder.status = newStatusOrder;
                 await updatedOrder.save();
 
-                await this.addHistoryEntry(orderId, `Estado de orden actualizado a ${status}.`, userId);
+                await this.addHistoryEntry(orderId, `Estado de orden actualizado a ${newStatusOrder}.`, userId);
             }
         }
         return updatedOrder;
+    }
+
+    /**
+   * Asigna una orden de pedido a una zona de producción.
+   * @param orderId ID de la orden de pedido
+   * @param zoneId ID de la zona de producción
+   * @param userId ID del usuario que realiza la acción
+   */
+    async assignOrderToZone(orderId: string, zoneId: string, userId: string) {
+        try {
+            let selectedZone = await this.usersService.getZoneByIdInternal(zoneId);
+            if (!selectedZone) {
+                throw new NotFoundException(`No se encontró zona de producción con ID ${zoneId}`);
+            }
+            await this.purchaseOrderModel.findByIdAndUpdate(
+                orderId,
+                {
+                    zoneId: new Types.ObjectId(zoneId),
+                    status: PurchaseStatusEnum.ASIGNADO,
+                    updatedAt: getCurrentUTCDate(),
+                    updatedBy: new Types.ObjectId(userId),
+                },
+                { new: true },
+            );
+
+            this.usersService.findOne(userId)
+                .then(user => {
+                    this.addHistoryEntry(orderId, `Orden de pedido asignada a zona de producción ${selectedZone.name}`, userId);
+                })
+            return ApiResponse.success('Orden de pedido asignada a zona de producción con éxito', null, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
     }
 }
