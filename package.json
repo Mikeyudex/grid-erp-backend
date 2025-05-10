@@ -18,7 +18,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/core/test/jest-e2e.json"
+    "test:e2e": "jest --config ./apps/core/test/jest-e2e.json",
+    "deploy:dev": "pm2 start ecosystem.config.dev.js --env dev",
+    "deploy:prod": "pm2 start ecosystem.config.js --env prod"
   },
   "dependencies": {
     "@bull-board/api": "^6.2.1",
