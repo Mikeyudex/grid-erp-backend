@@ -17,7 +17,7 @@ echo "Deploying..." >> $FILE_LOG
 if pm2 list | grep -q 'online'; then #verifica si hay un servicio corriendo
     pm2 reload ecosystem.config.dev.js --env dev
 else
-    npm run deploy
+    npm run deploy:dev
 fi
 
 # success
