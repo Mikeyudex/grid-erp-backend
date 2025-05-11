@@ -30,7 +30,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   app.useWebSocketAdapter(new WsAdapter(app));
-   app.enableCors({
+  /*  app.enableCors({
       origin: (origin, callback) => {
         const allowedOrigins = [];
         if (process.env.NODE_ENV === 'local' || process.env.ENV === 'LOCAL') {
@@ -55,7 +55,7 @@ async function bootstrap() {
       },
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true,
-    });
+    }); */
   
   await app.listen(configsService.get('PORT'));
   if (module.hot) {

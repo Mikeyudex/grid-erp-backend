@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -220,6 +220,20 @@ export class PurchaseOrderService {
                 message: 'userId no es un ObjectId válido',
             });
         }
+        // Obtener la orden completa para validaciones
+        const order = await this.purchaseOrderModel.findById(orderId);
+
+        if (!order) {
+            throw new NotFoundException({
+                statusCode: HttpStatus.NOT_FOUND,
+                message: 'Orden no encontrada',
+            });
+        }
+
+        // Validar reglas por estado
+        await this.validateOrderStatusTransition(order, status);
+
+
         const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
             orderId,
             { status, updatedBy: userId, updatedAt: getCurrentUTCDate() },
@@ -302,7 +316,6 @@ export class PurchaseOrderService {
                 message: 'status no es un ItemStatusEnum válido',
             });
         }
-
         const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
             orderId,
             {
@@ -381,6 +394,29 @@ export class PurchaseOrderService {
                 message: 'Error interno del servidor',
                 error: error.message || 'Unknown error',
             });
+        }
+    }
+
+    private async validateOrderStatusTransition(order: PurchaseOrderDocument, newStatus: string) {
+        console.log('newStatus recibido:', newStatus);
+        console.log('Enum DESPACHADO:', PurchaseStatusEnum.DESPACHADO);
+        switch (newStatus) {
+            case PurchaseStatusEnum.DESPACHADO:
+                const hasUnfinishedItems = order.details.some(
+                    (item) => item.itemStatus !== ItemStatusEnum.FINISHED && item.itemStatus !== ItemStatusEnum.INVENTORY
+                );
+
+                if (hasUnfinishedItems) {
+                    throw new BadRequestException({
+                        statusCode: HttpStatus.BAD_REQUEST,
+                        message: 'No se puede despachar la orden: existen ítems no finalizados.',
+                    });
+                }
+                break;
+
+            // Puedes agregar más casos aquí en el futuro
+            default:
+                break;
         }
     }
 }
