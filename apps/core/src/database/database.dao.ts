@@ -24,8 +24,20 @@ export abstract class DAO<T> {
     return this.model.findOneAndDelete(filter, options);
   }
 
+  async deleteMany(filter: FilterQuery<T>) {
+    return this.model.deleteMany(filter);
+  }
+
   async findById(id: string, options?: QueryOptions) {
     return this.model.findById(id, options).lean();
+  }
+
+  async findByIdAndUpdate(id: string, update: UpdateQuery<T>, options?: QueryOptions) {
+    return this.model.findByIdAndUpdate(id, update, { new: true, ...options });
+  }
+
+  async findByIdAndDelete(id: string, options?: QueryOptions) {
+    return this.model.findByIdAndDelete(id, options);
   }
 
   async findPaginated(page: number, limit: number, options?: QueryOptions) {

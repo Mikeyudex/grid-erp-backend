@@ -115,6 +115,9 @@ export class CreateCustomerDto {
     observations: string;
 }
 
+export class UpdateCustomerDto extends CreateCustomerDto {
+}
+
 export interface IContactsCustomer {
     contactName: string;
     contactLastname: string;

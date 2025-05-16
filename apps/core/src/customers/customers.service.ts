@@ -105,4 +105,84 @@ export class CustomersService {
             return null;
         }
     }
+
+    async updateCustomer(updateCustomer: CreateCustomerDto, id: string) {
+        try {
+            let customer = await this.customerDao.findByIdAndUpdate(id, updateCustomer, { new: true });
+            return ApiResponse.success('Cliente actualizado con éxito', customer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async deleteCustomer(id: string) {
+        try {
+            let customer = await this.customerDao.findByIdAndDelete(id);
+            return ApiResponse.success('Cliente eliminado con éxito', customer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async bulkDeleteCustomer(ids: string[]) {
+        try {
+            let idsObjectId = ids.map(id => new Types.ObjectId(id));
+            let customer = await this.customerDao.deleteMany({ _id: { $in: idsObjectId } });
+            return ApiResponse.success('Clientes eliminados con éxito', customer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async updateTypeCustomer(updateTypesCustomer: CreateTypesCustomerDto, id: string) {
+        try {
+            let typeCustomer = await this.typeCustomerModel.findByIdAndUpdate(id, updateTypesCustomer, { new: true });
+            return ApiResponse.success('Tipo de cliente actualizado con éxito', typeCustomer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async deleteTypeCustomer(id: string) {
+        try {
+            let typeCustomer = await this.typeCustomerModel.findByIdAndDelete(id);
+            return ApiResponse.success('Tipo de cliente eliminado con éxito', typeCustomer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async bulkDeleteTypeCustomer(ids: string[]) {
+        try {
+            let idsObjectId = ids.map(id => new Types.ObjectId(id));
+            let typeCustomer = await this.typeCustomerModel.deleteMany({ _id: { $in: idsObjectId } });
+            return ApiResponse.success('Tipos de cliente eliminados con éxito', typeCustomer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
 }       

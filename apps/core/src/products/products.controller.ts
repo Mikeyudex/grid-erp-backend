@@ -17,7 +17,8 @@ import {
   Inject,
   UseGuards,
   SetMetadata,
-  UploadedFile
+  UploadedFile,
+  InternalServerErrorException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -310,6 +311,44 @@ export class ProductsController {
       };
     } catch (error) {
       throw new HttpException('File not found or deletion failed', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('deleteProduct/:id')
+  async deleteProduct(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const deletedProduct = await this.productService.delete(id);
+      return res.status(200).json({
+        success: true,
+        data: deletedProduct,
+        errorMessage: ""
+      });
+    } catch (error) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/product/bulkDelete')
+  async deleteProducts(@Body() payload: Record<string, any>) {
+    try {
+      const deletedProducts = await this.productService.bulkDelete(payload?.ids);
+      return {
+        success: true,
+        data: deletedProducts,
+        errorMessage: ""
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
     }
   }
 }

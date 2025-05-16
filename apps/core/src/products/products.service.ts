@@ -258,7 +258,9 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
-    const updatedProduct = await this.productModel.findByIdAndUpdate(id, updateProductDto, { new: true }).exec();
+    let _id = new Types.ObjectId(id);
+    updateProductDto.id_category = new Types.ObjectId(updateProductDto.id_category);
+    const updatedProduct = await this.productModel.findByIdAndUpdate(_id, updateProductDto, { new: true }).exec();
     if (!updatedProduct) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
@@ -266,11 +268,26 @@ export class ProductsService {
   }
 
   async delete(id: string): Promise<Product> {
-    const deletedProduct = await this.productModel.findByIdAndDelete(id).exec();
+    let _id = new Types.ObjectId(id);
+    const deletedProduct = await this.productModel.findByIdAndDelete(_id).exec();
     if (!deletedProduct) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
     return deletedProduct;
+  }
+
+  async bulkDelete(ids: string[]) {
+    try {
+      let idsObjectId = ids.map(id => new Types.ObjectId(id));
+      let deletedProducts = await this.productModel.deleteMany({ _id: { $in: idsObjectId } });
+      return deletedProducts;
+    } catch (error) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
+    }
   }
 
   async findAttributeConfigs(): Promise<AttributeConfig[]> {
@@ -346,9 +363,10 @@ export class ProductsService {
         label: category.name,
         value: category.uuid
       };
-      let subCat = await this.findProductSubCategorysByCategoryId(category.uuid);
+      /* let subCat = await this.findProductSubCategorysByCategoryId(category.uuid);
       let subcatSelect = subCat.map((subca: ProductSubCategory) => { return { label: subca.name, value: subca.uuid } })
-      categoriesFullSelect.push(Object.assign({ ...categorySelect, subcategoriesSelect: subcatSelect }));
+      categoriesFullSelect.push(Object.assign({ ...categorySelect, subcategoriesSelect: subcatSelect })); */
+      categoriesFullSelect.push(categorySelect);
     }
     return categoriesFullSelect;
   }

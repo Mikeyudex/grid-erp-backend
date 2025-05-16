@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateProductDto {
   @ApiPropertyOptional({ example: '232324gg44545', description: 'ID del producto' })
@@ -61,7 +62,7 @@ export class CreateProductDto {
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
   @IsNotEmpty({ message: 'La categoría es un campo requerido.' })
   @IsString({ message: 'El id de la categoría debe ser una cadena de texto.' })
-  readonly id_category: string;
+  readonly id_category: string | Types.ObjectId;
 
   @ApiProperty({ example: '873827sdd', description: 'Id de la subcategoría del producto' })
   /* @IsNotEmpty({ message: 'La subcategoría es un campo requerido.' }) */

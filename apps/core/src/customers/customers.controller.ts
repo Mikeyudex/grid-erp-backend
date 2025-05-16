@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto } from './dtos/customer.dto';
-import { CreateTypesCustomerDto } from './dtos/types-customer.dto';
+import { CreateCustomerDto, UpdateCustomerDto } from './dtos/customer.dto';
+import { CreateTypesCustomerDto, UpdateTypesCustomerDto } from './dtos/types-customer.dto';
 
 @Controller('customers')
 export class CustomersController {
@@ -23,7 +23,7 @@ export class CustomersController {
         let fieldsArray = fields.split(',');
         return this.customersService.getAllByFields(page, limit, fieldsArray);
     }
-    
+
     @Get('getTypes')
     async typesCustomer() {
         return this.customersService.getAllTypeCustomers();
@@ -32,6 +32,36 @@ export class CustomersController {
     @Post('createTypeCustomer')
     async createTypeCustomer(@Body() createTypesCustomer: CreateTypesCustomerDto) {
         return this.customersService.createTypeCustomer(createTypesCustomer);
+    }
+
+    @Put('updateTypeCustomer/:customerId')
+    async updateTypeCustomer(@Body() updateTypesCustomer: UpdateTypesCustomerDto, @Param('customerId') customerId: string) {
+        return this.customersService.updateTypeCustomer(updateTypesCustomer, customerId);
+    }
+
+    @Delete('deleteTypeCustomer/:customerId')
+    async deleteTypeCustomer(@Param('customerId') customerId: string) {
+        return this.customersService.deleteTypeCustomer(customerId);
+    }
+
+    @Delete('typeCustomer/bulkDelete')
+    async bulkDeleteTypeCustomer(@Body() payload: Record<string, any>) {
+        return this.customersService.bulkDeleteTypeCustomer(payload?.ids);
+    }
+
+    @Put('updateCustomer/:customerId')
+    async updateCustomer(@Body() updateCustomer: UpdateCustomerDto, @Param('customerId') customerId: string) {
+        return this.customersService.updateCustomer(updateCustomer, customerId);
+    }
+
+    @Delete('deleteCustomer/:customerId')
+    async deleteCustomer(@Param('customerId') customerId: string) {
+        return this.customersService.deleteCustomer(customerId);
+    }
+
+    @Delete('customer/bulkDelete')
+    async bulkDeleteCustomer(@Body() payload: Record<string, any>) {
+        return this.customersService.bulkDeleteCustomer(payload?.ids);
     }
 
 }

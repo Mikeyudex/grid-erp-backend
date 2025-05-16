@@ -398,8 +398,7 @@ export class PurchaseOrderService {
     }
 
     private async validateOrderStatusTransition(order: PurchaseOrderDocument, newStatus: string) {
-        console.log('newStatus recibido:', newStatus);
-        console.log('Enum DESPACHADO:', PurchaseStatusEnum.DESPACHADO);
+        
         switch (newStatus) {
             case PurchaseStatusEnum.DESPACHADO:
                 const hasUnfinishedItems = order.details.some(
@@ -413,7 +412,6 @@ export class PurchaseOrderService {
                     });
                 }
                 break;
-
             // Puedes agregar más casos aquí en el futuro
             default:
                 break;
