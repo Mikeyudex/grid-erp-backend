@@ -35,7 +35,14 @@ export class PreciosTapeteMaterialService {
     }
 
     async delete(id: string): Promise<MatMaterialPricesDocument> {
-        return this.matMaterialPricesModel.findByIdAndDelete(id).exec();
+        if (!Types.ObjectId.isValid(id)) {
+            throw new InternalServerErrorException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'id no es un ObjectId válido',
+            });
+        }
+        let idCasted = new Types.ObjectId(id);
+        return this.matMaterialPricesModel.findByIdAndDelete(idCasted).exec();
     }
 
     async calcularFactorAjuste(material: string, tipoTapete: string): Promise<number> {

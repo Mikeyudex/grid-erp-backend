@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { PreciosTapeteMaterialService } from './precios-tapete-material.service';
 import { CreatePrecioTapeteMaterialDto, UpdatePrecioTapeteMaterialDto } from './precios-tapete-material.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('precios-tapete-material')
 export class PreciosTapeteMaterialController {
@@ -23,11 +24,13 @@ export class PreciosTapeteMaterialController {
         return this.preciosTapeteMaterialService.create(createPrecioTapeteMaterialDto);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
     async update(@Param('id') id: string, @Body() updatePrecioTapeteMaterialDto: UpdatePrecioTapeteMaterialDto) {
         return this.preciosTapeteMaterialService.update(id, updatePrecioTapeteMaterialDto);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async delete(@Param('id') id: string) {
         return this.preciosTapeteMaterialService.delete(id);
