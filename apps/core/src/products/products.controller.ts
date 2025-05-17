@@ -34,6 +34,7 @@ import { AttributeConfig } from './interfaces/attribute-config.interface';
 import { Product } from './interfaces/products.interface';
 import { CreateAttributeConfigDto } from './dto/create-attribute-config.dto';
 import { CreateCategoryDto } from './dto/category/create-category.dto';
+import { UpdateCategoryDto } from './dto/category/update-category.dto';
 import { ProductCategory } from './category/category.schema';
 import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
 import { ProductSubCategory } from './subcategory/subcategory.schema';
@@ -147,6 +148,31 @@ export class ProductsController {
     @Body() createCategoryDto: CreateCategoryDto
   ): Promise<ProductCategory> {
     return this.productService.createProductCategory(createCategoryDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('/category/update/:id')
+  async updateProductCategory(
+    @Param('id') id: string,
+    @Body() createCategoryDto: UpdateCategoryDto
+  ): Promise<ProductCategory> {
+    return this.productService.updateProductCategory(id, createCategoryDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/category/delete/:id')
+  async deleteProductCategory(
+    @Param('id') id: string
+  ): Promise<ProductCategory> {
+    return this.productService.deleteProductCategory(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/category/bulkDelete')
+  async bulkDeleteProductCategory(
+    @Body() payload: Record<string, any>
+  ): Promise<any> {
+    return this.productService.bulkDeleteProductCategory(payload?.ids);
   }
 
   // Endpoint para obtener las categorías

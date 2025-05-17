@@ -306,8 +306,8 @@ export class ProductsService {
 
   async createProductCategory(createCategoryDto: CreateCategoryDto): Promise<ProductCategory> {
     createCategoryDto.uuid = v4();
-    let lastShortCode = await this.getLastShortCodeCategory(createCategoryDto.companyId);
-    createCategoryDto.shortCode = lastShortCode;
+   /*  let lastShortCode = await this.getLastShortCodeCategory(createCategoryDto.companyId);
+    createCategoryDto.shortCode = lastShortCode; */
     const newProductCategory = new this.productCategoryModel(createCategoryDto);
     return newProductCategory.save();
   }
@@ -380,11 +380,35 @@ export class ProductsService {
   }
 
   async updateProductCategory(id: string, updateCategoryDto: UpdateCategoryDto): Promise<ProductCategory> {
-    const updatedProductCategory = await this.productCategoryModel.findByIdAndUpdate(id, updateCategoryDto, { new: true }).exec();
+    let _id = new Types.ObjectId(id);
+    const updatedProductCategory = await this.productCategoryModel.findByIdAndUpdate(_id, updateCategoryDto, { new: true }).exec();
     if (!updatedProductCategory) {
       throw new NotFoundException(`ProductCategory with ID ${id} not found`);
     }
     return updatedProductCategory;
+  }
+
+  async deleteProductCategory(id: string): Promise<ProductCategory> {
+    let _id = new Types.ObjectId(id);
+    const deletedProductCategory = await this.productCategoryModel.findByIdAndDelete(_id).exec();
+    if (!deletedProductCategory) {
+      throw new NotFoundException(`ProductCategory with ID ${id} not found`);
+    }
+    return deletedProductCategory;
+  }
+
+  async bulkDeleteProductCategory(ids: string[]) {
+    try {
+      let idsObjectId = ids.map(id => new Types.ObjectId(id));
+      let deletedProductCategory = await this.productCategoryModel.deleteMany({ _id: { $in: idsObjectId } });
+      return deletedProductCategory;
+    } catch (error) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
+    }
   }
 
   async createProductSubCategory(createProductSubCategoryDto: CreateProductSubCategoryDto): Promise<ProductSubCategory> {
