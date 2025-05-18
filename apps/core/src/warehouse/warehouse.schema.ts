@@ -24,6 +24,9 @@ export class Warehouse {
     @Prop({ type: Boolean, default: true })
     active: boolean;
 
+    @Prop({ type: String, default: "100" })
+    shortCode: string;
+
     @Prop({ default: () => getCurrentUTCDate()})
     createdAt: Date;
 

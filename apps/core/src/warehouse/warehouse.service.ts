@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Warehouse, WharehouseDocument } from './warehouse.schema';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
@@ -14,6 +14,9 @@ export class WarehouseService {
 
     async create(createWarehouseDto: CreateWarehouseDto): Promise<Warehouse> {
         createWarehouseDto.uuid = v4();
+        if (!createWarehouseDto.warehouseCode) {
+            createWarehouseDto.warehouseCode = createWarehouseDto.shortCode;
+        }
         const newcWarehouse = new this.warehouseModel(createWarehouseDto);
         return newcWarehouse.save();
     }
@@ -76,7 +79,8 @@ export class WarehouseService {
 
 
     async update(id: string, updateWarehouseDto: UpdateWarehouseDto): Promise<boolean> {
-        const updatedWarehouse = await this.warehouseModel.updateOne({ uuid: id }, updateWarehouseDto, { new: true }).exec();
+        let idCasted = new Types.ObjectId(id);
+        const updatedWarehouse = await this.warehouseModel.findByIdAndUpdate(idCasted, updateWarehouseDto, { new: true }).exec();
         if (!updatedWarehouse) {
             throw new NotFoundException(`Warehouse with ID ${id} not found`);
         }
@@ -84,11 +88,22 @@ export class WarehouseService {
     }
 
     async delete(id: string): Promise<boolean> {
-        const deletedWarehouse = await this.warehouseModel.deleteOne({ uuid: id }).exec();
+        let idCasted = new Types.ObjectId(id);
+        const deletedWarehouse = await this.warehouseModel.findByIdAndDelete(idCasted).exec();
         if (!deletedWarehouse) {
             throw new NotFoundException(`Warehouse with ID ${id} not found`);
         }
         return true;
+    }
+
+    async bulkDelete(ids: string[]) {
+        try {
+            let idsObjectId = ids.map(id => new Types.ObjectId(id));
+            let deletedWarehouse = await this.warehouseModel.deleteMany({ _id: { $in: idsObjectId } });
+            return deletedWarehouse;
+        } catch (error) {
+            throw new Error(error);
+        }
     }
 
 }

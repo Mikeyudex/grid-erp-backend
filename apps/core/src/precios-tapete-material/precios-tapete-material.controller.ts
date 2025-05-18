@@ -36,6 +36,12 @@ export class PreciosTapeteMaterialController {
         return this.preciosTapeteMaterialService.delete(id);
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Delete('bulkDelete')
+    async bulkDelete(@Body() payload: Record<string, any>) {
+        return this.preciosTapeteMaterialService.bulkDelete(payload?.ids);
+    }
+
     @Get('/calcular-precio-final/:productId/:tipoTapete/:material/:cantidad/:typeCustomerId')
     async calcularPrecioFinal(
         @Param('productId') productId: string,

@@ -9,7 +9,7 @@ export class CreateWarehouseDto {
   readonly companyId: string;
 
   @ApiProperty({ example: '2098', description: 'Codigo corto de la bodega' })
-  readonly warehouseCode: string;
+   warehouseCode: string;
 
   @ApiProperty({ example: 'Bodega 1', description: 'Nombre de la bodega' })
   readonly name: string;
@@ -19,5 +19,8 @@ export class CreateWarehouseDto {
 
   @ApiProperty({ example: 'false', description: 'Activo o inactivo' })
   readonly active: boolean;
+
+  @ApiProperty({ example: '100', description: 'Código corto de la bodega' })
+  shortCode: string;
 
 }

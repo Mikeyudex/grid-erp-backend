@@ -45,6 +45,20 @@ export class PreciosTapeteMaterialService {
         return this.matMaterialPricesModel.findByIdAndDelete(idCasted).exec();
     }
 
+    async bulkDelete(ids: string[]) {
+        try {
+            let idsObjectId = ids.map(id => new Types.ObjectId(id));
+            let deletedMaterialPrices = await this.matMaterialPricesModel.deleteMany({ _id: { $in: idsObjectId } });
+            return deletedMaterialPrices;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async calcularFactorAjuste(material: string, tipoTapete: string): Promise<number> {
         try {
             let data = await this.matMaterialPricesModel.find().exec();

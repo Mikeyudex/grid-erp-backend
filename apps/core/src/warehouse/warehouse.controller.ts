@@ -1,16 +1,18 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WarehouseService } from './warehouse.service';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 import { Warehouse } from './warehouse.schema';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @ApiTags('Warehouse')
 @Controller('warehouse')
 export class WarehouseController {
   constructor(private readonly warehouseService: WarehouseService) { }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/create')
   @ApiOperation({ summary: 'Crear una bodega' })
   @ApiResponse({ status: 201, description: 'La bodega ha sido creado exitosamente.' })
@@ -18,6 +20,7 @@ export class WarehouseController {
     return this.warehouseService.create(createWarehouseDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('getAll')
   @ApiOperation({ summary: 'Obtener todas las bodega' })
   @ApiResponse({ status: 200, description: 'Lista de bodegas obtenida exitosamente.' })
@@ -25,6 +28,7 @@ export class WarehouseController {
     return this.warehouseService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('getbyCompany')
   @ApiOperation({ summary: 'Obtener todas las bodega por compañía' })
   @ApiResponse({ status: 200, description: 'Lista de bodegas obtenida exitosamente.' })
@@ -45,6 +49,7 @@ export class WarehouseController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('getbyCompanySelect')
   @ApiOperation({ summary: 'Obtener todas las bodega por compañía en formato select html' })
   @ApiResponse({ status: 200, description: 'Lista de bodegas obtenida exitosamente.' })
@@ -52,6 +57,7 @@ export class WarehouseController {
     return this.warehouseService.findAllByCompanySelect(companyId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('get/:id')
   @ApiOperation({ summary: 'Obtener una bodega por UUID' })
   @ApiResponse({ status: 200, description: 'Registro encontrado.' })
@@ -60,6 +66,7 @@ export class WarehouseController {
     return this.warehouseService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('update/:id')
   @ApiOperation({ summary: 'Actualizar una bodega por ID' })
   @ApiResponse({ status: 200, description: 'Registro actualizado exitosamente.' })
@@ -68,12 +75,22 @@ export class WarehouseController {
     return this.warehouseService.update(id, updateWarehouseDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('delete/:id')
   @ApiOperation({ summary: 'Eliminar una bodega por ID' })
   @ApiResponse({ status: 200, description: 'Registro eliminado exitosamente.' })
   @ApiResponse({ status: 404, description: 'Registro no encontrado.' })
   async delete(@Param('id') id: string): Promise<boolean> {
     return this.warehouseService.delete(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('bulkDelete')
+  @ApiOperation({ summary: 'Eliminar bodegas por ID' })
+  @ApiResponse({ status: 200, description: 'Registros eliminados exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Registro no encontrado.' })
+  async bulkDelete(@Body() payload: Record<string, any>) {
+    return this.warehouseService.bulkDelete(payload?.ids);
   }
 
 }

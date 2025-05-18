@@ -15,4 +15,7 @@ export class UpdateWarehouseDto extends PartialType(CreateWarehouseDto) {
     @ApiPropertyOptional({ example: 'false', description: 'Activo o inactivo' })
     readonly active: boolean;
 
+    @ApiPropertyOptional({ example: '100', description: 'Código corto de la bodega' })
+    readonly shortCode: string;
+
 }
