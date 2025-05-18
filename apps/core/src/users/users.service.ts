@@ -1,5 +1,5 @@
 import { BadRequestException, forwardRef, HttpStatus, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { Model, Types as MongooseTypes } from 'mongoose';
+import { Model, Types as MongooseTypes, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from "crypto";
@@ -11,7 +11,7 @@ import { CreateUserDto, UpdateUserDto } from './dtos/users.dto';
 import { LoginResponseDto } from '../auth/dtos/login.dto';
 import { ApiResponse } from '../common/api-response';
 import { ZoneDocument, Zone } from './zone/zone.schema';
-import { CreateZoneDto } from './dtos/zones.dto';
+import { CreateZoneDto, UpdateZoneDto } from './dtos/zones.dto';
 import config from '../config';
 import { ConfigType } from '@nestjs/config';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
@@ -136,6 +136,38 @@ export class UsersService {
     async getZoneByIdInternal(id: string) {
         const zone = await this.zoneModel.findById(id).exec();
         return zone;
+    }
+
+    async updateZone(id: string, payload: UpdateZoneDto) {
+        if (!payload.name && !payload.shortCode) throw new BadRequestException(
+            {
+                statusCode: 400,
+                message: 'At least one field is required',
+                error: 'At least one field is required',
+            });
+        let idCasted = new Types.ObjectId(id);
+        const zone = await this.zoneModel.findByIdAndUpdate(idCasted, payload, { new: true }).exec();
+        return zone;
+    }
+
+    async deleteZone(id: string) {
+        let idCasted = new Types.ObjectId(id);
+        const zone = await this.zoneModel.findByIdAndDelete(idCasted).exec();
+        return zone;
+    }
+
+    async bulkDeleteZone(ids: string[]) {
+        try {
+            let idsObjectId = ids.map(id => new Types.ObjectId(id));
+            let deletedZone = await this.zoneModel.deleteMany({ _id: { $in: idsObjectId } });
+            return deletedZone;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
     }
 
     /**

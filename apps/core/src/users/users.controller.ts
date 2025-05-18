@@ -8,12 +8,14 @@ import {
   Delete,
   Query,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dtos/users.dto';
-import { CreateZoneDto } from './dtos/zones.dto';
+import { CreateZoneDto, UpdateZoneDto } from './dtos/zones.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -48,6 +50,7 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/zones/create')
   createZone(@Body() payload: CreateZoneDto) {
     return this.usersService.createZone(payload);
@@ -58,9 +61,28 @@ export class UsersController {
     return this.usersService.getAllZones();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/zones/getById/:id')
   getZoneById(@Param('id') id: string) {
     return this.usersService.getZoneById(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('/zones/update/:id')
+  updateZone(@Param('id') id: string, @Body() payload: UpdateZoneDto) {
+    return this.usersService.updateZone(id, payload);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/zones/delete/:id')
+  deleteZone(@Param('id') id: string) {
+    return this.usersService.deleteZone(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/zones/bulkDelete')
+  bulkDeleteZone(@Body() payload: Record<string, any>) {
+    return this.usersService.bulkDeleteZone(payload?.ids);
   }
 
 
