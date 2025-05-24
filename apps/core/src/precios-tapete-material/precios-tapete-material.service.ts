@@ -64,7 +64,7 @@ export class PreciosTapeteMaterialService {
             let data = await this.matMaterialPricesModel.find().exec();
 
             // Obtener el precio de "ESTÁNDAR A" con el mismo material
-            const precioBase = data.filter((item) => item.tipo_tapete === 'ESTÁNDAR A' && item.tipo_material === material)[0];
+            const precioBase = data.filter((item) => item.tipo_tapete === 'STANDAR' && item.tipo_material === material)[0];
 
             const precioSeleccionado = data.filter((item) => item.tipo_tapete === tipoTapete && item.tipo_material === material)[0];
 
@@ -103,7 +103,7 @@ export class PreciosTapeteMaterialService {
             let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
             //Se valida que el tipo de material seleccionado aplique para ajuste de precio
-            let tipoMaterialNoAplican = ["PR-KANT ADH", "PR-BEIGE LISO", "PR-BEIGE ADH", "PR-ALFOMBRA"];
+            let tipoMaterialNoAplican = ["KANT ADH", "BEIGE LISO", "BEIGE ADH", "ALFOMBRA"];
 
             if (tipoMaterialNoAplican.includes(material)) {
                 try {
@@ -154,7 +154,7 @@ export class PreciosTapeteMaterialService {
             let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
             //Se valida que el tipo de material seleccionado aplique para ajuste de precio
-            let tipoMaterialNoAplican = ["PR-KANT ADH", "PR-BEIGE LISO", "PR-BEIGE ADH", "PR-ALFOMBRA"];
+            let tipoMaterialNoAplican = ["KANT ADH", "BEIGE LISO", "BEIGE ADH", "ALFOMBRA"];
 
             if (tipoMaterialNoAplican.includes(material)) {
                 try {
