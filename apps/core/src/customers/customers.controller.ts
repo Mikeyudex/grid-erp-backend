@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto, UpdateCustomerDto } from './dtos/customer.dto';
 import { CreateTypesCustomerDto, UpdateTypesCustomerDto } from './dtos/types-customer.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('customers')
 export class CustomersController {
@@ -16,6 +17,12 @@ export class CustomersController {
     @Get('getAll')
     async getAll(@Query('page') page: number, @Query('limit') limit: number) {
         return this.customersService.getAll(page, limit);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('getById/:id')
+    async getCustomerById(@Param('id') id: string) {
+        return this.customersService.getCustomerById(id);
     }
 
     @Get('getAllByFields')
@@ -49,6 +56,7 @@ export class CustomersController {
         return this.customersService.bulkDeleteTypeCustomer(payload?.ids);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put('updateCustomer/:customerId')
     async updateCustomer(@Body() updateCustomer: UpdateCustomerDto, @Param('customerId') customerId: string) {
         return this.customersService.updateCustomer(updateCustomer, customerId);

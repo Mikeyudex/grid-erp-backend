@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
-import { truncate } from 'fs';
 import mongoose, { Document, Types } from 'mongoose';
 
 export type CustomerDocument = Customer & Document;
@@ -15,14 +14,20 @@ export interface IContactsCustomer {
     contactLastname: string;
     contactPhone: string;
     contactEmail: string;
+    contactCharge: string;
 }
-
 
 @Schema()
 export class Customer {
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'TypeCustomer' })
     typeCustomerId: Types.ObjectId;
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'TypeOfCustomer' })
+    typeOfCustomer: Types.ObjectId;
+
+    @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'TypeOfDocument' })
+    typeOfDocument: Types.ObjectId;
 
     @Prop({ required: true })
     name: string;
@@ -43,28 +48,10 @@ export class Customer {
     documento: string;
 
     @Prop({ required: true })
-    billingName: string;
+    city: string;
 
     @Prop({ required: true })
-    billingLastname: string;
-
-    @Prop({ required: true })
-    billingPhone: string;
-
-    @Prop({ required: true })
-    billingEmail: string;
-
-    @Prop({ required: true })
-    billingDocumento: string;
-
-    @Prop({ required: true })
-    billingAddress: string;
-
-    @Prop({ required: true })
-    billingCity: string;
-
-    @Prop({ required: true })
-    billingPostalCode: string;
+    address: string;
 
     @Prop({ required: true })
     shippingName: string;

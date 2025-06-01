@@ -23,6 +23,8 @@ export class CustomersService {
             const customerData = {
                 ...customer,
                 typeCustomerId: new Types.ObjectId(customer.typeCustomerId),
+                typeOfCustomer: new Types.ObjectId(customer.typeOfCustomer),
+                typeOfDocument: new Types.ObjectId(customer.typeOfDocument),
             };
             let customerDocument = await this.customerDao.create(customerData);
             return ApiResponse.success('Cliente creado con éxito', customerDocument.toJSON(), HttpStatus.CREATED);
@@ -90,10 +92,14 @@ export class CustomersService {
 
     async getCustomerById(id: string) {
         try {
-            let customer = await this.customerDao.findById(id);
-            return customer;
+            let customer = await this.customerDao.findByIdFull(id);
+            return ApiResponse.success('Cliente obtenido con éxito', customer);
         } catch (error) {
-            return null;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
         }
     }
 

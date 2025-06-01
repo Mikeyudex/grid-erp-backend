@@ -13,8 +13,8 @@ export class TypeCustomer {
     @Prop()
     description?: string;
 
-    @Prop({ required: true })
-    shortCode: string;
+    @Prop({ required: false })
+    shortCode?: string;
 
     @Prop({ default: true })
     active?: boolean;

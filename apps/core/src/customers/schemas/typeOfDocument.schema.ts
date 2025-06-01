@@ -1,0 +1,20 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
+import { Document } from 'mongoose';
+
+export type TypeOfDocumentDocument = TypeOfDocument & Document;
+
+@Schema()
+export class TypeOfDocument {
+
+    @Prop({ required: true })
+    name: string;
+
+    @Prop({ default: () => getCurrentUTCDate() })
+    createdAt: Date;
+
+    @Prop({ default: null })
+    updatedAt: Date;
+}
+
+export const TypeOfDocumentSchema = SchemaFactory.createForClass(TypeOfDocument);
