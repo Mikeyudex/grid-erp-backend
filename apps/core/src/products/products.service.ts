@@ -82,6 +82,10 @@ export class ProductsService {
         createProductDto.id_sub_category = "680aaf320d033722d44d4bff";
       }
 
+      if (!createProductDto.warehouseId) {
+        createProductDto.warehouseId = "67ac30a3-861c-4cc4-ac39-a23233440c1d";
+      }
+
       const newProduct = new this.productModel(createProductDto);
       newProduct.typeOfPieces = typeOfPiecesObjectId;
 
@@ -146,20 +150,24 @@ export class ProductsService {
     }
 
     for (let index = 0; index < products.length; index++) {
-      const product: any = products[index];
-      let warehouse = await this.warehouseService.findOne(product.warehouseId);
-      let stockProduct = await this.stockService.findOneByProductId(product.id);
+      try {
+        const product: any = products[index];
+        let warehouse = await this.warehouseService.findOne(product.warehouseId);
+        let stockProduct = await this.stockService.findOneByProductId(product.id);
 
-      const transformedProduct = {
-        ...product.toObject(),
-        categoryName: product.id_category.name,
-        subCategoryName: product.id_sub_category.name,
-        warehouseName: warehouse.name,
-        stock: stockProduct?.quantity ?? 0,
-        attributes: product.attributes || {},
-        additionalConfigs: product.additionalConfigs || {}
+        const transformedProduct = {
+          ...product.toObject(),
+          categoryName: product?.id_category?.name ?? "No Definido",
+          subCategoryName: product?.id_sub_category?.name ?? "No Definido",
+          warehouseName: warehouse?.name ?? "No Definido",
+          stock: stockProduct?.quantity ?? 0,
+          attributes: product.attributes || {},
+          additionalConfigs: product?.additionalConfigs || {}
+        }
+        response.push(transformedProduct)
+      } catch (error) {
+        console.log(error?.message);
       }
-      response.push(transformedProduct)
     }
 
     const totalRowCount = await this.productModel.countDocuments({ companyId })
@@ -306,8 +314,6 @@ export class ProductsService {
 
   async createProductCategory(createCategoryDto: CreateCategoryDto): Promise<ProductCategory> {
     createCategoryDto.uuid = v4();
-   /*  let lastShortCode = await this.getLastShortCodeCategory(createCategoryDto.companyId);
-    createCategoryDto.shortCode = lastShortCode; */
     const newProductCategory = new this.productCategoryModel(createCategoryDto);
     return newProductCategory.save();
   }

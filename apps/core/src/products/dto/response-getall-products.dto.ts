@@ -55,6 +55,18 @@ export class GetAllByCompanyProductsResponseDto {
   @ApiProperty({ example: 20.00, description: 'Precio de costo del producto' })
   costPrice: number;
 
+  @ApiProperty({ example: true, description: 'Si el impuesto se incluye en el precio' })
+  taxIncluded: boolean;
+
+  @ApiProperty({ example: 10, description: 'Porcentaje del impuesto' })
+  taxPercent: number;
+
+  @ApiProperty({ example: 'Observaciones del producto', description: 'Observaciones del producto' })
+  observations: string;
+
+  @ApiProperty({ example: 'Código de barras del producto', description: 'Código de barras del producto' })  
+  barCode: string;
+
   @ApiProperty({
     type: 'object',
     additionalProperties: true,

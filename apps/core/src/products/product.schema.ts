@@ -15,11 +15,11 @@ export class Product {
     @Prop({ required: true, type: String }) //Id de la empresa
     companyId: string;
 
-    @Prop({ required: true, type: String }) //Id de la bodega
-    warehouseId: string;
+    @Prop({ required: false, type: String }) //Id de la bodega
+    warehouseId?: string;
 
-    @Prop({ required: true }) //Id del proveedor
-    providerId: string;
+    @Prop({ required: false }) //Id del proveedor
+    providerId?: string;
 
     @Prop() //id de historial de actividad por ejemplo quien lo creó, lo actualizo, etc
     historyActivityUserId: string;
@@ -27,8 +27,8 @@ export class Product {
     @Prop()
     name: string;
 
-    @Prop()
-    description: string;
+    @Prop({ required: false })
+    description?: string;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'TypeProduct', required: true })
     id_type_product: string;
@@ -53,6 +53,18 @@ export class Product {
 
     @Prop({ required: true })
     costPrice: number;
+
+    @Prop({ required: false, type: String })
+    observations?: string;
+
+    @Prop({ required: false, type: String })
+    barCode?: string;
+
+    @Prop({ required: false, type: Boolean, default: false })
+    taxIncluded?: boolean;
+
+    @Prop({ required: false, type: Number, default: 0 })
+    taxPercent?: number;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

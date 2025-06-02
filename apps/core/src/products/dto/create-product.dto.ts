@@ -18,14 +18,14 @@ export class CreateProductDto {
   companyId?: string;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
-  @IsNotEmpty({ message: 'El id de la bodega es un campo requerido.' })
+  @IsOptional()
   @IsString({ message: 'El id de la bodega debe ser una cadena de texto.' })
-  readonly warehouseId: string;
+  warehouseId: string;
 
   @ApiProperty({ example: 'Id del proovedor', description: '12234' })
-  @IsNotEmpty({ message: 'El id del proveedor es un campo requerido.' })
+  @IsOptional()
   @IsString({ message: 'El id del proveedor debe ser una cadena de texto.' })
-  readonly providerId: string;
+  providerId: string;
 
   @ApiProperty({ example: 'Camiseta', description: 'Nombre del producto' })
   @IsNotEmpty({ message: 'El nombre es un campo requerido.' })
@@ -33,7 +33,7 @@ export class CreateProductDto {
   readonly name: string;
 
   @ApiProperty({ example: 'Camiseta manga larga', description: 'Descripción del producto' })
-  @IsNotEmpty({ message: 'La descripción es un campo requerido.' })
+  @IsOptional()
   @IsString({ message: 'La descripción debe ser una cadena de texto.' })
   readonly description: string;
 
@@ -87,6 +87,23 @@ export class CreateProductDto {
   @IsNumber({}, { message: 'El precio de costo debe ser un número.' })
   @Min(0, { message: 'El precio de costo no puede ser menor que 0.' })
   readonly costPrice: number;
+
+  @ApiProperty({ example: 'Observaciones del producto', description: 'Observaciones del producto' })
+  @IsOptional()
+  readonly observations?: string;
+
+  @ApiProperty({ example: 'Código de barras del producto', description: 'Código de barras del producto' })
+  @IsOptional()
+  readonly barCode?: string;
+
+  @ApiProperty({ example: true, description: 'Si el impuesto se incluye en el precio' })
+  @IsOptional()
+  readonly taxIncluded?: boolean;
+
+  @ApiProperty({ example: 10, description: 'Porcentaje del impuesto' })
+  @IsOptional()
+  @IsNumber({}, { message: 'El porcentaje del impuesto debe ser un número.' })
+  readonly taxPercent?: number;
 
   @ApiProperty({
     type: 'object',
