@@ -377,4 +377,10 @@ export class ProductsController {
       });
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/getById/:id')
+  async getProductById(@Param('id') id: string) {
+    return this.productService.getProductById(id);
+  }
 }

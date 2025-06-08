@@ -40,6 +40,11 @@ export class CreateCustomerDto {
     @ApiProperty({ description: "dirección del cliente" })
     address: string;
 
+    @IsString({ message: 'La propiedad postalCode debe ser un string.' })
+    @IsOptional()
+    @ApiProperty({ description: "código postal del cliente" })
+    postalCode: string;
+
     @IsString({ message: 'La propiedad shippingName debe ser un string.' })
     @IsOptional()
     @ApiProperty({ description: "nombre del cliente de entrega" })

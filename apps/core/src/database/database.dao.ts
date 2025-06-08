@@ -58,6 +58,7 @@ export abstract class DAO<T> {
 
   async findPaginatedByFields(page: number, limit: number, fields?: string[], options?: QueryOptions) {
     return this.model.find(options)
+      .populate('typeCustomerId')
       .lean()
       .skip(page * limit)
       .limit(limit)

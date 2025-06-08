@@ -30,6 +30,7 @@ import { CustomersModule } from './customers/customers.module';
 import { TypeOfPieceModule } from './type-of-piece/type-of-piece.module';
 import { PreciosTapeteMaterialModule } from './precios-tapete-material/precios-tapete-material.module';
 import { PurchaseOrderModule } from './purchase-order/purchase-order.module';
+import { AccountingModule } from './accounting/accounting.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { PurchaseOrderModule } from './purchase-order/purchase-order.module';
     TypeOfPieceModule,
     PreciosTapeteMaterialModule,
     PurchaseOrderModule,
+    AccountingModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],

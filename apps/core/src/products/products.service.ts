@@ -23,6 +23,7 @@ import { WarehouseService } from '../warehouse/warehouse.service';
 import { Movement, TypeMovementEnum } from '../movement/movement.schema';
 import { TypeProduct } from './typeProduct/typeProduct.schema';
 import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
+import { ApiResponse } from '../common/api-response';
 
 @Injectable()
 export class ProductsService {
@@ -296,6 +297,28 @@ export class ProductsService {
         error: error.message || 'Unknown error',
       });
     }
+  }
+
+  async getProductById(id: string): Promise<Product> {
+    try {
+      let castedId = new Types.ObjectId(id);
+      let product = await this.productModel.findById(castedId)
+        .populate('id_category')
+        .populate('id_type_product')
+        .lean();
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+      return product;
+    } catch (error) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
+    }
+
   }
 
   async findAttributeConfigs(): Promise<AttributeConfig[]> {

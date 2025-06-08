@@ -50,6 +50,9 @@ export class Customer {
     @Prop({ required: true })
     city: string;
 
+    @Prop({ required: false })
+    postalCode: string;
+
     @Prop({ required: true })
     address: string;
 
