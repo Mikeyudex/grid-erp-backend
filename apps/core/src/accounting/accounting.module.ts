@@ -10,8 +10,8 @@ import { SubAccountCategory, SubAccountCategorySchema } from './schemas/subAccou
 import { MethodOfPayment, MethodOfPaymentSchema } from './schemas/methodOfPayment.schema';
 import { PaymentMethod, PaymentMethodSchema } from './schemas/paymentMethod.schema';
 import { PaymentMethodService } from './services/paymentMethod.service';
-import { RelatedToService } from './services/relatedTo.service';
-import { RelatedTo, RelatedToSchema } from './schemas/relatedTo.schema';
+/* import { RelatedToService } from './services/relatedTo.service'; */
+/* import { RelatedTo, RelatedToSchema } from './schemas/relatedTo.schema'; */
 
 @Module({
   imports: [
@@ -22,10 +22,10 @@ import { RelatedTo, RelatedToSchema } from './schemas/relatedTo.schema';
     MongooseModule.forFeature([{ name: SubAccountCategory.name, schema: SubAccountCategorySchema }]),
     MongooseModule.forFeature([{ name: MethodOfPayment.name, schema: MethodOfPaymentSchema }]),
     MongooseModule.forFeature([{ name: PaymentMethod.name, schema: PaymentMethodSchema }]),
-    MongooseModule.forFeature([{ name: RelatedTo.name, schema: RelatedToSchema }]),
+   /*  MongooseModule.forFeature([{ name: RelatedTo.name, schema: RelatedToSchema }]), */
   ],
-  providers: [AccountingService, PaymentMethodService, RelatedToService],
+  providers: [AccountingService, PaymentMethodService/* , RelatedToService */],
   controllers: [AccountingController],
-  exports: [AccountingService, PaymentMethodService, RelatedToService]
+  exports: [AccountingService, PaymentMethodService/* , RelatedToService */]
 })
 export class AccountingModule { }

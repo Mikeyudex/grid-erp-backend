@@ -2,14 +2,14 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nes
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dtos/paymentMethod.dto';
 import { PaymentMethodService } from './services/paymentMethod.service';
-import { RelatedToService } from './services/relatedTo.service';
+/* import { RelatedToService } from './services/relatedTo.service'; */
 import { CreateRelatedToDto, UpdateRelatedToDto } from './dtos/relatedTo.dto';
 
 @Controller('accounting')
 export class AccountingController {
     constructor(
         private readonly paymentMethodService: PaymentMethodService,
-        private readonly relatedToService: RelatedToService,
+        /* private readonly relatedToService: RelatedToService, */
     ) { }
 
     @UseGuards(JwtAuthGuard)
@@ -48,7 +48,7 @@ export class AccountingController {
         return this.paymentMethodService.bulkDelete(payload?.ids);
     }
 
-    @UseGuards(JwtAuthGuard)
+   /*  @UseGuards(JwtAuthGuard)
     @Post('relatedTo/create')
     async createRelatedTo(@Body() CreateRelatedToDto: CreateRelatedToDto) {
         return this.relatedToService.create(CreateRelatedToDto);
@@ -82,5 +82,5 @@ export class AccountingController {
     @Delete('relatedTo/bulkDelete')
     async bulkDeleteRelatedTo(@Body() payload: Record<string, any>) {
         return this.relatedToService.bulkDelete(payload?.ids);
-    }
+    } */
 }
