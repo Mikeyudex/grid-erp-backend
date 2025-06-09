@@ -39,7 +39,7 @@ export class Product {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UnitOfMeasure', required: false })
     unitOfMeasureId: Types.ObjectId;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tax', required: false })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tax', required: true })
     taxId: Types.ObjectId;
 
     @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'ProductCategory' })
@@ -62,9 +62,6 @@ export class Product {
 
     @Prop({ required: false, type: Boolean, default: false })
     taxIncluded?: boolean;
-
-    @Prop({ required: false, type: Number, default: 0 })
-    taxPercent?: number;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

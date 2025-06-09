@@ -77,7 +77,6 @@ export class ProductsService {
       const typeOfPiecesObjectId = createProductDto.typeOfPieces.map(t => new Types.ObjectId(t));
 
       createProductDto.unitOfMeasureId = unitOfMeasure ? unitOfMeasure._id.toString() : null;
-      createProductDto.taxId = tax ? tax._id.toString() : null;
 
       if (!createProductDto.id_sub_category) {
         createProductDto.id_sub_category = "680aaf320d033722d44d4bff";

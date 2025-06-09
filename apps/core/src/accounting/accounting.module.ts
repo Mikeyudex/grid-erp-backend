@@ -10,6 +10,7 @@ import { SubAccountCategory, SubAccountCategorySchema } from './schemas/subAccou
 import { MethodOfPayment, MethodOfPaymentSchema } from './schemas/methodOfPayment.schema';
 import { PaymentMethod, PaymentMethodSchema } from './schemas/paymentMethod.schema';
 import { PaymentMethodService } from './services/paymentMethod.service';
+import { RelatedToService } from './services/relatedTo.service';
 
 @Module({
   imports: [
@@ -21,8 +22,8 @@ import { PaymentMethodService } from './services/paymentMethod.service';
     MongooseModule.forFeature([{ name: MethodOfPayment.name, schema: MethodOfPaymentSchema }]),
     MongooseModule.forFeature([{ name: PaymentMethod.name, schema: PaymentMethodSchema }]),
   ],
-  providers: [AccountingService, PaymentMethodService],
+  providers: [AccountingService, PaymentMethodService, RelatedToService],
   controllers: [AccountingController],
-  exports: [AccountingService, PaymentMethodService]
+  exports: [AccountingService, PaymentMethodService, RelatedToService]
 })
 export class AccountingModule { }

@@ -54,10 +54,9 @@ export class CreateProductDto {
   unitOfMeasureId?: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la lista de impuestos' })
-  /* @IsNotEmpty({ message: 'taxId es un campo requerido.' }) */
-  @IsOptional()
+  @IsNotEmpty({ message: 'taxId es un campo requerido.' })
   @IsString({ message: 'taxId debe ser una cadena.' })
-  taxId?: string;
+  taxId: string;
 
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
   @IsNotEmpty({ message: 'La categoría es un campo requerido.' })
