@@ -13,17 +13,23 @@ export class PurchaseOrderController {
     }
 
     @Get('findAll')
-    async findAll(@Query('page') page: number, @Query('limit') limit: number) {
-        return this.purchaseOrderService.findAll(page, limit);
+    async findAll(@Query('page') page: number, @Query('limit') limit: number, @Query('zoneId') zoneId: string) {
+        if (!page || !limit) {
+            throw new BadRequestException('Faltan parámetros');
+        }
+        if (page < 1 || limit < 1) {
+            throw new BadRequestException('page y limit deben ser mayores a 1');
+        }
+        return this.purchaseOrderService.findAll(page, limit, zoneId);
     }
 
 
     @Get('findAllFromViewProduction')
     async findAllFromViewProduction(@Query('page') page: number, @Query('limit') limit: number, @Query('zoneId') zoneId: string) {
-        if(!page || !limit) {
+        if (!page || !limit) {
             throw new BadRequestException('Faltan parámetros');
         }
-        if(page < 1 || limit < 1) {
+        if (page < 1 || limit < 1) {
             throw new BadRequestException('page y limit deben ser mayores a 1');
         }
         return this.purchaseOrderService.findAllByViewProduction(page, limit, zoneId);
@@ -73,5 +79,16 @@ export class PurchaseOrderController {
     @Put('update-item-status/:orderId/:itemId/:userId')
     async updateItemStatus(@Param('orderId') orderId: string, @Param('itemId') itemId: string, @Param('userId') userId: string, @Body() dto: { status: string }) {
         return this.purchaseOrderService.updateItemStatus(orderId, itemId, userId, dto.status);
+    }
+
+    @Put('release-order/:orderId/:userId')
+    async releaseOrder(@Param('orderId') orderId: string, @Param('userId') userId: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestException('orderId no es un ObjectId válido');
+        }
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException('userId no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.releaseOrder(orderId, userId);
     }
 }

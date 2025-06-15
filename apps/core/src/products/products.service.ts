@@ -268,6 +268,8 @@ export class ProductsService {
   async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
     let _id = new Types.ObjectId(id);
     updateProductDto.id_category = new Types.ObjectId(updateProductDto.id_category);
+    console.log(updateProductDto);
+    
     const updatedProduct = await this.productModel.findByIdAndUpdate(_id, updateProductDto, { new: true }).exec();
     if (!updatedProduct) {
       throw new NotFoundException(`Product with ID ${id} not found`);

@@ -55,9 +55,14 @@ export class PurchaseOrderService {
         }
     }
 
-    async findAll(page: number, limit: number) {
+    async findAll(page: number, limit: number, zoneId: string) {
         try {
-            let orders = await this.purchaseOrderDAO.findPaginated(page, limit);
+            let orders = await this.purchaseOrderDAO.findPaginated(page, limit, {
+                status: {
+                    $in: [PurchaseStatusEnum.ASIGNADO, PurchaseStatusEnum.FABRICACION]
+                },
+                zoneId: new Types.ObjectId(zoneId)
+            });
             return ApiResponse.success('Ordenes obtenidas con éxito', orders);
         } catch (error) {
             throw new InternalServerErrorException({
@@ -383,10 +388,7 @@ export class PurchaseOrderService {
                 { new: true },
             );
 
-            this.usersService.findOne(userId)
-                .then(user => {
-                    this.addHistoryEntry(orderId, `Orden de pedido asignada a zona de producción ${selectedZone.name}`, userId);
-                })
+            this.addHistoryEntry(orderId, `Orden de pedido asignada a zona de producción ${selectedZone.name}`, userId);
             return ApiResponse.success('Orden de pedido asignada a zona de producción con éxito', null, HttpStatus.OK);
         } catch (error) {
             throw new InternalServerErrorException({
@@ -398,7 +400,7 @@ export class PurchaseOrderService {
     }
 
     private async validateOrderStatusTransition(order: PurchaseOrderDocument, newStatus: string) {
-        
+
         switch (newStatus) {
             case PurchaseStatusEnum.DESPACHADO:
                 const hasUnfinishedItems = order.details.some(
@@ -415,6 +417,36 @@ export class PurchaseOrderService {
             // Puedes agregar más casos aquí en el futuro
             default:
                 break;
+        }
+    }
+
+    /**
+     * Libera una orden de pedido.
+     * @param orderId ID de la orden de pedido
+     * @param userId ID del usuario que realiza la acción
+     */
+    async releaseOrder(orderId: string, userId: string) {
+        try {
+            let castedOrderId = new Types.ObjectId(orderId);
+            await this.purchaseOrderModel.findByIdAndUpdate(
+                castedOrderId,
+                {
+                    status: PurchaseStatusEnum.LIBRE,
+                    updatedAt: getCurrentUTCDate(),
+                    updatedBy: new Types.ObjectId(userId),
+                    zoneId: null,
+                },
+                { new: true },
+            );
+
+            this.addHistoryEntry(orderId, `Orden de pedido liberada`, userId);
+            return ApiResponse.success('Orden de pedido liberada con éxito', null, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
         }
     }
 }
