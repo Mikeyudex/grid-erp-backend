@@ -1,7 +1,8 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { PurchaseOrderService } from './purchase-order.service';
 import { CreatePurchaseOrderDto } from './purchase-order.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('purchase-order')
 export class PurchaseOrderController {
@@ -81,6 +82,7 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.updateItemStatus(orderId, itemId, userId, dto.status);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put('release-order/:orderId/:userId')
     async releaseOrder(@Param('orderId') orderId: string, @Param('userId') userId: string) {
         if (!Types.ObjectId.isValid(orderId)) {
@@ -90,5 +92,17 @@ export class PurchaseOrderController {
             throw new BadRequestException('userId no es un ObjectId válido');
         }
         return this.purchaseOrderService.releaseOrder(orderId, userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put('dispatch-order/:orderId/:userId')
+    async dispatchOrder(@Param('orderId') orderId: string, @Param('userId') userId: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestException('orderId no es un ObjectId válido');
+        }
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException('userId no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.dispatchOrder(orderId, userId);
     }
 }

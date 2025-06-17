@@ -449,4 +449,41 @@ export class PurchaseOrderService {
             });
         }
     }
+
+    /**
+     * Despachar una orden de pedido.
+     * @param orderId ID de la orden de pedido
+     * @param userId ID del usuario que realiza la acción
+     */
+    async dispatchOrder(orderId: string, userId: string) {
+        try {
+            let castedOrderId = new Types.ObjectId(orderId);
+            let status = PurchaseStatusEnum.DESPACHADO;
+            const order = await this.purchaseOrderModel.findById(castedOrderId);
+
+            try {
+                await this.validateOrderStatusTransition(order, status);
+            } catch (error) {
+                return ApiResponse.error(error.message, null, error.statusCode);
+            }
+
+            const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
+                castedOrderId,
+                { status, updatedBy: userId, updatedAt: getCurrentUTCDate() },
+                { new: true }
+            );
+
+            if (updatedOrder) {
+                await this.addHistoryEntry(orderId, `Estado actualizado a ${status}`, userId);
+            }
+
+            return ApiResponse.success('Orden de pedido despachada con éxito', updatedOrder, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
 }
