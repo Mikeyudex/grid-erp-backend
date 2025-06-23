@@ -14,7 +14,7 @@ export class PurchaseOrderDAO extends DAO<PurchaseOrderDocument> {
         super(model);
     }
 
-    async findPaginated(page: number, limit: number, options?: QueryOptions): Promise<(FlattenMaps<PurchaseOrderDocument> & Required<{ _id: FlattenMaps<unknown>; }>)[]> {
+    async findPaginated(page: number, limit: number, options?: QueryOptions): Promise<(FlattenMaps<PurchaseOrderDocument> & Required<{ _id: FlattenMaps<unknown>; }> & { __v: number })[]> {
         return this.model.find(options)
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
@@ -24,12 +24,16 @@ export class PurchaseOrderDAO extends DAO<PurchaseOrderDocument> {
     }
 
     async findFromViewProduction(page: number, limit: number, filter?: FilterQuery<PurchaseOrderDocument>, options?: QueryOptions): Promise<(FlattenMaps<PurchaseOrderDocument> & Required<{ _id: FlattenMaps<unknown>; }>)[]> {
-        return this.model.find(filter, options)
+        return this.model.find(filter ?? {}, undefined, options)
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
             .populate('clientId')
             .populate('zoneId')
             .lean();
+    }
+
+    async countByStatus(status: string): Promise<number> {
+        return this.model.countDocuments({ status }).exec();
     }
 }

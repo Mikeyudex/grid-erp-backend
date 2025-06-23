@@ -24,6 +24,18 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.findAll(page, limit, zoneId);
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Get('findAllFreeOrders')
+    async findAllFreeOrders(@Query('page') page: number, @Query('limit') limit: number) {
+        if (!page || !limit) {
+            throw new BadRequestException('Faltan parámetros');
+        }
+        if (page < 1 || limit < 1) {
+            throw new BadRequestException('page y limit deben ser mayores a 1');
+        }
+        return this.purchaseOrderService.findAllFreeOrders(page, limit);
+    }
+
 
     @Get('findAllFromViewProduction')
     async findAllFromViewProduction(@Query('page') page: number, @Query('limit') limit: number, @Query('zoneId') zoneId: string) {
@@ -35,6 +47,16 @@ export class PurchaseOrderController {
         }
         return this.purchaseOrderService.findAllByViewProduction(page, limit, zoneId);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('countOrdersByStatus')
+    async countOrdersByStatus(@Query('status') status: string) {
+        if (!status) {
+            throw new BadRequestException('Falta el parámetro status');
+        }
+        return this.purchaseOrderService.countOrdersByStatus(status);
+    }
+
 
     @Get('getById/:id')
     async getById(@Param('id') id: string) {

@@ -26,7 +26,7 @@ import { WoocommerceModule } from '../woocommerce/woocommerce.module';
     MongooseModule.forFeature([{ name: TypeProduct.name, schema: TypeProductSchema }]),
     StockModule,
     UnitOfMeasureModule,
-    OracleCloudModule,
+    /* OracleCloudModule, */
     SettingsModule,
     TaxesModule,
     WarehouseModule,

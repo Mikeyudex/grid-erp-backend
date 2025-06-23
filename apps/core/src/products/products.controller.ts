@@ -54,7 +54,7 @@ export class ProductsController {
 
   constructor(
     private readonly productService: ProductsService,
-    private readonly oracleCloudService: OracleCloudService,
+    /* private readonly oracleCloudService: OracleCloudService, */
     @Inject(config.KEY) private configService: ConfigType<typeof config>,
   ) {
     this.mockupCompanyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
@@ -282,7 +282,7 @@ export class ProductsController {
     return { lastSku };
   }
 
-  @PublicController() //Este decorador sirve para desproteger una ruta en especifico si se tiene un guard en la raiz del controlador
+  /* @PublicController() //Este decorador sirve para desproteger una ruta en especifico si se tiene un guard en la raiz del controlador
   @Post('/upload')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
@@ -324,9 +324,9 @@ export class ProductsController {
     } catch (error) {
       throw new BadRequestException('File upload failed');
     }
-  }
+  } */
 
-  @Delete('/deleteFile/:filename')
+  /* @Delete('/deleteFile/:filename')
   async deleteFile(@Param('filename') filename: string) {
     try {
       const objectName = `${this.defaultFolderProducts}${filename}`;
@@ -338,7 +338,7 @@ export class ProductsController {
     } catch (error) {
       throw new HttpException('File not found or deletion failed', HttpStatus.NOT_FOUND);
     }
-  }
+  } */
 
   @UseGuards(JwtAuthGuard)
   @Delete('deleteProduct/:id')

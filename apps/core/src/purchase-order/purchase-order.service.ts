@@ -73,6 +73,38 @@ export class PurchaseOrderService {
         }
     }
 
+    async findAllFreeOrders(page: number, limit: number) {
+        try {
+            let orders = await this.purchaseOrderDAO.findPaginated(page, limit, {
+                status: PurchaseStatusEnum.LIBRE,
+                zoneId: null,
+            });
+            if (!orders || orders.length === 0) {
+                throw new NotFoundException(`No se encontraron ordenes de pedido libres`);
+            }
+            return ApiResponse.success('Ordenes libres obtenidas con éxito', orders);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async countOrdersByStatus(status: string) {
+        try {
+            let countOrders = await this.purchaseOrderDAO.countByStatus(status);
+            return ApiResponse.success('Ordenes obtenidas con éxito', countOrders);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     /**
    * Obtiene todas las ordenes de pedido desde la vista de producción.
    * @param page Número de página a mostrar
