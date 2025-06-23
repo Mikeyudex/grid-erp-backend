@@ -117,7 +117,14 @@ export class PurchaseOrderService {
                     { zoneId: new Types.ObjectId(zoneId) },
                     { zoneId: null },
                     { zoneId: { $exists: false } }
-                ]
+                ],
+                status: {
+                    $in: [
+                        PurchaseStatusEnum.ASIGNADO,
+                        PurchaseStatusEnum.FABRICACION,
+                        PurchaseStatusEnum.LIBRE,
+                    ],
+                },
             };
             let orders = await this.purchaseOrderDAO.findFromViewProduction(page, limit, filter, {});
             if (!orders || orders.length === 0) {
