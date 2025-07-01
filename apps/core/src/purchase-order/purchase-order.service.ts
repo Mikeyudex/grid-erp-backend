@@ -525,4 +525,48 @@ export class PurchaseOrderService {
             });
         }
     }
+
+    /**
+     * Autoasigna una orden de pedido.
+     * @param orderId ID de la orden de pedido
+     * @param userId ID del usuario que realiza la acción
+     * @param zoneId ID de la zona al que se le asigna la orden
+     */
+    async autoAssignOrder(orderId: string, userId: string, zoneId: string) {
+        try {
+            let castedOrderId = new Types.ObjectId(orderId);
+            let castedZoneId = new Types.ObjectId(zoneId);
+            let status = PurchaseStatusEnum.ASIGNADO;
+            const order = await this.purchaseOrderModel.findById(castedOrderId);
+
+            try {
+                await this.validateOrderStatusTransition(order, status);
+            } catch (error) {
+                return ApiResponse.error(error.message, null, error.statusCode);
+            }
+
+            const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
+                castedOrderId,
+                {   
+                    status,
+                    zoneId: castedZoneId,
+                    updatedBy: userId,
+                    updatedAt: getCurrentUTCDate(),
+                },
+                { new: true }
+            );
+
+            if (updatedOrder) {
+                await this.addHistoryEntry(orderId, `Estado actualizado a ${status}`, userId);
+            }
+
+            return ApiResponse.success('Orden de pedido autoasignada con éxito', updatedOrder, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
 }

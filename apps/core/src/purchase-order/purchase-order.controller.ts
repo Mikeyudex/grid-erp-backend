@@ -127,4 +127,19 @@ export class PurchaseOrderController {
         }
         return this.purchaseOrderService.dispatchOrder(orderId, userId);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Put('auto-assign-order/:orderId/:userId')
+    async autoAssignOrder(@Param('orderId') orderId: string, @Param('userId') userId: string, @Param('zoneId') zoneId: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestException('orderId no es un ObjectId válido');
+        }
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException('userId no es un ObjectId válido');
+        }
+        if (!Types.ObjectId.isValid(zoneId)) {
+            throw new BadRequestException('zoneId no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.autoAssignOrder(orderId, userId, zoneId);
+    }
 }
