@@ -6,20 +6,36 @@ export type AccountDocument = Account & Document;
 
 export interface IAccount {
     name: string;
-    code: number;
+    typeAccount: string;
+    bankAccount: string;
+    numberAccount: string;
+    isActive: boolean;
+    description: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    deletedAt?: Date;
 }
 
 @Schema()
 export class Account {
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'AccountGroup' })
-    accountGroupId: Types.ObjectId;
-
     @Prop({ required: true, type: String })
     name: string;
 
-    @Prop({ required: true, type: Number })
-    code: number;
+    @Prop({ required: true, type: String })
+    typeAccount: string;
+
+    @Prop({ required: true, type: String })
+    bankAccount: string;
+    
+    @Prop({ required: true, type: String })
+    numberAccount: string;
+
+    @Prop({ required: true, type: Boolean })
+    isActive: boolean;
+
+    @Prop({ required: false, type: String })
+    description: string;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

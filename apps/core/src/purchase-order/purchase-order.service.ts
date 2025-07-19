@@ -16,6 +16,7 @@ import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { UsersService } from '../users/users.service';
 import { ItemStatusEnum } from './enums/itemStatus.enum';
 import { PurchaseStatusEnum } from './enums/purchaseStatus.enum';
+import { IncomeService } from '../accounting/services/Income.service';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -29,10 +30,21 @@ export class PurchaseOrderService {
         private readonly purchaseOrderDAO: PurchaseOrderDAO,
         private readonly productsService: ProductsService,
         private readonly usersService: UsersService,
+        private readonly incomeService: IncomeService,
     ) { }
 
     async create(createPurchaseOrderDto: CreatePurchaseOrderDto) {
         try {
+            let incomeIds = [];
+
+            for (let index = 0; index < createPurchaseOrderDto.methodOfPayment.length; index++) {
+                let methodOfPaymentDto = createPurchaseOrderDto.methodOfPayment[index];
+                let incomeDocument = await this.incomeService.create(methodOfPaymentDto);
+                incomeIds.push(incomeDocument._id);
+            }
+
+            delete createPurchaseOrderDto.methodOfPayment;
+
             const createdOrder = new this.purchaseOrderModel({
                 ...createPurchaseOrderDto,
                 history: [
@@ -41,7 +53,8 @@ export class PurchaseOrderService {
                         userId: new Types.ObjectId(createPurchaseOrderDto.createdBy),
                         createdAt: getCurrentUTCDate(),
                     },
-                ]
+                ],
+                methodOfPayment: incomeIds,
             });
             let order = await createdOrder.save();
             return ApiResponse.success('Orden creada con éxito', order, HttpStatus.CREATED);
@@ -547,7 +560,7 @@ export class PurchaseOrderService {
 
             const updatedOrder = await this.purchaseOrderModel.findByIdAndUpdate(
                 castedOrderId,
-                {   
+                {
                     status,
                     zoneId: castedZoneId,
                     updatedBy: userId,

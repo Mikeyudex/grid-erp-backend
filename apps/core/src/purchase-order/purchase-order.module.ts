@@ -9,6 +9,7 @@ import { ProductsModule } from '../products/products.module';
 import { Counter, CounterSchema } from './counter.schema';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
 import { UsersModule } from '../users/users.module';
+import { AccountingModule } from '../accounting/accounting.module';
 
 
 @Module({
@@ -19,6 +20,7 @@ import { UsersModule } from '../users/users.module';
     MongooseModule.forFeature([{ name: PurchaseOrderItem.name, schema: PurchaseOrderSchema }]),
     ProductsModule,
     UsersModule,
+    AccountingModule
   ],
   providers: [PurchaseOrderService, PurchaseOrderDAO],
   controllers: [PurchaseOrderController]

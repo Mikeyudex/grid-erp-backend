@@ -13,6 +13,9 @@ export class Zone {
     @Prop({ required: false, type: String })
     shortCode: string;
 
+    @Prop({ required: false, type: Array<Types.ObjectId> , ref: 'Account' })
+    accounts: Types.ObjectId[];
+
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
 

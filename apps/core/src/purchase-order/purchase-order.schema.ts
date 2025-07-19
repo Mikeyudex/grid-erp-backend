@@ -96,6 +96,9 @@ export class PurchaseOrder {
     @Prop({ type: [PurchaseOrderHistorySchema], default: [] })
     history: PurchaseOrderHistory[];
 
+    @Prop({ required: true, type: Array<Types.ObjectId>, ref: 'Income', default: [] })
+    methodOfPayment: Types.ObjectId[];
+
     @Prop({ required: true, ref: 'User', type: Types.ObjectId }) //Id del usuario que crea la orden
     createdBy: Types.ObjectId;
 

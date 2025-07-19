@@ -2,14 +2,14 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nes
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dtos/paymentMethod.dto';
 import { PaymentMethodService } from './services/paymentMethod.service';
-/* import { RelatedToService } from './services/relatedTo.service'; */
-import { CreateRelatedToDto, UpdateRelatedToDto } from './dtos/relatedTo.dto';
+import { AccountService } from './services/account.service';
+import { CreateAccountDto, UpdateAccountDto } from './dtos/account.dto';
 
 @Controller('accounting')
 export class AccountingController {
     constructor(
         private readonly paymentMethodService: PaymentMethodService,
-        /* private readonly relatedToService: RelatedToService, */
+        private readonly accountService: AccountService,
     ) { }
 
     @UseGuards(JwtAuthGuard)
@@ -46,6 +46,42 @@ export class AccountingController {
     @Delete('paymentMethod/bulkDelete')
     async bulkDeletePaymentMethod(@Body() payload: Record<string, any>) {
         return this.paymentMethodService.bulkDelete(payload?.ids);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('account/create')
+    async createAccount(@Body() CreateAccountDto: CreateAccountDto) {
+        return this.accountService.create(CreateAccountDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('account/getAll')
+    async getAllAccount() {
+        return this.accountService.findAll();
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('account/getById/:id')
+    async getByIdAccount(@Param('id') id: string) {
+        return this.accountService.findById(id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put('account/update/:id')
+    async updateAccount(@Body() UpdateAccountDto: UpdateAccountDto, @Param('id') id: string) {
+        return this.accountService.update(id, UpdateAccountDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('account/delete/:id')
+    async deleteAccount(@Param('id') id: string) {
+        return this.accountService.delete(id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('account/bulkDelete')
+    async bulkDeleteAccount(@Body() payload: Record<string, any>) {
+        return this.accountService.bulkDelete(payload?.ids);
     }
 
    /*  @UseGuards(JwtAuthGuard)

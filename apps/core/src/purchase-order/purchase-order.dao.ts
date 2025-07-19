@@ -14,7 +14,7 @@ export class PurchaseOrderDAO extends DAO<PurchaseOrderDocument> {
         super(model);
     }
 
-    async findPaginated(page: number, limit: number, options?: QueryOptions): Promise<(FlattenMaps<PurchaseOrderDocument> & Required<{ _id: FlattenMaps<unknown>; }> & { __v: number })[]> {
+    async findPaginated(page: number, limit: number, options?: QueryOptions): Promise<(FlattenMaps<PurchaseOrderDocument> & Required<{ _id: FlattenMaps<unknown>; }>)[]> {
         return this.model.find(options)
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)

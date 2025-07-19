@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { CreateIncomeDto } from '../accounting/dtos/income.dto';
 
 class CreatePurchaseOrderItemDto {
   @IsString()
@@ -93,4 +94,9 @@ export class CreatePurchaseOrderDto {
   @IsOptional()
   @IsMongoId()
   updatedBy?: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateIncomeDto)
+  methodOfPayment: CreateIncomeDto[];
 }

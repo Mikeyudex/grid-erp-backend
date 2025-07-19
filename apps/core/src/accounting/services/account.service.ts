@@ -1,21 +1,34 @@
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { PaymentMethod, PaymentMethodDocument } from "../schemas/paymentMethod.schema";
-import { InternalServerErrorException } from "@nestjs/common";
+import { Account, AccountDocument } from "../schemas/account.schema";
 import { ApiResponse } from "../../common/api-response";
-import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from "../dtos/paymentMethod.dto";
+import { InternalServerErrorException } from "@nestjs/common";
+import { CreateAccountDto, UpdateAccountDto } from "../dtos/account.dto";
 
-
-export class PaymentMethodService {
+export class AccountService {
 
     constructor(
-        @InjectModel(PaymentMethod.name) private readonly paymentMethodModel: Model<PaymentMethodDocument>,
+        @InjectModel(Account.name) private readonly accounModel: Model<AccountDocument>,
     ) { }
 
     async findAll() {
         try {
-            let paymentMethods = await this.paymentMethodModel.find().lean().exec();
-            return ApiResponse.success('Registros obtenidos con éxito', paymentMethods);
+            let accounts = await this.accounModel.find().exec();
+            return ApiResponse.success('Registros obtenidos con éxito', accounts);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async findOne(id: string) {
+        try {
+            let castedId = new Types.ObjectId(id);
+            let account = await this.accounModel.findById(castedId).exec();
+            return ApiResponse.success('Registro obtenido con éxito', account);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
@@ -27,8 +40,9 @@ export class PaymentMethodService {
 
     async findById(id: string) {
         try {
-            let paymentMethod = await this.paymentMethodModel.findById(id).lean().exec();
-            return ApiResponse.success('Registros obtenidos con éxito', paymentMethod);
+            let castedId = new Types.ObjectId(id);
+            let account = await this.accounModel.findById(castedId).exec();
+            return ApiResponse.success('Registro obtenido con éxito', account);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
@@ -38,10 +52,10 @@ export class PaymentMethodService {
         }
     }
 
-    async create(createPaymentMethodDto: CreatePaymentMethodDto) {
+    async create(account: CreateAccountDto) {
         try {
-            let paymentMethodDocument = await this.paymentMethodModel.create(createPaymentMethodDto);
-            return ApiResponse.success('Registros obtenidos con éxito', paymentMethodDocument);
+            let created = await this.accounModel.create(account);
+            return ApiResponse.success('Registro creado con éxito', created);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
@@ -51,39 +65,42 @@ export class PaymentMethodService {
         }
     }
 
-    async update(id: string, updatePaymentMethodDto: UpdatePaymentMethodDto) {
+    async update(id: string, account: UpdateAccountDto) {
         try {
             let castedId = new Types.ObjectId(id);
-            let paymentMethod = await this.paymentMethodModel.findByIdAndUpdate(castedId, updatePaymentMethodDto, { new: true });
-            return ApiResponse.success('Registros obtenidos con éxito', paymentMethod);
+            let updated = await this.accounModel.findByIdAndUpdate(castedId, account, { new: true }).exec();
+            return ApiResponse.success('Registro actualizado con éxito', updated);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
                 message: 'Error interno del servidor',
                 error: error.message || 'Unknown error',
             });
+
         }
     }
 
     async delete(id: string) {
         try {
             let castedId = new Types.ObjectId(id);
-            let paymentMethod = await this.paymentMethodModel.findByIdAndDelete(castedId);
-            return ApiResponse.success('Registros eliminados con éxito', paymentMethod);
+            let deleted = await this.accounModel.findByIdAndDelete(castedId).exec();
+            return ApiResponse.success('Registro eliminado con éxito', deleted);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
                 message: 'Error interno del servidor',
                 error: error.message || 'Unknown error',
             });
+
         }
+
     }
 
     async bulkDelete(ids: string[]) {
         try {
             let idsObjectId = ids.map(id => new Types.ObjectId(id));
-            let paymentMethod = await this.paymentMethodModel.deleteMany({ _id: { $in: idsObjectId } });
-            return ApiResponse.success('Registros eliminados con éxito', paymentMethod);
+            let deletedAccounts = await this.accounModel.deleteMany({ _id: { $in: idsObjectId } });
+            return ApiResponse.success('Registros eliminados con éxito', deletedAccounts);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
@@ -93,6 +110,4 @@ export class PaymentMethodService {
         }
     }
 
-
 }
-

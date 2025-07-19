@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 import { CoreModule } from './core.module';
 import { MongooseValidationFilter } from './mongoose-validation.filter';
@@ -16,7 +17,9 @@ async function bootstrap() {
     const configsService = new ConfigService();
     const app = await NestFactory.create(CoreModule);
 
-    //app.useGlobalFilters(new AllExceptionsFilter());
+    app.useWebSocketAdapter(new IoAdapter(app));
+
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     //BullBoard configs
     //const bullBoardService = app.get(BullBoardService);
@@ -25,7 +28,7 @@ async function bootstrap() {
     // Configurar ruta para Bull Board
     //app.use('/bull-board', serverAdapter.getRouter());
 
-    //app.useGlobalFilters(new MongooseValidationFilter());
+    app.useGlobalFilters(new MongooseValidationFilter());
     app.enableCors();
     const config = new DocumentBuilder()
       .setTitle('Inventory API')
@@ -34,7 +37,7 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
-    app.useWebSocketAdapter(new WsAdapter(app));
+   /*  app.useWebSocketAdapter(new WsAdapter(app)); */
     /*  app.enableCors({
         origin: (origin, callback) => {
           const allowedOrigins = [];
