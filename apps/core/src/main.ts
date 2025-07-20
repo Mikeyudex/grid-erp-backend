@@ -1,12 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import { WsAdapter } from '@nestjs/platform-ws';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
 import { CoreModule } from './core.module';
 import { MongooseValidationFilter } from './mongoose-validation.filter';
-import { BullBoardService } from './common/config/bull-board.config';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import './mongoose-monitor';
 

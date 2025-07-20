@@ -38,6 +38,16 @@ export class AccountService {
         }
     }
 
+
+    async findByIds(ids: Types.ObjectId[]) {
+        try {
+            let accounts = await this.accounModel.find({ _id: { $in: ids } }).exec();
+            return accounts;
+        } catch (error) {
+            throw new Error(`Error getting accounts: ${error.message}`);
+        }
+    }
+
     async findById(id: string) {
         try {
             let castedId = new Types.ObjectId(id);

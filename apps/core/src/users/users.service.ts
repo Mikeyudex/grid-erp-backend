@@ -18,6 +18,7 @@ import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { AuthService } from '../auth/auth.service';
 import { MailerService } from '../mailer.service';
 import { TransporterOptions } from '../interfaces/transporterOptions.interface';
+import { AccountService } from '../accounting/services/account.service';
 
 @Injectable()
 export class UsersService {
@@ -28,6 +29,7 @@ export class UsersService {
         @InjectModel(Zone.name) private zoneModel: Model<ZoneDocument>,
         @Inject(config.KEY) private configService: ConfigType<typeof config>,
         @Inject(forwardRef(() => AuthService)) private readonly authService: AuthService,
+        private readonly accountService: AccountService,
     ) { this.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a" }
 
     async findAll(filter?: string, value?: string) {
@@ -161,6 +163,56 @@ export class UsersService {
             let idsObjectId = ids.map(id => new Types.ObjectId(id));
             let deletedZone = await this.zoneModel.deleteMany({ _id: { $in: idsObjectId } });
             return deletedZone;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async addAccountsToZone(payload: Record<string, any>) {
+        try {
+            let idsObjectId = payload.ids.map((id: string) => new Types.ObjectId(id));
+            let accountsId = payload.accountIds.map((id: string) => new Types.ObjectId(id));
+            await this.zoneModel.updateMany(
+                { _id: { $in: idsObjectId } },
+                {
+                    $addToSet: {
+                        accounts: { $each: accountsId }
+                    }
+                }
+            );
+            return ApiResponse.success('Operación realizada correctamente', null);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async getAccountsFromZone(id: string) {
+        try {
+            const zone = await this.zoneModel.findById(id)
+                .exec();
+            if (!zone) {
+                throw new InternalServerErrorException({
+                    statusCode: 404,
+                    message: 'No se encontraron cuentas en la zona seleccionada',
+                });
+            }
+            let accountsId = zone.accounts;
+            let accounts = await this.accountService.findByIds(accountsId);
+            if (!accounts || accounts.length === 0) {
+                return new InternalServerErrorException({
+                    statusCode: 404,
+                    message: 'No se encontraron cuentas en la zona seleccionada',
+                });
+            }
+            return ApiResponse.success('Success', accounts);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,

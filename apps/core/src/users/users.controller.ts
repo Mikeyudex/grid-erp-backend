@@ -85,6 +85,17 @@ export class UsersController {
     return this.usersService.bulkDeleteZone(payload?.ids);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Put('/zones/addAccounts')
+  addAccountsToZone(@Body() payload: Record<string, any>) {
+    return this.usersService.addAccountsToZone(payload);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/zones/getAccountsFromZone/:id')
+  getAccountsFromZone(@Param('id') id: string) {
+    return this.usersService.getAccountsFromZone(id);
+  }
 
   @Get('/generateQrCode/:email')
   async generate(@Param('email') email: string) {
