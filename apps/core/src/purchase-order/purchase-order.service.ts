@@ -44,7 +44,7 @@ export class PurchaseOrderService {
             }
 
             delete createPurchaseOrderDto.methodOfPayment;
-
+            createPurchaseOrderDto.zoneId = new Types.ObjectId(createPurchaseOrderDto.zoneId);
             const createdOrder = new this.purchaseOrderModel({
                 ...createPurchaseOrderDto,
                 history: [
@@ -57,6 +57,7 @@ export class PurchaseOrderService {
                 methodOfPayment: incomeIds,
             });
             let order = await createdOrder.save();
+            this.incomeService.updatePurchaseOrderId(incomeIds, order._id);
             return ApiResponse.success('Orden creada con éxito', order, HttpStatus.CREATED);
         } catch (error) {
             this.logger.error('Error al crear cliente', error);

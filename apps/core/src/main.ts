@@ -19,13 +19,6 @@ async function bootstrap() {
 
     app.useGlobalFilters(new AllExceptionsFilter());
 
-    //BullBoard configs
-    //const bullBoardService = app.get(BullBoardService);
-    //const serverAdapter = bullBoardService.getServerAdapter();
-
-    // Configurar ruta para Bull Board
-    //app.use('/bull-board', serverAdapter.getRouter());
-
     app.useGlobalFilters(new MongooseValidationFilter());
     app.enableCors();
     const config = new DocumentBuilder()
@@ -35,7 +28,7 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
-   /*  app.useWebSocketAdapter(new WsAdapter(app)); */
+    /*  app.useWebSocketAdapter(new WsAdapter(app)); */
     /*  app.enableCors({
         origin: (origin, callback) => {
           const allowedOrigins = [];

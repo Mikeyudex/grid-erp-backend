@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as Joi from 'joi';
 import { ConfigType } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 import { CoreController } from './core.controller';
 import { CoreService } from './core.service';
@@ -20,7 +22,6 @@ import { UsersModule } from './users/users.module';
 import { MovementModule } from './movement/movement.module';
 import { StockAdjustmentModule } from './stock-adjustment/stock-adjustment.module';
 import config from './config';
-import { ApiWoocommerceModule } from './api-woocommerce/api-woocommerce.module';
 import { BullModule } from '@nestjs/bull';
 import { RedisConfig } from './common/config/redis.config';
 import { BullBoardService } from './common/config/bull-board.config';
@@ -32,6 +33,7 @@ import { PreciosTapeteMaterialModule } from './precios-tapete-material/precios-t
 import { PurchaseOrderModule } from './purchase-order/purchase-order.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { UserGatewayModule } from './gateways/user.gateway.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -66,6 +68,10 @@ import { UserGatewayModule } from './gateways/user.gateway.module';
     BullModule.registerQueue({
       name: QueuesEnum.Imports,
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'static'),
+      serveRoot: '/static',
+    }),
     CompanyModule,
     WarehouseModule,
     ProviderModule,
@@ -84,6 +90,7 @@ import { UserGatewayModule } from './gateways/user.gateway.module';
     PurchaseOrderModule,
     AccountingModule,
     UserGatewayModule,
+    UploadModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],

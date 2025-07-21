@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Types } from 'mongoose';
 import { CreateIncomeDto } from '../accounting/dtos/income.dto';
 
 class CreatePurchaseOrderItemDto {
@@ -82,7 +83,7 @@ export class CreatePurchaseOrderDto {
 
   @IsOptional()
   @IsMongoId()
-  zoneId?: string;
+  zoneId?: string | Types.ObjectId;
 
   @IsOptional()
   @IsDate()

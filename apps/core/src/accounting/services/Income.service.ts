@@ -3,7 +3,6 @@ import { Model, Types } from "mongoose";
 import { Income, IncomeDocument } from "../schemas/income.schema";
 import { CreateIncomeDto } from "../dtos/income.dto";
 
-
 export class IncomeService {
 
     constructor(
@@ -16,6 +15,18 @@ export class IncomeService {
             return incomeDocument;
         } catch (error) {
             throw new Error(`Error creating income: ${error.message}`);
+        }
+    }
+
+    async updatePurchaseOrderId(ids:Types.ObjectId[], purchaseOrderId:unknown) {
+        try {
+            let updated = await this.incomeModel.updateMany(
+                { _id: { $in: ids } },
+                { $set: { purchaseOrderId: purchaseOrderId } }
+            );
+            return updated;
+        } catch (error) {
+            throw new Error(`Error updating income: ${error.message}`);
         }
     }
 

@@ -4,12 +4,17 @@ import { Document, Types } from 'mongoose';
 
 export type IncomeDocument = Income & Document;
 
+export enum IncomeTypeOperation {
+    SALES = 'ventas',
+    RECEIPTS = 'recibos',
+}
+
 export interface IIncome {
     purchaseOrderId: Types.ObjectId;
     sequence: number;
     typeOperation: string;
     paymentDate: Date;
-    providerId: Types.ObjectId;
+    providerId?: Types.ObjectId;
     accountId: Types.ObjectId;
     value: number;
     observations: string;
@@ -25,7 +30,7 @@ export class Income {
     @Prop({ required: false, type: Types.ObjectId, ref: 'PurchaseOrder', default: null })
     purchaseOrderId: Types.ObjectId;
 
-    @Prop({ required: true, type: Number })
+    @Prop({ required: false, type: Number })
     sequence: number;
 
     @Prop({ required: true, type: String })
@@ -35,7 +40,7 @@ export class Income {
     paymentDate: Date;
 
     @Prop({ required: false, type: Types.ObjectId, ref: 'ProviderErp', default: null })
-    providerId: Types.ObjectId;
+    providerId?: Types.ObjectId;
     
     @Prop({ required: true, type: Types.ObjectId, ref: 'Account' })
     accountId: Types.ObjectId;
@@ -43,7 +48,7 @@ export class Income {
     @Prop({ required: true, type: Number })
     value: number;
 
-    @Prop({ required: true, type: String })
+    @Prop({ required: false, type: String })
     observations: string;
 
     @Prop({required:false, type: String})
@@ -60,3 +65,16 @@ export class Income {
 }
 
 export const IncomeSchema = SchemaFactory.createForClass(Income);
+
+IncomeSchema.pre<IncomeDocument>('save', async function (next) {
+    if (this.isNew && !this.sequence) {
+        const counterModel = this.db.model('Counter');
+        const counter = await counterModel.findOneAndUpdate(
+            { entity: 'income' },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        this.sequence = counter.seq;
+    }
+    next();
+});

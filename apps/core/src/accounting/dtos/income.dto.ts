@@ -1,17 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export class CreateIncomeDto {
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({description: 'Id del pedido'})
     purchaseOrderId: string;
 
     @IsNumber()
-    @IsNotEmpty()
-    @ApiProperty({description: 'Número de secuencia'})
+    @IsOptional()
+    @ApiProperty({description: 'Secuencia'})
     sequence: number;
 
     @IsString() 
@@ -25,7 +25,7 @@ export class CreateIncomeDto {
     paymentDate: Date;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({description: 'Id del proveedor'})
     providerId: string;
 
@@ -40,13 +40,12 @@ export class CreateIncomeDto {
     value: number;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({description: 'Observaciones'})
     observations: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({description: 'Soporte de pago'})
     paymentSupport: string;
-
 }
