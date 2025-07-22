@@ -583,4 +583,41 @@ export class PurchaseOrderService {
             });
         }
     }
+
+    /**
+     * Elimina una orden de pedido.
+     * @param orderId ID de la orden de pedido
+     */
+    async deleteOrder(orderId: string) {
+        try {
+            let castedOrderId = new Types.ObjectId(orderId);
+            let deletedOrder = await this.purchaseOrderModel.findByIdAndDelete(castedOrderId).exec();
+            return ApiResponse.success('Orden de pedido eliminada con éxito', deletedOrder, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+
+    /**
+     * Elimina ordenes de pedido.
+     * @param ids IDs de las ordenes de pedido
+     */
+    async bulkDeleteOrders(ids: string[]) {
+        try {
+            let idsObjectId = ids.map(id => new Types.ObjectId(id));
+            let deletedOrders = await this.purchaseOrderModel.deleteMany({ _id: { $in: idsObjectId } });
+            return ApiResponse.success('Ordenes de pedido eliminadas con éxito', deletedOrders, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
 }

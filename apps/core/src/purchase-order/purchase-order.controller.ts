@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { PurchaseOrderService } from './purchase-order.service';
 import { CreatePurchaseOrderDto } from './purchase-order.dto';
@@ -141,5 +141,20 @@ export class PurchaseOrderController {
             throw new BadRequestException('zoneId no es un ObjectId válido');
         }
         return this.purchaseOrderService.autoAssignOrder(orderId, userId, zoneId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('delete-order/:orderId')
+    async deleteOrder(@Param('orderId') orderId: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestException('orderId no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.deleteOrder(orderId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('bulk-delete')
+    async bulkDeleteOrders(@Body() payload: Record<string, any>) {
+        return this.purchaseOrderService.bulkDeleteOrders(payload?.ids);
     }
 }
