@@ -7,15 +7,17 @@ export type IncomeDocument = Income & Document;
 export enum IncomeTypeOperation {
     SALES = 'ventas',
     RECEIPTS = 'recibos',
+    ANTICIPO = 'anticipo',
 }
 
 export interface IIncome {
-    purchaseOrderId: Types.ObjectId;
+    purchaseOrderId: Types.ObjectId | string | null;
     sequence: number;
     typeOperation: string;
     paymentDate: Date;
-    providerId?: Types.ObjectId;
-    accountId: Types.ObjectId;
+    customerId?: Types.ObjectId | string | null;
+    providerId?: Types.ObjectId | string | null;
+    accountId: Types.ObjectId | string;
     value: number;
     observations: string;
     paymentSupport: string;
@@ -28,7 +30,7 @@ export interface IIncome {
 export class Income {
 
     @Prop({ required: false, type: Types.ObjectId, ref: 'PurchaseOrder', default: null })
-    purchaseOrderId: Types.ObjectId;
+    purchaseOrderId?: Types.ObjectId;
 
     @Prop({ required: false, type: Number })
     sequence: number;
@@ -38,6 +40,9 @@ export class Income {
 
     @Prop({ required: true, type: Date })
     paymentDate: Date;
+
+    @Prop({ required: false, type: Types.ObjectId, ref: 'Customer'})
+    customerId?: Types.ObjectId;
 
     @Prop({ required: false, type: Types.ObjectId, ref: 'ProviderErp', default: null })
     providerId?: Types.ObjectId;

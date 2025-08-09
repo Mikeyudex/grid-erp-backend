@@ -26,6 +26,11 @@ export class CreateIncomeDto {
 
     @IsString()
     @IsOptional()
+    @ApiProperty({description: 'Id del cliente'})
+    customerId: string;
+
+    @IsString()
+    @IsOptional()
     @ApiProperty({description: 'Id del proveedor'})
     providerId: string;
 

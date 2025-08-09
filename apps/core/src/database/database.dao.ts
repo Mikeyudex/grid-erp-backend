@@ -52,7 +52,7 @@ export abstract class DAO<T> {
     return this.model.find(options)
       .populate('typeCustomerId')
       .lean()
-      .skip(page * limit)
+      .skip((page - 1) * limit)
       .limit(limit)
   }
 
@@ -60,7 +60,7 @@ export abstract class DAO<T> {
     return this.model.find(options)
       .populate('typeCustomerId')
       .lean()
-      .skip(page * limit)
+      .skip((page - 1) * limit)
       .limit(limit)
       .select(fields.join(' '));
   }

@@ -1,15 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dtos/paymentMethod.dto';
 import { PaymentMethodService } from './services/paymentMethod.service';
 import { AccountService } from './services/account.service';
 import { CreateAccountDto, UpdateAccountDto } from './dtos/account.dto';
+import { IncomeService } from './services/Income.service';
+import { CreateIncomeDto } from './dtos/income.dto';
 
 @Controller('accounting')
 export class AccountingController {
     constructor(
         private readonly paymentMethodService: PaymentMethodService,
         private readonly accountService: AccountService,
+        private readonly incomeService: IncomeService,
     ) { }
 
     @UseGuards(JwtAuthGuard)
@@ -84,39 +87,83 @@ export class AccountingController {
         return this.accountService.bulkDelete(payload?.ids);
     }
 
-   /*  @UseGuards(JwtAuthGuard)
-    @Post('relatedTo/create')
-    async createRelatedTo(@Body() CreateRelatedToDto: CreateRelatedToDto) {
-        return this.relatedToService.create(CreateRelatedToDto);
+    @UseGuards(JwtAuthGuard)
+    @Post('income/create')
+    async createIncome(@Body() CreateIncomeDto: CreateIncomeDto) {
+        return this.incomeService.create(CreateIncomeDto);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get('relatedTo/getAll')
-    async getAllRelatedTo() {
-        return this.relatedToService.findAll();
+    @Get('income/getAll')
+    async getAllIncome(
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Query('search') search: string,
+        @Query('sortBy') sortBy = 'createdAt',
+        @Query('sortOrder') sortOrder: 'asc' | 'desc',
+    ) {
+        return this.incomeService.findAll(
+            { page, limit, search, sortBy, sortOrder }
+        );
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get('relatedTo/getById/:id')
-    async getByIdRelatedTo(@Param('id') id: string) {
-        return this.relatedToService.findById(id);
+    @Get('income/getById/:id')
+    async getByIdIncome(@Param('id') id: string) {
+        return this.incomeService.findById(id);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Put('relatedTo/update/:id')
-    async updateRelatedTo(@Body() UpdateRelatedToDto: UpdateRelatedToDto, @Param('id') id: string) {
-        return this.relatedToService.update(id, UpdateRelatedToDto);
+    @Put('income/update/:id')
+    async updateIncome(@Body() UpdateIncomeDto: any, @Param('id') id: string) {
+        return this.incomeService.update(id, UpdateIncomeDto);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Delete('relatedTo/delete/:id')
-    async deleteRelatedTo(@Param('id') id: string) {
-        return this.relatedToService.delete(id);
+    @Delete('income/delete/:id')
+    async deleteIncome(@Param('id') id: string) {
+        return this.incomeService.delete(id);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Delete('relatedTo/bulkDelete')
-    async bulkDeleteRelatedTo(@Body() payload: Record<string, any>) {
-        return this.relatedToService.bulkDelete(payload?.ids);
-    } */
+    @Delete('income/bulkDelete')
+    async bulkDeleteIncome(@Body() payload: Record<string, any>) {
+        return this.incomeService.bulkDelete(payload?.ids);
+    }
+
+    /*  @UseGuards(JwtAuthGuard)
+     @Post('relatedTo/create')
+     async createRelatedTo(@Body() CreateRelatedToDto: CreateRelatedToDto) {
+         return this.relatedToService.create(CreateRelatedToDto);
+     }
+ 
+     @UseGuards(JwtAuthGuard)
+     @Get('relatedTo/getAll')
+     async getAllRelatedTo() {
+         return this.relatedToService.findAll();
+     }
+ 
+     @UseGuards(JwtAuthGuard)
+     @Get('relatedTo/getById/:id')
+     async getByIdRelatedTo(@Param('id') id: string) {
+         return this.relatedToService.findById(id);
+     }
+ 
+     @UseGuards(JwtAuthGuard)
+     @Put('relatedTo/update/:id')
+     async updateRelatedTo(@Body() UpdateRelatedToDto: UpdateRelatedToDto, @Param('id') id: string) {
+         return this.relatedToService.update(id, UpdateRelatedToDto);
+     }
+ 
+     @UseGuards(JwtAuthGuard)
+     @Delete('relatedTo/delete/:id')
+     async deleteRelatedTo(@Param('id') id: string) {
+         return this.relatedToService.delete(id);
+     }
+ 
+     @UseGuards(JwtAuthGuard)
+     @Delete('relatedTo/bulkDelete')
+     async bulkDeleteRelatedTo(@Body() payload: Record<string, any>) {
+         return this.relatedToService.bulkDelete(payload?.ids);
+     } */
 }

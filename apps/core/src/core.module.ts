@@ -34,6 +34,7 @@ import { PurchaseOrderModule } from './purchase-order/purchase-order.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { UserGatewayModule } from './gateways/user.gateway.module';
 import { UploadModule } from './upload/upload.module';
+import { DebtModule } from './debt/debt.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { UploadModule } from './upload/upload.module';
     AccountingModule,
     UserGatewayModule,
     UploadModule,
+    DebtModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],
