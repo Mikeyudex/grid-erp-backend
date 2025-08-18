@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dtos/paymentMethod.dto';
 import { PaymentMethodService } from './services/paymentMethod.service';
@@ -105,6 +105,26 @@ export class AccountingController {
         return this.incomeService.findAll(
             { page, limit, search, sortBy, sortOrder }
         );
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('income/getAllByCustomerAndTypeOperation/:customerId/:typeOperation')
+    async getAllIncomeByUserId(
+        @Param('customerId') customerId: string,
+        @Param('typeOperation') typeOperation: string,
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Query('search') search: string,
+        @Query('sortBy') sortBy = 'createdAt',
+        @Query('sortOrder') sortOrder: 'asc' | 'desc',
+    ) {
+        if (!customerId || !typeOperation) {
+            throw new BadRequestException('CustomerId and TypeOperation are required');
+        }
+        return this.incomeService.findAllByCustomerAndTypeOperation(
+            customerId,
+            typeOperation,
+            { page, limit, search, sortBy, sortOrder });
     }
 
     @UseGuards(JwtAuthGuard)

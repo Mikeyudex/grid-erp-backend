@@ -11,6 +11,7 @@ import { Debt, DebtSchema } from './debt.schema';
     ]),
   ],
   providers: [DebtService],
-  controllers: [DebtController]
+  controllers: [DebtController],
+  exports: [DebtService],
 })
 export class DebtModule {}

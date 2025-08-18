@@ -53,7 +53,7 @@ class CreatePurchaseOrderItemDto {
 
 export class CreatePurchaseOrderDto {
   @IsMongoId()
-  clientId: string;
+  clientId: string | Types.ObjectId;
 
   @IsNumber()
   itemsQuantity: number;
@@ -90,7 +90,7 @@ export class CreatePurchaseOrderDto {
   deliveryDate?: Date;
 
   @IsMongoId()
-  createdBy: string;
+  createdBy: string | Types.ObjectId;
 
   @IsOptional()
   @IsMongoId()

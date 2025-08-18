@@ -1,56 +1,69 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Types } from "mongoose";
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export class CreateIncomeDto {
 
+    @IsOptional()
+    incomeId?: string | Types.ObjectId;
+
     @IsString()
     @IsOptional()
-    @ApiProperty({description: 'Id del pedido'})
-    purchaseOrderId: string;
+    @ApiProperty({ description: 'Id del pedido' })
+    purchaseOrderId: string | Types.ObjectId;
 
     @IsNumber()
     @IsOptional()
-    @ApiProperty({description: 'Secuencia'})
+    @ApiProperty({ description: 'Secuencia' })
     sequence: number;
 
-    @IsString() 
+    @IsString()
     @IsNotEmpty()
-    @ApiProperty({description: 'Tipo de operación'})
+    @ApiProperty({ description: 'Tipo de operación' })
     typeOperation: string;
 
     @IsString()
     @IsNotEmpty()
-    @ApiProperty({description: 'Fecha de pago'})
+    @ApiProperty({ description: 'Fecha de pago' })
     paymentDate: Date;
 
     @IsString()
     @IsOptional()
-    @ApiProperty({description: 'Id del cliente'})
-    customerId: string;
+    @ApiProperty({ description: 'Id del cliente' })
+    customerId: string | Types.ObjectId;
 
     @IsString()
     @IsOptional()
-    @ApiProperty({description: 'Id del proveedor'})
-    providerId: string;
+    @ApiProperty({ description: 'Id del proveedor' })
+    providerId: string | Types.ObjectId;
 
     @IsString()
-    @IsNotEmpty()
-    @ApiProperty({description: 'Id de la cuenta'})
-    accountId: string;
+    @IsOptional()
+    @ApiProperty({ description: 'Id de la cuenta' })
+    accountId: string | Types.ObjectId;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ description: 'Id de la deuda' })
+    debtId: string | Types.ObjectId;
 
     @IsNumber()
     @IsNotEmpty()
-    @ApiProperty({description: 'Valor'})
+    @ApiProperty({ description: 'Valor' })
     value: number;
 
     @IsString()
     @IsOptional()
-    @ApiProperty({description: 'Observaciones'})
+    @ApiProperty({ description: 'Observaciones' })
     observations: string;
 
     @IsString()
     @IsOptional()
-    @ApiProperty({description: 'Soporte de pago'})
+    @ApiProperty({ description: 'Soporte de pago' })
     paymentSupport: string;
+
+    @IsOptional()
+    @ApiProperty({ description: 'Indica si el anticipo es vigente' })
+    hasCurrentAdvancePayment?: boolean;
 }

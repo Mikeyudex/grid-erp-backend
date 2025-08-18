@@ -5,6 +5,8 @@ import { CreateIncomeDto } from "../dtos/income.dto";
 import { PaginatedResponse } from "../../common/interfaces/paginated.interface";
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ApiResponse } from "../../common/api-response";
+import { Debt, DebtDocument } from "../../debt/debt.schema";
+import { DebtStatusEnum } from "../../debt/debt.enum";
 
 interface GetIncomesParams {
     page: number
@@ -18,6 +20,7 @@ export class IncomeService {
 
     constructor(
         @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
+        @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
     ) { }
 
     async findAll(params: GetIncomesParams): Promise<PaginatedResponse<IncomeDocument>> {
@@ -30,8 +33,13 @@ export class IncomeService {
                 const regex = new RegExp(search, 'i');
                 filters.$or = [
                     { customerId: regex },
+                    { providerId: regex },
+                    { accountId: regex },
+                    { debtId: regex },
+                    { typeOperation: regex },
                     { purchaseOrderId: regex },
                     { description: regex },
+                    { hasCurrentAdvancePayment: regex },
                 ];
             }
 
@@ -42,6 +50,8 @@ export class IncomeService {
                 .limit(limit)
                 .populate('customerId', 'name lastname commercialName')
                 .populate('purchaseOrderId', '_id orderNumber')
+                .populate('debtId', '_id name amountPayable status')
+                .populate('accountId', '_id name')
                 .exec();
 
             const totalPages = Math.ceil(totalItems / limit);
@@ -57,6 +67,48 @@ export class IncomeService {
             }
         } catch (error) {
             throw new Error(`Error getting incomes: ${error.message}`);
+        }
+    }
+
+    async findAllByCustomerAndTypeOperation(customerId: string, typeOperation: string, params: GetIncomesParams): Promise<PaginatedResponse<IncomeDocument>> {
+        try {
+            const { page, limit, sortBy = 'createdAt', sortOrder = 'asc' } = params;
+            const filters: any = {};
+
+            filters.customerId = customerId;
+            filters.typeOperation = typeOperation;
+            filters.hasCurrentAdvancePayment = true;
+
+            const totalItems = await this.incomeModel.countDocuments(filters);
+
+            let incomes = await this.incomeModel.find(filters)
+                .sort({ [sortBy]: sortOrder })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .populate('customerId', 'name lastname commercialName')
+                .populate('purchaseOrderId', '_id orderNumber')
+                .populate('debtId', '_id name amountPayable status')
+                .populate('accountId', '_id name')
+                .exec();
+
+            const totalPages = Math.ceil(totalItems / limit);
+
+            return {
+                data: incomes,
+                meta: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems,
+                    itemsPerPage: limit,
+                },
+            }
+        } catch (error) {
+            if (error instanceof BadRequestException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
         }
     }
 
@@ -90,6 +142,19 @@ export class IncomeService {
 
     async create(createIncomeDto: CreateIncomeDto): Promise<IncomeDocument> {
         try {
+            if (createIncomeDto?.debtId) {
+                let debt = await this.debtModel.findById(createIncomeDto.debtId);
+                if (debt) {
+                    createIncomeDto.debtId = new Types.ObjectId(createIncomeDto.debtId);
+                    createIncomeDto.purchaseOrderId = debt.purchaseOrderId;
+                    await this.crossDebt(createIncomeDto.debtId.toString(), createIncomeDto.value);
+                }
+            }
+            
+            createIncomeDto.purchaseOrderId = new Types.ObjectId(createIncomeDto.purchaseOrderId);
+            createIncomeDto.customerId = new Types.ObjectId(createIncomeDto.customerId);
+            createIncomeDto.accountId = new Types.ObjectId(createIncomeDto.accountId);
+            
             let incomeDocument = await this.incomeModel.create(createIncomeDto);
             return incomeDocument;
         } catch (error) {
@@ -171,6 +236,23 @@ export class IncomeService {
             return updated;
         } catch (error) {
             throw new Error(`Error updating income: ${error.message}`);
+        }
+    }
+
+    async crossDebt(debtId: string, amount: number) {
+        try {
+            let castedId = new Types.ObjectId(debtId);
+            let debt = await this.debtModel.findById(castedId);
+            if (!debt) return null;
+            let balance = debt.amountPayable;
+            if (amount === balance) {
+                debt.status = DebtStatusEnum.CERRADO;
+            }
+            debt.amountPayable = balance - amount;
+            const updatedDebt = await this.debtModel.findByIdAndUpdate(castedId, debt, { new: true });
+            return updatedDebt;
+        } catch (error) {
+            throw new Error(`Error updating debt: ${error.message}`);
         }
     }
 

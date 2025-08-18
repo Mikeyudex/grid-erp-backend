@@ -1,5 +1,5 @@
 
-import { IsArray, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { Types } from "mongoose";
 
 
@@ -7,11 +7,11 @@ export class CreateDebtDto {
 
     @IsString()
     @IsNotEmpty()
-    customerId: string;
+    customerId: string | Types.ObjectId;
 
     @IsString()
     @IsNotEmpty()
-    purchaseOrderId: string;
+    purchaseOrderId: string | Types.ObjectId;
 
     @IsString()
     @IsNotEmpty()
@@ -20,17 +20,21 @@ export class CreateDebtDto {
     @IsNumber()
     @IsNotEmpty()
     amountPayable: number;
+
+    @IsString()
+    @IsNotEmpty()
+    status: 'abierto' | 'cerrado';
 }
 
 export class UpdateDebtDto {
 
     @IsString()
     @IsNotEmpty()
-    customerId: string;
+    customerId: string | Types.ObjectId;
 
     @IsString()
     @IsNotEmpty()
-    purchaseOrderId: string;
+    purchaseOrderId: string | Types.ObjectId;
 
     @IsString()
     @IsNotEmpty()

@@ -5,6 +5,7 @@ import { Debt, DebtDocument } from './debt.schema';
 import { ApiResponse } from '../common/api-response';
 import { PaginatedResponse } from '../common/interfaces/paginated.interface'
 import { CreateDebtDto, GetDebtsDto, UpdateDebtDto } from './debt.dto';
+import { DebtStatusEnum } from './debt.enum';
 
 interface GetDebtsParams {
     page: number
@@ -63,6 +64,57 @@ export class DebtService {
         }
     }
 
+    async getDebtsByCustomer(customerId: string, params: GetDebtsParams, status: string): Promise<PaginatedResponse<DebtDocument>> {
+        try {
+            const { page, limit, sortBy = 'createdAt', sortOrder = 'asc' } = params;
+
+            let castedId = new Types.ObjectId(customerId);
+            if (!Types.ObjectId.isValid(castedId)) {
+                throw new BadRequestException({
+                    statusCode: 400,
+                    message: 'ID inválido',
+                    error: 'El ID proporcionado no es válido',
+                });
+            }
+            const filters: any = {};
+
+            if (status) {
+                filters.customerId = castedId;
+                filters.status = status;
+            } else {
+                filters.customerId = castedId;
+            }
+            const totalItems = await this.debtModel.countDocuments(filters);
+
+            let debts = await this.debtModel.find(filters)
+                .sort({ [sortBy]: sortOrder })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .populate('customerId', 'name')
+                .populate('purchaseOrderId', '_id purchaseOrderNumber')
+                .exec();
+
+            const totalPages = Math.ceil(totalItems / limit);
+
+            return {
+                data: debts,
+                meta: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems,
+                    itemsPerPage: limit,
+                },
+            }
+        } catch (error) {
+            if (error instanceof BadRequestException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async getDebtById(id: string): Promise<ApiResponse<DebtDocument>> {
         try {
             let castedId = new Types.ObjectId(id);
@@ -93,10 +145,13 @@ export class DebtService {
 
     async createDebt(createDebtDto: CreateDebtDto): Promise<ApiResponse<DebtDocument>> {
         try {
+            createDebtDto.customerId = new Types.ObjectId(createDebtDto.customerId);
+            createDebtDto.purchaseOrderId = new Types.ObjectId(createDebtDto.purchaseOrderId);
             const debt = new this.debtModel(createDebtDto);
             const createdDebt = await debt.save();
             return ApiResponse.success('Debt created', createdDebt);
         } catch (error) {
+            console.log(error);
             if (error instanceof BadRequestException) throw error;
             throw new InternalServerErrorException({
                 statusCode: 500,
@@ -157,5 +212,5 @@ export class DebtService {
                 error: error.message || 'Unknown error',
             });
         }
-    }   
+    }
 }

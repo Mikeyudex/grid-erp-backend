@@ -1,6 +1,7 @@
 import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import * as moment from "moment";
+import { ClientSession, Model, Types } from 'mongoose';
 import {
     PurchaseOrder,
     PurchaseOrderDocument,
@@ -17,6 +18,13 @@ import { UsersService } from '../users/users.service';
 import { ItemStatusEnum } from './enums/itemStatus.enum';
 import { PurchaseStatusEnum } from './enums/purchaseStatus.enum';
 import { IncomeService } from '../accounting/services/Income.service';
+import { Account, AccountDocument } from '../accounting/schemas/account.schema';
+import { CreateDebtDto } from '../debt/debt.dto';
+import { CreateIncomeDto } from '../accounting/dtos/income.dto';
+import { DebtStatusEnum } from '../debt/debt.enum';
+import { Income, IncomeDocument, IncomeTypeOperation } from '../accounting/schemas/income.schema';
+import { Debt, DebtDocument } from '../debt/debt.schema';
+
 
 @Injectable()
 export class PurchaseOrderService {
@@ -31,20 +39,43 @@ export class PurchaseOrderService {
         private readonly productsService: ProductsService,
         private readonly usersService: UsersService,
         private readonly incomeService: IncomeService,
+        @InjectModel(Account.name) private readonly accountModel: Model<AccountDocument>,
+        @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
+        @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
     ) { }
 
     async create(createPurchaseOrderDto: CreatePurchaseOrderDto) {
+        const session: ClientSession = await this.purchaseOrderModel.db.startSession();
+        session.startTransaction();
+
         try {
             let incomeIds = [];
+            let methodOfPayments: CreateIncomeDto[] = [];
 
             for (let index = 0; index < createPurchaseOrderDto.methodOfPayment.length; index++) {
                 let methodOfPaymentDto = createPurchaseOrderDto.methodOfPayment[index];
-                let incomeDocument = await this.incomeService.create(methodOfPaymentDto);
-                incomeIds.push(incomeDocument._id);
+
+                if (
+                    methodOfPaymentDto.typeOperation === IncomeTypeOperation.RECEIPTS
+                    || methodOfPaymentDto.typeOperation === IncomeTypeOperation.SALES
+                    || methodOfPaymentDto.typeOperation === IncomeTypeOperation.CREDITO
+                ) {
+                    methodOfPaymentDto.customerId = new Types.ObjectId(methodOfPaymentDto.customerId);
+                    methodOfPaymentDto.accountId = new Types.ObjectId(methodOfPaymentDto.accountId);
+                    methodOfPaymentDto.hasCurrentAdvancePayment = false;
+                    let incomeDocument = await this.incomeService.create(methodOfPaymentDto);
+                    incomeIds.push(incomeDocument._id);
+                    methodOfPaymentDto.incomeId = incomeDocument._id.toString();
+                }
+                methodOfPayments.push(methodOfPaymentDto);
             }
 
             delete createPurchaseOrderDto.methodOfPayment;
+            
+            createPurchaseOrderDto.clientId = new Types.ObjectId(createPurchaseOrderDto.clientId);
             createPurchaseOrderDto.zoneId = new Types.ObjectId(createPurchaseOrderDto.zoneId);
+            createPurchaseOrderDto.createdBy = new Types.ObjectId(createPurchaseOrderDto.createdBy);
+
             const createdOrder = new this.purchaseOrderModel({
                 ...createPurchaseOrderDto,
                 history: [
@@ -57,15 +88,97 @@ export class PurchaseOrderService {
                 methodOfPayment: incomeIds,
             });
             let order = await createdOrder.save();
-            this.incomeService.updatePurchaseOrderId(incomeIds, order._id);
+            await this.createDebt(order, methodOfPayments);
+            await this.crossAdvancePayment(order, methodOfPayments);
+            await this.incomeService.updatePurchaseOrderId(incomeIds, order._id);
             return ApiResponse.success('Orden creada con éxito', order, HttpStatus.CREATED);
         } catch (error) {
-            this.logger.error('Error al crear cliente', error);
+            this.logger.error('Error al crear orden de pedido', error);
+            await session.abortTransaction();
             throw new InternalServerErrorException({
                 statusCode: 500,
                 message: 'Error interno del servidor',
                 error: error.message || 'Unknown error',
             });
+        } finally {
+            session.endSession();
+        }
+
+    }
+
+    async createDebt(order: PurchaseOrderDocument, methodOfPayments: CreateIncomeDto[]) {
+        try {
+            let value = 0;
+            for (let index = 0; index < methodOfPayments.length; index++) {
+                const methodOfPayment = methodOfPayments[index];
+                let typeOperation = methodOfPayment.typeOperation;
+                if (typeOperation === IncomeTypeOperation.CREDITO) {
+                    value = value + methodOfPayment.value;
+                    // Crear el registro de la deuda
+                    const debt: CreateDebtDto = {
+                        customerId: order.clientId,
+                        purchaseOrderId: order._id as Types.ObjectId,
+                        description: `Deuda de $${order.totalOrder} por Pedido #${order.orderNumber}`,
+                        amountPayable: value,
+                        status: DebtStatusEnum.ABIERTO,
+                    };
+
+                    let debtDocument = new this.debtModel(debt);
+                    await debtDocument.save();
+                    await this.incomeModel.updateOne(
+                        { _id: methodOfPayment.incomeId },
+                        {
+                            $set: {
+                                debtId: debtDocument._id,
+                                updatedAt: getCurrentUTCDate()
+                            }
+                        }
+                    )
+                }
+            }
+        } catch (error: any) {
+            console.log(error);
+            throw new Error(`Error al crear la deuda: ${error?.message}`);
+        }
+    }
+
+    async crossAdvancePayment(order: PurchaseOrderDocument, methodOfPayments: CreateIncomeDto[]) {
+        try {
+            for (let index = 0; index < methodOfPayments.length; index++) {
+                const methodOfPayment = methodOfPayments[index];
+                let typeOperation = methodOfPayment.typeOperation;
+                if (typeOperation === IncomeTypeOperation.ANTICIPO) {
+                    try {
+                        let incomeId = methodOfPayment.accountId;
+                        await this.incomeModel.findByIdAndUpdate(incomeId, {
+                            hasCurrentAdvancePayment: false,
+                            updatedAt: getCurrentUTCDate(),
+                            purchaseOrderId: order._id
+                        })
+                    } catch (error) {
+                        this.logger.error('Error al cruzar el anticipo', error);
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            throw new Error(`Error al cruzar el anticipo: ${error?.message}`);
+        }
+    }
+
+    async getNameAccount(id: string) {
+        try {
+            let castedId = new Types.ObjectId(id);
+            if (!Types.ObjectId.isValid(castedId)) {
+                throw new Error('id no es un ObjectId válido');
+            }
+            let account = await this.accountModel.findOne(castedId).exec();
+            if (!account) {
+                throw new NotFoundException(`No se encontró la cuenta con ID ${id}`);
+            }
+            return account.name;
+        } catch (error) {
+            throw new Error(`Error al obtener el nombre de la cuenta: ${error.message}`);
         }
     }
 

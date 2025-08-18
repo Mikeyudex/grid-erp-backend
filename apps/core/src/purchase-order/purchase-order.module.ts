@@ -10,6 +10,10 @@ import { Counter, CounterSchema } from './counter.schema';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
 import { UsersModule } from '../users/users.module';
 import { AccountingModule } from '../accounting/accounting.module';
+import { DebtModule } from '../debt/debt.module';
+import { Account, AccountSchema } from '../accounting/schemas/account.schema';
+import { Income, IncomeSchema } from '../accounting/schemas/income.schema';
+import { Debt, DebtSchema } from '../debt/debt.schema';
 
 
 @Module({
@@ -18,9 +22,13 @@ import { AccountingModule } from '../accounting/accounting.module';
     MongooseModule.forFeature([{ name: Counter.name, schema: CounterSchema }]),
     MongooseModule.forFeature([{ name: PurchaseOrderHistory.name, schema: PurchaseOrderHistorySchema }]),
     MongooseModule.forFeature([{ name: PurchaseOrderItem.name, schema: PurchaseOrderSchema }]),
+    MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }]),
+    MongooseModule.forFeature([{ name: Income.name, schema: IncomeSchema }]),
+    MongooseModule.forFeature([{ name: Debt.name, schema: DebtSchema }]),
     ProductsModule,
     UsersModule,
-    AccountingModule
+    AccountingModule,
+    DebtModule
   ],
   providers: [PurchaseOrderService, PurchaseOrderDAO],
   controllers: [PurchaseOrderController]

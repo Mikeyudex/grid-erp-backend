@@ -13,6 +13,7 @@ import { PaymentMethodService } from './services/paymentMethod.service';
 import { Income, IncomeSchema } from './schemas/income.schema';
 import { IncomeService } from './services/Income.service';
 import { AccountService } from './services/account.service';
+import { Debt, DebtSchema } from '../debt/debt.schema';
 /* import { RelatedToService } from './services/relatedTo.service'; */
 /* import { RelatedTo, RelatedToSchema } from './schemas/relatedTo.schema'; */
 
@@ -26,7 +27,8 @@ import { AccountService } from './services/account.service';
     MongooseModule.forFeature([{ name: MethodOfPayment.name, schema: MethodOfPaymentSchema }]),
     MongooseModule.forFeature([{ name: PaymentMethod.name, schema: PaymentMethodSchema }]),
     MongooseModule.forFeature([{ name: Income.name, schema: IncomeSchema }]),
-
+    MongooseModule.forFeature([{ name: Debt.name, schema: DebtSchema }]),
+    // MongooseModule.forFeature([{
   ],
   providers: [AccountingService, PaymentMethodService, IncomeService, AccountService],
   controllers: [AccountingController],

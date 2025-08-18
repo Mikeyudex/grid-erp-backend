@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Document, Types } from 'mongoose';
+import { DebtStatusEnum } from './debt.enum';
 
 export type DebtDocument = Debt & Document;
 
@@ -10,6 +11,7 @@ export interface IDebt {
     purchaseOrderId: Types.ObjectId;
     description: string;
     amountPayable: number;
+    status: 'abierto' | 'cerrado';
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -29,6 +31,9 @@ export class Debt {
 
     @Prop({ required: true, type: Number })
     amountPayable: number;
+
+    @Prop({ required: true, type: String, default: DebtStatusEnum.ABIERTO })
+    status: 'abierto' | 'cerrado';
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

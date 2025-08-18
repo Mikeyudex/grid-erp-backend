@@ -38,7 +38,7 @@ export class CustomersService {
         }
     }
 
-    async getAll(page: number, limit: number) {
+    async getAll(page: number = 1, limit: number = 10) {
         try {
             let customers = await this.customerDao.findPaginated(page, limit);
             return ApiResponse.success('Clientes obtenidos con éxito', customers);

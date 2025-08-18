@@ -8,19 +8,22 @@ export enum IncomeTypeOperation {
     SALES = 'ventas',
     RECEIPTS = 'recibos',
     ANTICIPO = 'anticipo',
+    CREDITO = 'credito',
 }
 
 export interface IIncome {
     purchaseOrderId: Types.ObjectId | string | null;
     sequence: number;
-    typeOperation: string;
+    typeOperation: 'ventas' | 'recibos' | 'anticipo' | 'credito';
     paymentDate: Date;
     customerId?: Types.ObjectId | string | null;
     providerId?: Types.ObjectId | string | null;
-    accountId: Types.ObjectId | string;
+    accountId: Types.ObjectId | string | null;
+    debtId: Types.ObjectId | string | null;
     value: number;
     observations: string;
     paymentSupport: string;
+    hasCurrentAdvancePayment?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -41,14 +44,17 @@ export class Income {
     @Prop({ required: true, type: Date })
     paymentDate: Date;
 
-    @Prop({ required: false, type: Types.ObjectId, ref: 'Customer'})
+    @Prop({ required: false, type: Types.ObjectId, ref: 'Customer', default: null })
     customerId?: Types.ObjectId;
 
     @Prop({ required: false, type: Types.ObjectId, ref: 'ProviderErp', default: null })
     providerId?: Types.ObjectId;
-    
-    @Prop({ required: true, type: Types.ObjectId, ref: 'Account' })
-    accountId: Types.ObjectId;
+
+    @Prop({ required: false, type: Types.ObjectId, ref: 'Account', default: null })
+    accountId?: Types.ObjectId;
+
+    @Prop({ required: false, type: Types.ObjectId, ref: 'Debt', default: null })
+    debtId: Types.ObjectId;
 
     @Prop({ required: true, type: Number })
     value: number;
@@ -56,8 +62,11 @@ export class Income {
     @Prop({ required: false, type: String })
     observations: string;
 
-    @Prop({required:false, type: String})
+    @Prop({ required: false, type: String })
     paymentSupport: string;
+
+    @Prop({ required: false, type: Boolean, default: true })
+    hasCurrentAdvancePayment?: boolean;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
