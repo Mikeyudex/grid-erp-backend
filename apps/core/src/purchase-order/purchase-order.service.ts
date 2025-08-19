@@ -58,7 +58,7 @@ export class PurchaseOrderService {
                 if (
                     methodOfPaymentDto.typeOperation === IncomeTypeOperation.RECEIPTS
                     || methodOfPaymentDto.typeOperation === IncomeTypeOperation.SALES
-                    || methodOfPaymentDto.typeOperation === IncomeTypeOperation.CREDITO
+                    /* || methodOfPaymentDto.typeOperation === IncomeTypeOperation.CREDITO */
                 ) {
                     methodOfPaymentDto.customerId = new Types.ObjectId(methodOfPaymentDto.customerId);
                     methodOfPaymentDto.accountId = new Types.ObjectId(methodOfPaymentDto.accountId);

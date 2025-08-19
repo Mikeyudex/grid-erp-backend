@@ -1,22 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
-export type AccountClassDocument = AccountClass & Document;
+export type TypeOfExpenseDocument = TypeOfExpense & Document;
 
-export interface IAccountClass {
+export interface ITypeOfExpense {
     name: string;
-    code: number;
+    code: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    deletedAt?: Date;
 }
 
 @Schema()
-export class AccountClass {
-
+export class TypeOfExpense {
     @Prop({ required: true, type: String })
     name: string;
 
-    @Prop({ required: true, type: Number })
-    code: number;
+    @Prop({ required: true, type: String })
+    code: string;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
@@ -28,4 +30,4 @@ export class AccountClass {
     deletedAt: Date;
 }
 
-export const AccountClassSchema = SchemaFactory.createForClass(AccountClass);
+export const TypeOfExpenseSchema = SchemaFactory.createForClass(TypeOfExpense);

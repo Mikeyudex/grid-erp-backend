@@ -6,6 +6,8 @@ import { AccountService } from './services/account.service';
 import { CreateAccountDto, UpdateAccountDto } from './dtos/account.dto';
 import { IncomeService } from './services/Income.service';
 import { CreateIncomeDto } from './dtos/income.dto';
+import { TypeOfExpenseService } from './services/type-of-expense.service';
+import { CreateTypeOfExpenseDto, UpdateTypeOfExpenseDto } from './dtos/type-of-expense.dto';
 
 @Controller('accounting')
 export class AccountingController {
@@ -13,6 +15,7 @@ export class AccountingController {
         private readonly paymentMethodService: PaymentMethodService,
         private readonly accountService: AccountService,
         private readonly incomeService: IncomeService,
+        private readonly typeOfExpenseService: TypeOfExpenseService,
     ) { }
 
     @UseGuards(JwtAuthGuard)
@@ -151,39 +154,39 @@ export class AccountingController {
         return this.incomeService.bulkDelete(payload?.ids);
     }
 
-    /*  @UseGuards(JwtAuthGuard)
-     @Post('relatedTo/create')
-     async createRelatedTo(@Body() CreateRelatedToDto: CreateRelatedToDto) {
-         return this.relatedToService.create(CreateRelatedToDto);
-     }
- 
-     @UseGuards(JwtAuthGuard)
-     @Get('relatedTo/getAll')
-     async getAllRelatedTo() {
-         return this.relatedToService.findAll();
-     }
- 
-     @UseGuards(JwtAuthGuard)
-     @Get('relatedTo/getById/:id')
-     async getByIdRelatedTo(@Param('id') id: string) {
-         return this.relatedToService.findById(id);
-     }
- 
-     @UseGuards(JwtAuthGuard)
-     @Put('relatedTo/update/:id')
-     async updateRelatedTo(@Body() UpdateRelatedToDto: UpdateRelatedToDto, @Param('id') id: string) {
-         return this.relatedToService.update(id, UpdateRelatedToDto);
-     }
- 
-     @UseGuards(JwtAuthGuard)
-     @Delete('relatedTo/delete/:id')
-     async deleteRelatedTo(@Param('id') id: string) {
-         return this.relatedToService.delete(id);
-     }
- 
-     @UseGuards(JwtAuthGuard)
-     @Delete('relatedTo/bulkDelete')
-     async bulkDeleteRelatedTo(@Body() payload: Record<string, any>) {
-         return this.relatedToService.bulkDelete(payload?.ids);
-     } */
+    @UseGuards(JwtAuthGuard)
+    @Post('type-of-expense/create')
+    async createTypeOfExpense(@Body() CreateTypeOfExpenseDto: CreateTypeOfExpenseDto) {
+        return this.typeOfExpenseService.create(CreateTypeOfExpenseDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('type-of-expense/getAll')
+    async getAllTypeOfExpense() {
+        return this.typeOfExpenseService.findAll();
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('type-of-expense/getById/:id')
+    async getByIdTypeOfExpense(@Param('id') id: string) {
+        return this.typeOfExpenseService.findById(id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put('type-of-expense/update/:id')
+    async updateTypeOfExpense(@Body() UpdateTypeOfExpenseDto: UpdateTypeOfExpenseDto, @Param('id') id: string) {
+        return this.typeOfExpenseService.update(id, UpdateTypeOfExpenseDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('type-of-expense/delete/:id')
+    async deleteTypeOfExpense(@Param('id') id: string) {
+        return this.typeOfExpenseService.delete(id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('type-of-expense/bulkDelete')
+    async bulkDeleteTypeOfExpense(@Body() payload: Record<string, any>) {
+        return this.typeOfExpenseService.bulkDelete(payload?.ids);
+    }
 }
