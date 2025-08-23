@@ -38,10 +38,8 @@ import { UpdateCategoryDto } from './dto/category/update-category.dto';
 import { ProductCategory } from './category/category.schema';
 import { CreateProductSubCategoryDto } from './dto/subcategory/create-subcategory.dto';
 import { ProductSubCategory } from './subcategory/subcategory.schema';
-import { OracleCloudService } from '../oracle-cloud.service';
 import { GetAllByCompanyProductsResponseDto } from './dto/response-getall-products.dto';
 import config from '../config';
-import { PublicController } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
 

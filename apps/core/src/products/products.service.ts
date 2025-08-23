@@ -57,7 +57,11 @@ export class ProductsService {
       if (createProductDto.unitOfMeasureId) {
         unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
         if (!unitOfMeasure) {
-          throw new Error('Unit of Measure not found');
+          throw new NotFoundException({
+            statusCode: 404,
+            message: 'Unit of Measure not found',
+            error: 'Not Found',
+          });
         }
       }
 
@@ -65,13 +69,21 @@ export class ProductsService {
       if (createProductDto.taxId) {
         tax = await this.taxesService.findOne(createProductDto.taxId);
         if (!tax) {
-          throw new Error('tax not found');
+          throw new NotFoundException({
+            statusCode: 404,
+            message: 'Tax not found',
+            error: 'Not Found',
+          });
         }
       }
 
       const typeProduct = await this.getNameTypeProductById(createProductDto.id_type_product);
       if (!typeProduct) {
-        throw new Error('typeProduct not found');
+        throw new NotFoundException({
+          statusCode: 404,
+          message: 'TypeProduct not found',
+          error: 'Not Found',
+        });
       }
 
       const typeOfPiecesObjectId = createProductDto.typeOfPieces.map(t => new Types.ObjectId(t));
@@ -90,10 +102,6 @@ export class ProductsService {
       newProduct.typeOfPieces = typeOfPiecesObjectId;
 
       const product = await newProduct.save();
-
-      /* if (typeProduct !== 'Producto') {
-        return product;
-      } */
 
       //Creando el stock para el produto recién creado
       const createStockDto: CreateStockDto = {

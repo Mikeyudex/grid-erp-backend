@@ -75,7 +75,7 @@ export class IncomeService {
             const { page, limit, sortBy = 'createdAt', sortOrder = 'asc' } = params;
             const filters: any = {};
 
-            filters.customerId = customerId;
+            filters.customerId = new Types.ObjectId(customerId);
             filters.typeOperation = typeOperation;
             filters.hasCurrentAdvancePayment = true;
 

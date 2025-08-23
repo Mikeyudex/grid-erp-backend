@@ -55,6 +55,21 @@ async function bootstrap() {
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
       }); */
+      
+    // Configurar el cierre correcto
+    process.on('SIGTERM', async () => {
+      await app.close();
+    });
+
+    process.on('SIGINT', async () => {
+      await app.close();
+    });
+
+    // Para hot reload en desarrollo
+    if (module.hot) {
+      module.hot.accept();
+      module.hot.dispose(() => app.close());
+    }
 
     await app.listen(configsService.get('PORT'));
     if (module.hot) {

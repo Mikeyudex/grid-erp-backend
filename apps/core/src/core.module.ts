@@ -57,6 +57,11 @@ import { DebtModule } from './debt/debt.module';
       imports: [ConfigModule], // Importa ConfigModule para que ConfigService esté disponible
       useFactory: async (configService: ConfigType<typeof config>) => ({
         uri: configService.database.uri, // Obtiene la URI de las variables de entorno
+        // Opciones importantes para hot reload
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        bufferCommands: false,
       }),
       inject: [config.KEY], // Inyecta config.KEY para usarlo en useFactory
     }),
