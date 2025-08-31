@@ -3,8 +3,8 @@ import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Document, Types } from 'mongoose';
 @Schema()
 export class User extends Document {
-    @Prop({ required: true, type: String })
-    companyId: string;
+    @Prop({ required: true, type: Types.ObjectId, ref: 'Company' })
+    companyId: Types.ObjectId;
 
     @Prop({ required: true, unique: true })
     email: string;

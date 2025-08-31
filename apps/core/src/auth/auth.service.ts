@@ -18,6 +18,8 @@ export class AuthService {
 
     async validateUser(email: string, password: string) {
         const user = await this.usersService.findByEmail(email);
+        console.log(user);
+        
         if (user) {
             const isMatch = await bcrypt.compare(password, user.password);
             if (isMatch) {
@@ -28,12 +30,12 @@ export class AuthService {
     }
 
     generateJwtGlobal(user: User): string {
-        const payload: PayloadToken = { sub: user._id.toString(), role: user.role, companyId: user.companyId };
+        const payload: PayloadToken = { sub: user._id.toString(), role: user.role, companyId: user.companyId.toString() };
         return this.jwtService.sign(payload);
     }
 
     generateJwt(user: User) {
-        const payload: PayloadToken = { sub: user.id, role: user.role, companyId: user.companyId };
+        const payload: PayloadToken = { sub: user.id, role: user.role, companyId: user.companyId.toString() };
         return ApiResponse.success('Login exitoso', { access_token: this.jwtService.sign(payload), user: new LoginResponseDto(user) }, HttpStatus.OK);
     }
 

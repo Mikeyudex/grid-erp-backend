@@ -22,7 +22,7 @@ import { AccountService } from '../accounting/services/account.service';
 
 @Injectable()
 export class UsersService {
-    companyId: string;
+    companyId: Types.ObjectId;
 
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
@@ -30,7 +30,7 @@ export class UsersService {
         @Inject(config.KEY) private configService: ConfigType<typeof config>,
         @Inject(forwardRef(() => AuthService)) private readonly authService: AuthService,
         private readonly accountService: AccountService,
-    ) { this.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a" }
+    ) { this.companyId = new Types.ObjectId("66becedd790bddbc9b1e2cbc"); }
 
     async findAll(filter?: string, value?: string) {
         let filterBy = filter ? { [filter]: value } : {};

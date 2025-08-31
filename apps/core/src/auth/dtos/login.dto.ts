@@ -38,7 +38,7 @@ export class LoginResponseDto {
         this.email = user.email;
         this.phone = user.phone;
         this.role = user.role;
-        this.companyId = user.companyId;
+        this.companyId = user.companyId.toString();
         this.active = user.active;
         this.activeOtp = user.activeOtp; {
         this.zoneId = user.zoneId.toString();
