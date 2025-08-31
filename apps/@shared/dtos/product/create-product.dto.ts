@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray, IsMongoId } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateProductDto {
   @ApiPropertyOptional({ example: '232324gg44545', description: 'ID del producto' })
@@ -13,18 +14,23 @@ export class CreateProductDto {
 
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
   @IsOptional()
-  @IsString({ message: 'El id de la empresa debe ser una cadena de texto.' })
-  companyId?: string;
+    @IsMongoId()
+  companyId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
-  @IsNotEmpty({ message: 'El id de la bodega es un campo requerido.' })
-  @IsString({ message: 'El id de la bodega debe ser una cadena de texto.' })
-  readonly warehouseId: string;
+  @IsOptional()
+  @IsMongoId()
+  warehouseId: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Id del proovedor', description: '12234' })
-  @IsNotEmpty({ message: 'El id del proveedor es un campo requerido.' })
-  @IsString({ message: 'El id del proveedor debe ser una cadena de texto.' })
-  readonly providerId: string;
+  @IsOptional()
+  @IsMongoId()
+  providerId: string | Types.ObjectId;
+
+  @ApiProperty({ example: 'Id del usuario que creó el producto', description: '12234' })
+  @IsOptional()
+  @IsMongoId()
+  historyActivityUserId: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Camiseta', description: 'Nombre del producto' })
   @IsNotEmpty({ message: 'El nombre es un campo requerido.' })
@@ -32,14 +38,14 @@ export class CreateProductDto {
   readonly name: string;
 
   @ApiProperty({ example: 'Camiseta manga larga', description: 'Descripción del producto' })
-  @IsNotEmpty({ message: 'La descripción es un campo requerido.' })
+  @IsOptional()
   @IsString({ message: 'La descripción debe ser una cadena de texto.' })
   readonly description: string;
 
   @ApiProperty({ example: 'Id del tipo de producto', description: '12234' })
   @IsNotEmpty({ message: 'El id del tipo de producto es un campo requerido.' })
-  @IsString({ message: 'El id del tipo de producto debe ser una cadena de texto.' })
-  readonly id_type_product: string;
+  @IsMongoId()
+  readonly id_type_product: string | Types.ObjectId;
 
   @ApiProperty({ example: 'CAM123', description: 'SKU del producto' })
   @IsNotEmpty({ message: 'El sku es un campo requerido.' })
@@ -47,27 +53,25 @@ export class CreateProductDto {
   readonly sku: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la unidad de medida del producto' })
-  /*   @IsNotEmpty({ message: 'La unidad de medida es un campo requerido.' }) */
   @IsOptional()
-  @IsString({ message: 'El id de la unidad de medida debe ser una cadena de texto.' })
-  unitOfMeasureId?: string;
+  @IsMongoId()
+  unitOfMeasureId?: string | Types.ObjectId;
 
   @ApiProperty({ example: '99272772', description: 'Id de la lista de impuestos' })
-  /* @IsNotEmpty({ message: 'taxId es un campo requerido.' }) */
-  @IsOptional()
-  @IsString({ message: 'taxId debe ser una cadena.' })
-  taxId?: string;
+  @IsNotEmpty({ message: 'taxId es un campo requerido.' })
+  @IsMongoId()
+  taxId: string | Types.ObjectId;
 
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
   @IsNotEmpty({ message: 'La categoría es un campo requerido.' })
-  @IsString({ message: 'El id de la categoría debe ser una cadena de texto.' })
-  readonly id_category: string;
+  @IsMongoId()
+  readonly id_category: string | Types.ObjectId;
 
   @ApiProperty({ example: '873827sdd', description: 'Id de la subcategoría del producto' })
   /* @IsNotEmpty({ message: 'La subcategoría es un campo requerido.' }) */
   @IsOptional()
-  @IsString({ message: 'El id de la subategoría debe ser una cadena de texto.' })
-  id_sub_category?: string;
+  @IsMongoId()
+  id_sub_category?: string | Types.ObjectId;
 
   @ApiProperty({ example: 10, description: 'Cantidad del producto' })
   @IsNotEmpty({ message: 'La cantidad es un campo requerido.' })
@@ -86,6 +90,23 @@ export class CreateProductDto {
   @IsNumber({}, { message: 'El precio de costo debe ser un número.' })
   @Min(0, { message: 'El precio de costo no puede ser menor que 0.' })
   readonly costPrice: number;
+
+  @ApiProperty({ example: 'Observaciones del producto', description: 'Observaciones del producto' })
+  @IsOptional()
+  readonly observations?: string;
+
+  @ApiProperty({ example: 'Código de barras del producto', description: 'Código de barras del producto' })
+  @IsOptional()
+  readonly barCode?: string;
+
+  @ApiProperty({ example: true, description: 'Si el impuesto se incluye en el precio' })
+  @IsOptional()
+  readonly taxIncluded?: boolean;
+
+  @ApiProperty({ example: 10, description: 'Porcentaje del impuesto' })
+  @IsOptional()
+  @IsNumber({}, { message: 'El porcentaje del impuesto debe ser un número.' })
+  readonly taxPercent?: number;
 
   @ApiProperty({
     type: 'object',

@@ -55,7 +55,7 @@ export class ProductsController {
     /* private readonly oracleCloudService: OracleCloudService, */
     @Inject(config.KEY) private configService: ConfigType<typeof config>,
   ) {
-    this.mockupCompanyId = "3423f065-bb88-4cc5-b53a-63290b960c1a";
+    this.mockupCompanyId = "66becedd790bddbc9b1e2cbc";
     this.defaultFolderProducts = `company-${this.mockupCompanyId}/products/images/`;
 
   }
@@ -380,5 +380,14 @@ export class ProductsController {
   @Get('/getById/:id')
   async getProductById(@Param('id') id: string) {
     return this.productService.getProductById(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/searchProductByTypeAndSearch/:typeProduct/:search')
+  async searchProduct(@Param('typeProduct') typeProduct: string, @Param('search') search: string) {
+    if (!typeProduct || !search) {
+      throw new BadRequestException('TypeProduct and Search are required');
+    }
+    return this.productService.searchProduct(typeProduct, search);
   }
 }

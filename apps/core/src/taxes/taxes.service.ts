@@ -1,20 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Tax, TaxDocument } from './taxes.schema';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
 
 @Injectable()
 export class TaxesService {
-    private companyId: string;
-
     constructor(
         @InjectModel(Tax.name) private readonly taxModel: Model<TaxDocument>,
-    ) { this.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a" }
+    ) { }
 
     async create(createTaxDto: CreateTaxDto): Promise<TaxDocument> {
-        createTaxDto.companyId = this.companyId;
+        createTaxDto.companyId = new Types.ObjectId(createTaxDto.companyId);
         const createdTax = new this.taxModel(createTaxDto);
         return createdTax.save();
     }
@@ -23,12 +21,21 @@ export class TaxesService {
         return this.taxModel.find().exec();
     }
 
-    async findAllByCompany(): Promise<TaxDocument[]> {
-        return this.taxModel.find({ companyId: this.companyId }).exec();
+    async findAllByCompany(companyId: string): Promise<TaxDocument[]> {
+        let castedCompanyId = new Types.ObjectId(companyId);
+        if (!Types.ObjectId.isValid(castedCompanyId)) {
+            throw new NotFoundException(`Invalid ID: ${companyId}`);
+        }
+        return this.taxModel.find({ companyId: castedCompanyId }).exec();
     }
 
+
     async findOne(id: string): Promise<TaxDocument> {
-        const tax = await this.taxModel.findById(id).exec();
+        let castedId = new Types.ObjectId(id);
+        if (!Types.ObjectId.isValid(castedId)) {
+            throw new NotFoundException(`Invalid ID: ${id}`);
+        }
+        const tax = await this.taxModel.findById(castedId).exec();
         if (!tax) {
             throw new NotFoundException(`Tax with ID ${id} not found`);
         }

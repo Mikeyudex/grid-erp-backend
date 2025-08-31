@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Document, Types } from 'mongoose';
 
-export type TaxDocument = Tax & Document;
+export type RetentionDocument = Retention & Document;
 
 @Schema()
-export class Tax {
+export class Retention {
 
     @Prop({ required: true, type: Types.ObjectId, ref: 'Company' })
     companyId: Types.ObjectId;
@@ -32,4 +32,4 @@ export class Tax {
     updatedAt: Date;
 }
 
-export const TaxSchema = SchemaFactory.createForClass(Tax);
+export const RetentionSchema = SchemaFactory.createForClass(Retention);

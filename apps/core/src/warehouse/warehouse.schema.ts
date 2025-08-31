@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { getCurrentUTCDate } from '../../utils/getUtcDate';
 
 export type WharehouseDocument = HydratedDocument<Warehouse>;
@@ -9,8 +9,8 @@ export class Warehouse {
     @Prop({required:true, type:String, unique:true})
     uuid: string;
 
-    @Prop({required:true, type:String}) //Id de la empresa
-    companyId: string;
+    @Prop({required:true, type:mongoose.Schema.Types.ObjectId, ref: 'Company'})
+    companyId: string | Types.ObjectId;
 
     @Prop({required: true, type:String, unique:true })
     warehouseCode: string;

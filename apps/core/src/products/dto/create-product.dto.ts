@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray, IsMongoId } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateProductDto {
@@ -14,18 +14,23 @@ export class CreateProductDto {
 
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
   @IsOptional()
-  @IsString({ message: 'El id de la empresa debe ser una cadena de texto.' })
-  companyId?: string;
+    @IsMongoId()
+  companyId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
   @IsOptional()
-  @IsString({ message: 'El id de la bodega debe ser una cadena de texto.' })
-  warehouseId: string;
+  @IsMongoId()
+  warehouseId: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Id del proovedor', description: '12234' })
   @IsOptional()
-  @IsString({ message: 'El id del proveedor debe ser una cadena de texto.' })
-  providerId: string;
+  @IsMongoId()
+  providerId: string | Types.ObjectId;
+
+  @ApiProperty({ example: 'Id del usuario que creó el producto', description: '12234' })
+  @IsOptional()
+  @IsMongoId()
+  historyActivityUserId: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Camiseta', description: 'Nombre del producto' })
   @IsNotEmpty({ message: 'El nombre es un campo requerido.' })
@@ -39,8 +44,8 @@ export class CreateProductDto {
 
   @ApiProperty({ example: 'Id del tipo de producto', description: '12234' })
   @IsNotEmpty({ message: 'El id del tipo de producto es un campo requerido.' })
-  @IsString({ message: 'El id del tipo de producto debe ser una cadena de texto.' })
-  readonly id_type_product: string;
+  @IsMongoId()
+  readonly id_type_product: string | Types.ObjectId;
 
   @ApiProperty({ example: 'CAM123', description: 'SKU del producto' })
   @IsNotEmpty({ message: 'El sku es un campo requerido.' })
@@ -48,26 +53,25 @@ export class CreateProductDto {
   readonly sku: string;
 
   @ApiProperty({ example: '99272772', description: 'Id de la unidad de medida del producto' })
-  /*   @IsNotEmpty({ message: 'La unidad de medida es un campo requerido.' }) */
   @IsOptional()
-  @IsString({ message: 'El id de la unidad de medida debe ser una cadena de texto.' })
-  unitOfMeasureId?: string;
+  @IsMongoId()
+  unitOfMeasureId?: string | Types.ObjectId;
 
   @ApiProperty({ example: '99272772', description: 'Id de la lista de impuestos' })
   @IsNotEmpty({ message: 'taxId es un campo requerido.' })
-  @IsString({ message: 'taxId debe ser una cadena.' })
-  taxId: string;
+  @IsMongoId()
+  taxId: string | Types.ObjectId;
 
   @ApiProperty({ example: '873827', description: 'Id de la categoría del producto' })
   @IsNotEmpty({ message: 'La categoría es un campo requerido.' })
-  @IsString({ message: 'El id de la categoría debe ser una cadena de texto.' })
+  @IsMongoId()
   readonly id_category: string | Types.ObjectId;
 
   @ApiProperty({ example: '873827sdd', description: 'Id de la subcategoría del producto' })
   /* @IsNotEmpty({ message: 'La subcategoría es un campo requerido.' }) */
   @IsOptional()
-  @IsString({ message: 'El id de la subategoría debe ser una cadena de texto.' })
-  id_sub_category?: string;
+  @IsMongoId()
+  id_sub_category?: string | Types.ObjectId;
 
   @ApiProperty({ example: 10, description: 'Cantidad del producto' })
   @IsNotEmpty({ message: 'La cantidad es un campo requerido.' })

@@ -1,10 +1,11 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsNotEmpty } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, IsNotEmpty, IsMongoId } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateTaxDto {
 
   @IsOptional()
-  @IsString({ message: 'El id de la empresa debe ser una cadena de texto.' })
-  companyId: string;
+  @IsMongoId()
+  companyId: string | Types.ObjectId;
 
   @IsNotEmpty({ message: 'El nombre es un campo requerido.' })
   @IsString({ message: 'El nombre debe ser una cadena de texto.' })

@@ -9,31 +9,31 @@ export class Product {
     @Prop({ required: true, type: String, unique: true })
     uuid: string;
 
-    @Prop()
-    externalId: string;
+    @Prop({ required: false, type: String })
+    externalId?: string;
 
-    @Prop({ required: true, type: String }) //Id de la empresa
-    companyId: string;
+    @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'Company' }) //Id de la empresa
+    companyId: Types.ObjectId;
 
-    @Prop({ required: false, type: String }) //Id de la bodega
-    warehouseId?: string;
+    @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse' }) //Id de la bodega
+    warehouseId?: Types.ObjectId;
 
-    @Prop({ required: false }) //Id del proveedor
-    providerId?: string;
+    @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: 'Provider' }) //Id del proveedor
+    providerId?: Types.ObjectId;
 
-    @Prop() //id de historial de actividad por ejemplo quien lo creó, lo actualizo, etc
-    historyActivityUserId: string;
+    @Prop({ required:false, type: mongoose.Schema.Types.ObjectId, ref: 'User' }) //id de usuario que creó el producto
+    historyActivityUserId: Types.ObjectId;
 
-    @Prop()
+    @Prop({ required: true, type: String })
     name: string;
 
     @Prop({ required: false })
     description?: string;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'TypeProduct', required: true })
-    id_type_product: string;
+    id_type_product: Types.ObjectId;
 
-    @Prop()
+    @Prop({ required: false, type: String })
     sku: string;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UnitOfMeasure', required: false })

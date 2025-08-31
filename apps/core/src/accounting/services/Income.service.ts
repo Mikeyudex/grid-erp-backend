@@ -1,9 +1,9 @@
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { Income, IncomeDocument } from "../schemas/income.schema";
+import { Income, IncomeDocument, IncomeTypeOperation } from "../schemas/income.schema";
 import { CreateIncomeDto } from "../dtos/income.dto";
 import { PaginatedResponse } from "../../common/interfaces/paginated.interface";
-import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { ApiResponse } from "../../common/api-response";
 import { Debt, DebtDocument } from "../../debt/debt.schema";
 import { DebtStatusEnum } from "../../debt/debt.enum";
@@ -17,6 +17,8 @@ interface GetIncomesParams {
 }
 
 export class IncomeService {
+
+    private readonly logger = new Logger(IncomeService.name);
 
     constructor(
         @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
@@ -35,7 +37,6 @@ export class IncomeService {
                     { customerId: regex },
                     { providerId: regex },
                     { accountId: regex },
-                    { debtId: regex },
                     { typeOperation: regex },
                     { purchaseOrderId: regex },
                     { description: regex },
@@ -44,17 +45,37 @@ export class IncomeService {
             }
 
             const totalItems = await this.incomeModel.countDocuments(filters);
-            let incomes = await this.incomeModel.find(filters)
+            let incomes: any = await this.incomeModel.find(filters)
                 .sort({ [sortBy]: sortOrder })
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .populate('customerId', 'name lastname commercialName')
                 .populate('purchaseOrderId', '_id orderNumber')
-                .populate('debtId', '_id name amountPayable status')
+                /* .populate('debtId', '_id name amountPayable status') */
                 .populate('accountId', '_id name')
                 .exec();
 
             const totalPages = Math.ceil(totalItems / limit);
+
+            let debts = [];
+
+            if (incomes.length > 0) {
+                for (let income of incomes) {
+                    if (income.debtIds) {
+                        const debtsByIncome = await this.getDebtsByIncome(income.debtIds);
+                        debts = [...debts, ...debtsByIncome];
+                    }
+                }
+            }
+            if (debts.length > 0) {
+                incomes = incomes.map((income: any) => {
+                    const debt = debts.find(debt => debt._id.toString() === income.debtIds[0].toString());
+                    return {
+                        ...income,
+                        debt,
+                    };
+                });
+            }
 
             return {
                 data: incomes,
@@ -87,11 +108,30 @@ export class IncomeService {
                 .limit(limit)
                 .populate('customerId', 'name lastname commercialName')
                 .populate('purchaseOrderId', '_id orderNumber')
-                .populate('debtId', '_id name amountPayable status')
                 .populate('accountId', '_id name')
                 .exec();
 
             const totalPages = Math.ceil(totalItems / limit);
+
+            let debts = [];
+
+            if (incomes.length > 0) {
+                for (let income of incomes) {
+                    if (income.debtIds) {
+                        const debtsByIncome = await this.getDebtsByIncome(income.debtIds);
+                        debts = [...debts, ...debtsByIncome];
+                    }
+                }
+            }
+            if (debts.length > 0) {
+                incomes = incomes.map((income: any) => {
+                    const debt = debts.find(debt => debt._id.toString() === income.debtIds[0].toString());
+                    return {
+                        ...income,
+                        debt,
+                    };
+                });
+            }
 
             return {
                 data: incomes,
@@ -142,20 +182,49 @@ export class IncomeService {
 
     async create(createIncomeDto: CreateIncomeDto): Promise<IncomeDocument> {
         try {
-            if (createIncomeDto?.debtId) {
-                let debt = await this.debtModel.findById(createIncomeDto.debtId);
-                if (debt) {
-                    createIncomeDto.debtId = new Types.ObjectId(createIncomeDto.debtId);
-                    createIncomeDto.purchaseOrderId = debt.purchaseOrderId;
-                    await this.crossDebt(createIncomeDto.debtId.toString(), createIncomeDto.value);
+            let totalDebts = 0;
+
+            //Cruzar deudas si existen
+            if (createIncomeDto?.debtIds && createIncomeDto.debtIds.length > 0) {
+                for (let debtId of createIncomeDto.debtIds) {
+                    let debtIdParsed = new Types.ObjectId(debtId);
+                    let debt = await this.debtModel.findById(debtIdParsed);
+                    if (debt) {
+                        totalDebts += debt.amountPayable;
+                        createIncomeDto.purchaseOrderId = debt.purchaseOrderId;
+                        await this.crossDebt(debtIdParsed, createIncomeDto.value);
+                    }
                 }
             }
-            
+
             createIncomeDto.purchaseOrderId = new Types.ObjectId(createIncomeDto.purchaseOrderId);
             createIncomeDto.customerId = new Types.ObjectId(createIncomeDto.customerId);
             createIncomeDto.accountId = new Types.ObjectId(createIncomeDto.accountId);
-            
+            if (createIncomeDto.debtIds.length > 0) {
+                createIncomeDto.debtIds = (createIncomeDto.debtIds as string[]).map(
+                    (debtId) => new Types.ObjectId(debtId)
+                );
+            }
+
             let incomeDocument = await this.incomeModel.create(createIncomeDto);
+
+            // si el total del pago es mayor a las deudas, crear anticipo
+            if (totalDebts < createIncomeDto.value) {
+                //Crear income como anticipo
+                let saldo = createIncomeDto.value - totalDebts;
+                createIncomeDto.typeOperation = IncomeTypeOperation.ANTICIPO;
+                createIncomeDto.value = saldo;
+                createIncomeDto.hasCurrentAdvancePayment = true;
+                createIncomeDto.purchaseOrderId = null;
+                createIncomeDto.observations = `Anticipo creado por saldo de pago de deudas pendientes. Total de deudas pagado: ${totalDebts}, saldo del pago: ${saldo}`;
+                this.crearAnticipo(createIncomeDto)
+                    .then(anticipo => {
+                        this.logger.log(`Anticipo creado con éxito: ${anticipo.id}`);
+                    })
+                    .catch(error => {
+                        throw new Error(`Error creando anticipo: ${error.message}`);
+                    });
+            }
             return incomeDocument;
         } catch (error) {
             throw new Error(`Error creating income: ${error.message}`);
@@ -239,20 +308,40 @@ export class IncomeService {
         }
     }
 
-    async crossDebt(debtId: string, amount: number) {
+    async crossDebt(debtId: Types.ObjectId, amount: number) {
         try {
-            let castedId = new Types.ObjectId(debtId);
-            let debt = await this.debtModel.findById(castedId);
+            let debt = await this.debtModel.findById(debtId);
             if (!debt) return null;
             let balance = debt.amountPayable;
-            if (amount === balance) {
+
+            if (amount > balance) {
                 debt.status = DebtStatusEnum.CERRADO;
+                debt.amountPayable = 0;
+            } else if (amount < balance) {
+                debt.amountPayable = balance - amount;
             }
-            debt.amountPayable = balance - amount;
-            const updatedDebt = await this.debtModel.findByIdAndUpdate(castedId, debt, { new: true });
+            const updatedDebt = await this.debtModel.findByIdAndUpdate(debtId, debt, { new: true });
             return updatedDebt;
         } catch (error) {
             throw new Error(`Error updating debt: ${error.message}`);
+        }
+    }
+
+    async getDebtsByIncome(ids: Types.ObjectId[]) {
+        try {
+            let debts = await this.debtModel.find({ _id: { $in: ids } });
+            return debts;
+        } catch (error) {
+            throw new Error(`Error getting debts by income: ${error.message}`);
+        }
+    }
+
+    async crearAnticipo(createIncomeDto: CreateIncomeDto) {
+        try {
+            let anticipo = await this.incomeModel.create(createIncomeDto);
+            return anticipo;
+        } catch (error) {
+            throw new Error(`Error creating anticipo: ${error.message}`);
         }
     }
 

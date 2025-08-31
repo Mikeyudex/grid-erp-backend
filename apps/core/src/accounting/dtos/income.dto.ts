@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Types } from "mongoose";
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export class CreateIncomeDto {
@@ -43,10 +43,10 @@ export class CreateIncomeDto {
     @ApiProperty({ description: 'Id de la cuenta' })
     accountId: string | Types.ObjectId;
 
-    @IsString()
+    @IsArray()
     @IsOptional()
-    @ApiProperty({ description: 'Id de la deuda' })
-    debtId: string | Types.ObjectId;
+    @ApiProperty({ description: 'Ids de las deudas' })
+    debtIds: string[] | Types.ObjectId[];
 
     @IsNumber()
     @IsNotEmpty()

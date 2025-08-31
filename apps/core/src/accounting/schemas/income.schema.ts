@@ -9,17 +9,19 @@ export enum IncomeTypeOperation {
     RECEIPTS = 'recibos',
     ANTICIPO = 'anticipo',
     CREDITO = 'credito',
+    COMPRAS = 'compras',
+    ABONO = 'abono',
 }
 
 export interface IIncome {
     purchaseOrderId: Types.ObjectId | string | null;
     sequence: number;
-    typeOperation: 'ventas' | 'recibos' | 'anticipo' | 'credito';
+    typeOperation: 'ventas' | 'recibos' | 'anticipo' | 'credito' | 'compras' | 'abono';
     paymentDate: Date;
     customerId?: Types.ObjectId | string | null;
     providerId?: Types.ObjectId | string | null;
     accountId: Types.ObjectId | string | null;
-    debtId: Types.ObjectId | string | null;
+    debtIds: Types.ObjectId[] | string[] | null;
     value: number;
     observations: string;
     paymentSupport: string;
@@ -53,8 +55,8 @@ export class Income {
     @Prop({ required: false, type: Types.ObjectId, ref: 'Account', default: null })
     accountId?: Types.ObjectId;
 
-    @Prop({ required: false, type: Types.ObjectId, ref: 'Debt', default: null })
-    debtId: Types.ObjectId;
+    @Prop({ required: false, type: Array<Types.ObjectId>, ref: 'Debt', default: null })
+    debtIds: Types.ObjectId[];
 
     @Prop({ required: true, type: Number })
     value: number;

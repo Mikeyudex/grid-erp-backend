@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -27,7 +27,11 @@ export class WarehouseService {
     }
 
     async findAllByCompany(companyId: string): Promise<Warehouse[]> {
-        let warehouses = this.warehouseModel.find({ companyId }).lean();
+        let companyIdCasted = new Types.ObjectId(companyId);
+        if (!Types.ObjectId.isValid(companyIdCasted)) {
+            throw new BadRequestException(`Invalid ID: ${companyId}`);
+        }
+        let warehouses = this.warehouseModel.find({ companyId: companyIdCasted }).lean();
         return warehouses;
     }
 
@@ -49,7 +53,11 @@ export class WarehouseService {
     }
 
     async findOne(id: string): Promise<Warehouse> {
-        const warehouse = await this.warehouseModel.findOne({ uuid: id }).lean();
+        let idCasted = new Types.ObjectId(id);
+        if (!Types.ObjectId.isValid(idCasted)) {
+            throw new NotFoundException(`Invalid ID: ${id}`);
+        }
+        const warehouse = await this.warehouseModel.findById(idCasted).lean();
         if (!warehouse) {
             throw new NotFoundException(`Warehouse with ID ${id} not found`);
         }

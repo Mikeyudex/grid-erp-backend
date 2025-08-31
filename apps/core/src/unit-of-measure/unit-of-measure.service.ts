@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { UnitOfMeasure, UnitOfMeasureDocument } from './unit-of-measure.schema';
 import { CreateUnitOfMeasureDto } from './dto/create-unit-of-measure.dto';
 import { UpdateUnitOfMeasureDto } from './dto/update-unit-of-measure.dto';
@@ -24,7 +24,11 @@ export class UnitOfMeasureService {
 
   // Obtener una unidad de medida por ID
   async findOne(id: string): Promise<UnitOfMeasureDocument> {
-    const unit = await this.unitOfMeasureModel.findById(id).exec();
+    let castedId = new Types.ObjectId(id);
+    if (!Types.ObjectId.isValid(castedId)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+    const unit = await this.unitOfMeasureModel.findById(castedId).exec();
     if (!unit) {
       throw new NotFoundException(`Unit of Measure with ID ${id} not found`);
     }

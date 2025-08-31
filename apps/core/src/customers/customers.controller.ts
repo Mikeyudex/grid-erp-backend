@@ -19,6 +19,11 @@ export class CustomersController {
         return this.customersService.getAll(page, limit);
     }
 
+    @Get('getProviders')
+    async getProviders() {
+        return this.customersService.getProviders();
+    }
+
     @UseGuards(JwtAuthGuard)
     @Get('getById/:id')
     async getCustomerById(@Param('id') id: string) {

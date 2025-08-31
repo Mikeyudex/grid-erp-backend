@@ -6,6 +6,7 @@ import { ApiResponse } from '../common/api-response';
 import { TypeCustomer, TypeCustomerDocument } from './typeCustomer.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateTypesCustomerDto } from './dtos/types-customer.dto';
+import { Customer, CustomerDocument } from './customers.schema';
 
 @Injectable()
 export class CustomersService {
@@ -14,7 +15,8 @@ export class CustomersService {
 
     constructor(
         private readonly customerDao: CustomerDAO,
-        @InjectModel(TypeCustomer.name) private readonly typeCustomerModel: Model<TypeCustomerDocument>
+        @InjectModel(TypeCustomer.name) private readonly typeCustomerModel: Model<TypeCustomerDocument>,
+        @InjectModel(Customer.name) private readonly customerModel: Model<CustomerDocument>
     ) { }
 
     async create(customer: CreateCustomerDto) {
@@ -68,6 +70,24 @@ export class CustomersService {
         try {
             let typesCustomer = await this.typeCustomerModel.find().lean().exec();
             return ApiResponse.success('Registros obtenidos con éxito', typesCustomer);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async getProviders() {
+        try {
+            let search = "PROV"
+            let typeCustomer = await this.typeCustomerModel.findOne({ name: new RegExp(search, 'i') })
+                .lean()
+                .exec();
+                
+            let providers = await this.customerModel.find({ typeCustomerId: typeCustomer._id }).lean().exec();
+            return ApiResponse.success('Registros obtenidos con éxito', providers);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,

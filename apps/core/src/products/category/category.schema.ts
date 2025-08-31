@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { getCurrentUTCDate } from '../../../utils/getUtcDate';
 
 export type ProductCategoryDocument = HydratedDocument<ProductCategory>;
@@ -9,8 +9,8 @@ export class ProductCategory {
     @Prop({required:true, type:String, unique:true})
     uuid: string;
 
-    @Prop({required: true })
-    companyId: string;
+    @Prop({required: true, type: mongoose.Schema.Types.ObjectId, ref: 'Company'})
+    companyId: string | Types.ObjectId;
 
     @Prop({required: true })
     name: string;

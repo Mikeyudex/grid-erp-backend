@@ -18,9 +18,9 @@ export class TaxesController {
         return this.taxesService.findAll();
     }
 
-    @Get('/getbyCompany')
-    async findAllByCompany(): Promise<TaxDocument[]> {
-        return this.taxesService.findAllByCompany();
+    @Get('/getbyCompany/:companyId')
+    async findAllByCompany(@Param('companyId') companyId: string): Promise<TaxDocument[]> {
+        return this.taxesService.findAllByCompany(companyId);
     }
 
     @Get(':id')

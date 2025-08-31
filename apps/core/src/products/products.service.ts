@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './product.schema';
@@ -23,7 +23,8 @@ import { WarehouseService } from '../warehouse/warehouse.service';
 import { Movement, TypeMovementEnum } from '../movement/movement.schema';
 import { TypeProduct } from './typeProduct/typeProduct.schema';
 import { CreateTypesProductDto } from './dto/typesProduct/typesProduct.dto';
-import { ApiResponse } from '../common/api-response';
+import { PaginatedResponse } from '../common/interfaces/paginated.interface';
+
 
 @Injectable()
 export class ProductsService {
@@ -40,11 +41,11 @@ export class ProductsService {
     private readonly settingsService: SettingsService,
     private readonly taxesService: TaxesService,
     private readonly warehouseService: WarehouseService,
-  ) { this.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a" }
+  ) { this.companyId = "66becedd790bddbc9b1e2cbc" }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     createProductDto.uuid = v4();
-    createProductDto.companyId = "3423f065-bb88-4cc5-b53a-63290b960c1a"; //TODO el id de la compañia se debe sacar del token o la sesión de la solicitud
+    createProductDto.companyId = new Types.ObjectId("66becedd790bddbc9b1e2cbc");
 
     const session: ClientSession = await this.productModel.db.startSession();
     session.startTransaction();
@@ -55,7 +56,7 @@ export class ProductsService {
 
       //find by id unitOfMeasure
       if (createProductDto.unitOfMeasureId) {
-        unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId);
+        unitOfMeasure = await this.unitOfMeasureService.findOne(createProductDto.unitOfMeasureId as string);
         if (!unitOfMeasure) {
           throw new NotFoundException({
             statusCode: 404,
@@ -67,7 +68,7 @@ export class ProductsService {
 
       //find by id tax
       if (createProductDto.taxId) {
-        tax = await this.taxesService.findOne(createProductDto.taxId);
+        tax = await this.taxesService.findOne(createProductDto.taxId as string);
         if (!tax) {
           throw new NotFoundException({
             statusCode: 404,
@@ -77,7 +78,7 @@ export class ProductsService {
         }
       }
 
-      const typeProduct = await this.getNameTypeProductById(createProductDto.id_type_product);
+      const typeProduct = await this.getNameTypeProductById(createProductDto.id_type_product as string);
       if (!typeProduct) {
         throw new NotFoundException({
           statusCode: 404,
@@ -86,20 +87,22 @@ export class ProductsService {
         });
       }
 
-      const typeOfPiecesObjectId = createProductDto.typeOfPieces.map(t => new Types.ObjectId(t));
+      const typeOfPiecesObjectId = createProductDto.typeOfPieces ? createProductDto.typeOfPieces.map(type => new Types.ObjectId(type)) : [];
 
-      createProductDto.unitOfMeasureId = unitOfMeasure ? unitOfMeasure._id.toString() : null;
+      createProductDto.unitOfMeasureId = unitOfMeasure ? unitOfMeasure._id : null;
 
       if (!createProductDto.id_sub_category) {
-        createProductDto.id_sub_category = "680aaf320d033722d44d4bff";
+        createProductDto.id_sub_category = new Types.ObjectId("680aaf320d033722d44d4bff");
       }
 
       if (!createProductDto.warehouseId) {
-        createProductDto.warehouseId = "67ac30a3-861c-4cc4-ac39-a23233440c1d";
+        createProductDto.warehouseId = new Types.ObjectId("66c2cbd4f171187740252cfc");
       }
 
       const newProduct = new this.productModel(createProductDto);
       newProduct.typeOfPieces = typeOfPiecesObjectId;
+      newProduct.warehouseId = new Types.ObjectId(createProductDto.warehouseId);
+      newProduct.historyActivityUserId = new Types.ObjectId(createProductDto.historyActivityUserId);
 
       const product = await newProduct.save();
 
@@ -107,7 +110,7 @@ export class ProductsService {
       const createStockDto: CreateStockDto = {
         productId: newProduct._id.toString(),
         quantity: createProductDto.quantity,
-        warehouseId: createProductDto.warehouseId,
+        warehouseId: createProductDto.warehouseId.toString(),
       }
 
       await this.stockService.create(createStockDto);
@@ -146,7 +149,11 @@ export class ProductsService {
 
     let response = [];
     const skip = (page - 1) * limit;
-    let products = await this.productModel.find({ companyId })
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
+    let products = await this.productModel.find({ companyId: companyIdCasted })
       .populate('id_category')
       .populate('id_sub_category')
       .sort({ createdAt: -1 })
@@ -160,6 +167,7 @@ export class ProductsService {
     for (let index = 0; index < products.length; index++) {
       try {
         const product: any = products[index];
+
         let warehouse = await this.warehouseService.findOne(product.warehouseId);
         let stockProduct = await this.stockService.findOneByProductId(product.id);
 
@@ -189,7 +197,11 @@ export class ProductsService {
   async findAllByCompanyLite(companyId: string, page: number = 1, limit: number = 10) {
     try {
       const skip = (page - 1) * limit;
-      let products = await this.productModel.find({ companyId })
+      let companyIdCasted = new Types.ObjectId(companyId);
+      if (!Types.ObjectId.isValid(companyIdCasted)) {
+        throw new BadRequestException(`Invalid ID: ${companyId}`);
+      }
+      let products = await this.productModel.find({ companyId: companyIdCasted })
         .populate('typeOfPieces')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -277,7 +289,7 @@ export class ProductsService {
     let _id = new Types.ObjectId(id);
     updateProductDto.id_category = new Types.ObjectId(updateProductDto.id_category);
     console.log(updateProductDto);
-    
+
     const updatedProduct = await this.productModel.findByIdAndUpdate(_id, updateProductDto, { new: true }).exec();
     if (!updatedProduct) {
       throw new NotFoundException(`Product with ID ${id} not found`);
@@ -351,8 +363,12 @@ export class ProductsService {
   }
 
   async getLastShortCodeCategory(companyId: string): Promise<string | null> {
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
     const lastProductCategory = await this.productCategoryModel
-      .findOne({ companyId })
+      .findOne({ companyId: companyIdCasted })
       .sort({ shortCode: -1 })
       .select('shortCode')
       .exec();
@@ -360,8 +376,12 @@ export class ProductsService {
   }
 
   async findProductCategorysByCompanyId(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: ProductCategory[] }> {
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
     const skip = (page - 1) * limit;
-    let categories = await this.productCategoryModel.find({ companyId })
+    let categories = await this.productCategoryModel.find({ companyId: companyIdCasted })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -377,13 +397,19 @@ export class ProductsService {
   }
 
   async findProductCategoriesFull(companyId: string, page: number = 1, limit: number = 10): Promise<any> {
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
     const skip = (page - 1) * limit;
-    let categories = await this.productCategoryModel.find({ companyId })
+
+    let categories = await this.productCategoryModel.find({ companyId: companyIdCasted })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
     let categoriesFull = [];
+
     for (let index = 0; index < categories.length; index++) {
       const category = categories[index];
       let subCat = await this.findProductSubCategorysByCategoryId(category._id.toString());
@@ -393,7 +419,11 @@ export class ProductsService {
   }
 
   async findProductCategoriesFullSelect(companyId: string): Promise<any> {
-    let categories = await this.productCategoryModel.find({ companyId }).lean();
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
+    let categories = await this.productCategoryModel.find({ companyId: companyIdCasted }).lean();
     let categoriesFullSelect = [];
     for (let index = 0; index < categories.length; index++) {
       const category: ProductCategory = categories[index];
@@ -410,7 +440,11 @@ export class ProductsService {
   }
 
   async findProductCategoryByCompanyId(companyId: string): Promise<ProductCategory> {
-    return this.productCategoryModel.findOne({ companyId }).exec();
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
+    return this.productCategoryModel.findOne({ companyId: companyIdCasted }).exec();
   }
 
   async findProductCategoryByUuId(uuid: string): Promise<ProductCategory> {
@@ -457,7 +491,11 @@ export class ProductsService {
   }
 
   async findProductSubCategorysByCategoryId(categoryId: string): Promise<ProductSubCategory[]> {
-    return this.productSubCategoryModel.find({ categoryId }).exec();
+    let categoryIdCasted = new Types.ObjectId(categoryId);
+    if (!Types.ObjectId.isValid(categoryIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${categoryId}`);
+    }
+    return this.productSubCategoryModel.find({ categoryId: categoryIdCasted }).exec();
   }
 
   async findProductSubCategoryByUuId(uuid: string): Promise<ProductSubCategory> {
@@ -474,8 +512,12 @@ export class ProductsService {
   }
 
   async getLastSkuByCompany(companyId: string): Promise<string | null> {
+    let companyIdCasted = new Types.ObjectId(companyId);
+    if (!Types.ObjectId.isValid(companyIdCasted)) {
+      throw new BadRequestException(`Invalid ID: ${companyId}`);
+    }
     const lastProduct = await this.productModel
-      .findOne({ companyId })  // Filtrar por companyId
+      .findOne({ companyId: companyIdCasted })  // Filtrar por companyId
       .sort({ sku: -1 })        // Ordenar por SKU en orden descendente
       .select('sku')            // Seleccionar solo el campo sku
       .exec();
@@ -515,8 +557,67 @@ export class ProductsService {
   }
 
   async getNameTypeProductById(id: string): Promise<string> {
-    let typeProduct = await this.typeProductModel.findById(id, { name: 1 }).exec();
+    let castedId = new Types.ObjectId(id);
+    if (!Types.ObjectId.isValid(castedId)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+    let typeProduct = await this.typeProductModel.findById(castedId, { name: 1 }).exec();
     return typeProduct.name;
+  }
+
+  async searchProduct(typeProduct: string, search: string): Promise<PaginatedResponse<ProductDocument>> {
+    let typeProductDocument = await this.typeProductModel.findOne({ name: new RegExp(typeProduct, 'i') })
+    .lean()
+    .exec();
+    if (!typeProductDocument) {
+      throw new NotFoundException(`TypeProduct not found`);
+    }
+    const filters: any = {};
+
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      filters.$or = [
+        { name: regex },
+        { description: regex },
+        { sku: regex },
+      ];
+    }
+
+    filters.id_type_product = typeProductDocument._id;
+
+    const totalItems = await this.productModel.countDocuments(filters);
+
+    let products = await this.productModel.find(filters)
+      .sort({ createdAt: -1 })
+      .populate('id_category', 'name')
+      .populate('warehouseId', 'name')
+      .populate('id_type_product', 'name')
+      .populate('taxId', 'name, percentage')
+      .exec();
+
+    const totalPages = Math.ceil(totalItems / 10);
+
+    let productsMap = [];
+
+    for (let index = 0; index < products.length; index++) {
+      const product: any = products[index];
+      let stockProduct = await this.stockService.findOneByProductId(product._id.toString());
+      productsMap.push({
+        ...product.toObject(),
+        stock: stockProduct?.quantity ?? 0,
+      })
+    }
+
+    return {
+      data: productsMap as ProductDocument[],
+      meta: {
+        currentPage: 1,
+        totalPages,
+        totalItems,
+        itemsPerPage: 10,
+      },
+    }
+
   }
 
 }
