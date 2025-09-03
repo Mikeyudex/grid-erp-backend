@@ -66,4 +66,8 @@ export class CreateIncomeDto {
     @IsOptional()
     @ApiProperty({ description: 'Indica si el anticipo es vigente' })
     hasCurrentAdvancePayment?: boolean;
+
+    @IsOptional()
+    @ApiProperty({ description: 'Indica si el pago es interno' })
+    isInternalPayment?: boolean;
 }

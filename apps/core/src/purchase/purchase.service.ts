@@ -9,9 +9,12 @@ import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Tax, TaxDocument } from '../taxes/taxes.schema';
 import { Retention, RetentionDocument } from '../retention/retention.schema';
 import { CreateIncomeDto } from '../accounting/dtos/income.dto';
-import { IncomeTypeOperation } from '../accounting/schemas/income.schema';
+import { Income, IncomeDocument, IncomeTypeOperation } from '../accounting/schemas/income.schema';
 import { IncomeService } from '../accounting/services/Income.service';
 import { ApiResponse } from '../common/api-response';
+import { CreateDebtDto } from '../debt/debt.dto';
+import { DebtStatusEnum } from '../debt/debt.enum';
+import { Debt, DebtDocument } from '../debt/debt.schema';
 
 interface GetPurchaseParams {
     page: number
@@ -30,6 +33,8 @@ export class PurchaseService {
         @InjectModel(Purchase.name) private readonly purchaseModel: Model<PurchaseDocument>,
         @InjectModel(Tax.name) private readonly taxModel: Model<TaxDocument>,
         @InjectModel(Retention.name) private readonly retentionModel: Model<RetentionDocument>,
+        @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
+        @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
         private readonly incomeService: IncomeService,
     ) { }
 
@@ -136,7 +141,7 @@ export class PurchaseService {
                     || methodOfPaymentDto.typeOperation === IncomeTypeOperation.SALES
                     || methodOfPaymentDto.typeOperation === IncomeTypeOperation.COMPRAS
                 ) {
-                    methodOfPaymentDto.customerId = new Types.ObjectId(methodOfPaymentDto.customerId);
+                    methodOfPaymentDto.providerId = new Types.ObjectId(methodOfPaymentDto.customerId);
                     methodOfPaymentDto.accountId = new Types.ObjectId(methodOfPaymentDto.accountId);
                     methodOfPaymentDto.hasCurrentAdvancePayment = false;
                     let incomeDocument = await this.incomeService.create(methodOfPaymentDto);
@@ -163,6 +168,8 @@ export class PurchaseService {
             purchaseDocument.methodOfPayment = incomeIds;
 
             let order = await purchaseDocument.save();
+            await this.createDebt(order, methodOfPayments);
+            await this.crossAdvancePayment(order, methodOfPayments);
             await this.incomeService.updatePurchaseOrderId(incomeIds, purchaseDocument._id);
             return ApiResponse.success('Orden de compra creada con éxito', order, HttpStatus.CREATED);
         } catch (error) {
@@ -271,6 +278,66 @@ export class PurchaseService {
             return purchase;
         } catch (error) {
             throw new Error(`Error deleting purchase: ${error.message}`);
+        }
+    }
+
+    async createDebt(order: PurchaseDocument, methodOfPayments: CreateIncomeDto[]) {
+        try {
+            let value = 0;
+            for (let index = 0; index < methodOfPayments.length; index++) {
+                const methodOfPayment = methodOfPayments[index];
+                let typeOperation = methodOfPayment.typeOperation;
+                if (typeOperation === IncomeTypeOperation.CREDITO) {
+                    value = value + methodOfPayment.value;
+                    // Crear el registro de la deuda
+                    const debt: CreateDebtDto = {
+                        customerId: order.providerId,
+                        purchaseOrderId: order._id as Types.ObjectId,
+                        description: `Deuda de $${order.totalOrder} por Compra #${order.orderNumber}`,
+                        amountPayable: value,
+                        status: DebtStatusEnum.ABIERTO,
+                    };
+
+                    let debtDocument = new this.debtModel(debt);
+                    await debtDocument.save();
+                    await this.incomeModel.updateOne(
+                        { _id: methodOfPayment.incomeId },
+                        {
+                            $set: {
+                                debtId: debtDocument._id,
+                                updatedAt: getCurrentUTCDate()
+                            }
+                        }
+                    )
+                }
+            }
+        } catch (error: any) {
+            console.log(error);
+            throw new Error(`Error al crear la deuda: ${error?.message}`);
+        }
+    }
+
+    async crossAdvancePayment(order: PurchaseDocument, methodOfPayments: CreateIncomeDto[]) {
+        try {
+            for (let index = 0; index < methodOfPayments.length; index++) {
+                const methodOfPayment = methodOfPayments[index];
+                let typeOperation = methodOfPayment.typeOperation;
+                if (typeOperation === IncomeTypeOperation.ANTICIPO) {
+                    try {
+                        let incomeId = methodOfPayment.accountId;
+                        await this.incomeModel.findByIdAndUpdate(incomeId, {
+                            hasCurrentAdvancePayment: false,
+                            updatedAt: getCurrentUTCDate(),
+                            purchaseOrderId: order._id
+                        })
+                    } catch (error) {
+                        this.logger.error('Error al cruzar el anticipo', error);
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            throw new Error(`Error al cruzar el anticipo: ${error?.message}`);
         }
     }
 }

@@ -196,9 +196,14 @@ export class IncomeService {
                     }
                 }
             }
-
             createIncomeDto.purchaseOrderId = new Types.ObjectId(createIncomeDto.purchaseOrderId);
-            createIncomeDto.customerId = new Types.ObjectId(createIncomeDto.customerId);
+
+            if (createIncomeDto.isInternalPayment) {
+                createIncomeDto.providerId = new Types.ObjectId(createIncomeDto.providerId);
+            } else {
+                createIncomeDto.customerId = new Types.ObjectId(createIncomeDto.customerId);
+            }
+
             createIncomeDto.accountId = new Types.ObjectId(createIncomeDto.accountId);
             if (createIncomeDto.debtIds.length > 0) {
                 createIncomeDto.debtIds = (createIncomeDto.debtIds as string[]).map(

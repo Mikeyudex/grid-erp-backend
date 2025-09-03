@@ -8,6 +8,8 @@ import { AccountingModule } from '../accounting/accounting.module';
 import { Tax } from '../taxes/taxes.schema';
 import { TaxSchema } from '@shared/index';
 import { Retention, RetentionSchema } from '../retention/retention.schema';
+import { Debt, DebtSchema } from '../debt/debt.schema';
+import { Income, IncomeSchema } from '../accounting/schemas/income.schema';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { Retention, RetentionSchema } from '../retention/retention.schema';
     MongooseModule.forFeature([{ name: Purchase.name, schema: PurchaseSchema }]),
     MongooseModule.forFeature([{ name: Tax.name, schema: TaxSchema }]),
     MongooseModule.forFeature([{ name: Retention.name, schema: RetentionSchema }]),
+    MongooseModule.forFeature([{ name: Debt.name, schema: DebtSchema }]),
+    MongooseModule.forFeature([{ name: Income.name, schema: IncomeSchema }]),
     AccountingModule
   ],
   providers: [PurchaseService],

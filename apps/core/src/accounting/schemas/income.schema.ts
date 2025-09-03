@@ -26,6 +26,7 @@ export interface IIncome {
     observations: string;
     paymentSupport: string;
     hasCurrentAdvancePayment?: boolean;
+    isInternalPayment?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -69,6 +70,9 @@ export class Income {
 
     @Prop({ required: false, type: Boolean, default: true })
     hasCurrentAdvancePayment?: boolean;
+
+    @Prop({ required: false, type: Boolean, default: false })
+    isInternalPayment?: boolean;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
