@@ -50,7 +50,7 @@ export class Income {
     @Prop({ required: false, type: Types.ObjectId, ref: 'Customer', default: null })
     customerId?: Types.ObjectId;
 
-    @Prop({ required: false, type: Types.ObjectId, ref: 'ProviderErp', default: null })
+    @Prop({ required: false, type: Types.ObjectId, ref: 'Customer', default: null })
     providerId?: Types.ObjectId;
 
     @Prop({ required: false, type: Types.ObjectId, ref: 'Account', default: null })

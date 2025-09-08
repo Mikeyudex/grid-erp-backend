@@ -50,6 +50,7 @@ export class IncomeService {
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .populate('customerId', 'name lastname commercialName')
+                .populate('providerId', 'name lastname commercialName')
                 .populate('purchaseOrderId', '_id orderNumber')
                 /* .populate('debtId', '_id name amountPayable status') */
                 .populate('accountId', '_id name')
@@ -57,24 +58,17 @@ export class IncomeService {
 
             const totalPages = Math.ceil(totalItems / limit);
 
-            let debts = [];
-
+            // 🔹 Mapear deudas para cada income
             if (incomes.length > 0) {
                 for (let income of incomes) {
-                    if (income.debtIds) {
+                    if (income.debtIds && income.debtIds.length > 0) {
                         const debtsByIncome = await this.getDebtsByIncome(income.debtIds);
-                        debts = [...debts, ...debtsByIncome];
+                        // Filtrar deudas nulas o inexistentes
+                        income._doc.debts = debtsByIncome.filter(debt => debt !== null);
+                    } else {
+                        income._doc.debts = []; // si no tiene deudas
                     }
                 }
-            }
-            if (debts.length > 0) {
-                incomes = incomes.map((income: any) => {
-                    const debt = debts.find(debt => debt._id.toString() === income.debtIds[0].toString());
-                    return {
-                        ...income,
-                        debt,
-                    };
-                });
             }
 
             return {
@@ -86,7 +80,9 @@ export class IncomeService {
                     itemsPerPage: limit,
                 },
             }
+
         } catch (error) {
+            console.log(error);
             throw new Error(`Error getting incomes: ${error.message}`);
         }
     }
@@ -102,7 +98,7 @@ export class IncomeService {
 
             const totalItems = await this.incomeModel.countDocuments(filters);
 
-            let incomes = await this.incomeModel.find(filters)
+            let incomes: any = await this.incomeModel.find(filters)
                 .sort({ [sortBy]: sortOrder })
                 .skip((page - 1) * limit)
                 .limit(limit)
@@ -113,24 +109,67 @@ export class IncomeService {
 
             const totalPages = Math.ceil(totalItems / limit);
 
-            let debts = [];
-
             if (incomes.length > 0) {
                 for (let income of incomes) {
-                    if (income.debtIds) {
+                    if (income.debtIds && income.debtIds.length > 0) {
                         const debtsByIncome = await this.getDebtsByIncome(income.debtIds);
-                        debts = [...debts, ...debtsByIncome];
+                        // Filtrar deudas nulas o inexistentes
+                        income._doc.debts = debtsByIncome.filter(debt => debt !== null);
+                    } else {
+                        income._doc.debts = []; // si no tiene deudas
                     }
                 }
             }
-            if (debts.length > 0) {
-                incomes = incomes.map((income: any) => {
-                    const debt = debts.find(debt => debt._id.toString() === income.debtIds[0].toString());
-                    return {
-                        ...income,
-                        debt,
-                    };
-                });
+            return {
+                data: incomes,
+                meta: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems,
+                    itemsPerPage: limit,
+                },
+            }
+        } catch (error) {
+            if (error instanceof BadRequestException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async findAllByProviderAndTypeOperation(providerId: string, typeOperation: string, params: GetIncomesParams): Promise<PaginatedResponse<IncomeDocument>> {
+        try {
+            const { page, limit, sortBy = 'createdAt', sortOrder = 'asc' } = params;
+            const filters: any = {};
+
+            filters.providerId = new Types.ObjectId(providerId);
+            filters.typeOperation = typeOperation;
+            filters.hasCurrentAdvancePayment = true;
+
+            const totalItems = await this.incomeModel.countDocuments(filters);
+
+            let incomes: any = await this.incomeModel.find(filters)
+                .sort({ [sortBy]: sortOrder })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .populate('providerId', 'name lastname commercialName')
+                .populate('accountId', '_id name')
+                .exec();
+
+            const totalPages = Math.ceil(totalItems / limit);
+
+            if (incomes.length > 0) {
+                for (let income of incomes) {
+                    if (income.debtIds && income.debtIds.length > 0) {
+                        const debtsByIncome = await this.getDebtsByIncome(income.debtIds);
+                        // Filtrar deudas nulas o inexistentes
+                        income._doc.debts = debtsByIncome.filter(debt => debt !== null);
+                    } else {
+                        income._doc.debts = []; // si no tiene deudas
+                    }
+                }
             }
 
             return {
@@ -164,6 +203,7 @@ export class IncomeService {
             }
             let income = await this.incomeModel.findById(castedId)
                 .populate('customerId', 'name lastname commercialName')
+                .populate('providerId', 'name lastname commercialName')
                 .populate('purchaseOrderId', '_id orderNumber')
                 .exec();
             if (!income) {
@@ -315,11 +355,10 @@ export class IncomeService {
 
     async crossDebt(debtId: Types.ObjectId, amount: number) {
         try {
-            let debt = await this.debtModel.findById(debtId);
+            let debt = await this.debtModel.findOne({ _id: debtId, status: DebtStatusEnum.ABIERTO });
             if (!debt) return null;
             let balance = debt.amountPayable;
-
-            if (amount > balance) {
+            if (amount >= balance) {
                 debt.status = DebtStatusEnum.CERRADO;
                 debt.amountPayable = 0;
             } else if (amount < balance) {

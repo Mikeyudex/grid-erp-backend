@@ -115,6 +115,68 @@ export class DebtService {
         }
     }
 
+    async getDebtsByProvider(providerId: string, customerId: string, params: GetDebtsParams, status: string): Promise<PaginatedResponse<DebtDocument>> {
+        try {
+            const { page, limit, sortBy = 'createdAt', sortOrder = 'asc' } = params;
+
+            let customerIdCasted = new Types.ObjectId(customerId);
+            let providerIdCasted = new Types.ObjectId(providerId);
+            if (!Types.ObjectId.isValid(customerIdCasted)) {
+                throw new BadRequestException({
+                    statusCode: 400,
+                    message: 'ID inválido',
+                    error: 'El ID proporcionado no es válido',
+                });
+            }
+            if (!Types.ObjectId.isValid(providerIdCasted)) {
+                throw new BadRequestException({
+                    statusCode: 400,
+                    message: 'ID inválido',
+                    error: 'El ID proporcionado no es válido',
+                });
+            }
+
+            const filters: any = {};
+
+            if (status) {
+                filters.customerId = customerIdCasted;
+                filters.providerId = providerIdCasted;
+                filters.status = status;
+            } else {
+                filters.customerId = customerIdCasted;
+                filters.providerId = providerIdCasted;
+            }
+            const totalItems = await this.debtModel.countDocuments(filters);
+
+            let debts = await this.debtModel.find(filters)
+                .sort({ [sortBy]: sortOrder })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .populate('providerId', 'name')
+                .populate('purchaseOrderId', '_id purchaseOrderNumber')
+                .exec();
+
+            const totalPages = Math.ceil(totalItems / limit);
+
+            return {
+                data: debts,
+                meta: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems,
+                    itemsPerPage: limit,
+                },
+            }
+        } catch (error) {
+            if (error instanceof BadRequestException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async getDebtById(id: string): Promise<ApiResponse<DebtDocument>> {
         try {
             let castedId = new Types.ObjectId(id);

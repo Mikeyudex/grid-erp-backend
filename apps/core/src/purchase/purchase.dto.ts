@@ -85,6 +85,10 @@ export class CreatePurchaseDto {
 
     @IsOptional()
     @IsMongoId()
+    zoneId: string | Types.ObjectId;
+
+    @IsOptional()
+    @IsMongoId()
     updatedBy: string | Types.ObjectId;
 
     @IsOptional()

@@ -1,5 +1,5 @@
 
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { Types } from "mongoose";
 
 
@@ -8,6 +8,10 @@ export class CreateDebtDto {
     @IsString()
     @IsNotEmpty()
     customerId: string | Types.ObjectId;
+
+    @IsOptional()
+    @IsString()
+    providerId: string | Types.ObjectId;
 
     @IsString()
     @IsNotEmpty()
@@ -24,24 +28,32 @@ export class CreateDebtDto {
     @IsString()
     @IsNotEmpty()
     status: 'abierto' | 'cerrado';
+
+    @IsOptional()
+    @IsBoolean()
+    isInternalDebt?: boolean;
 }
 
 export class UpdateDebtDto {
 
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
     customerId: string | Types.ObjectId;
 
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
+    providerId: string | Types.ObjectId;
+
+    @IsOptional()
+    @IsString()
     purchaseOrderId: string | Types.ObjectId;
 
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
     description: string;
 
+    @IsOptional()
     @IsNumber()
-    @IsNotEmpty()
     amountPayable: number;
 }
 
@@ -50,6 +62,10 @@ export class GetDebtsDto {
     @IsString()
     @IsNotEmpty()
     customerId: string;
+
+    @IsOptional()
+    @IsString()
+    providerId: string;
 
     @IsString()
     @IsNotEmpty()
@@ -62,6 +78,14 @@ export class GetDebtsDto {
     @IsNumber()
     @IsNotEmpty()
     amountPayable: number;
+
+    @IsString()
+    @IsNotEmpty()
+    status: 'abierto' | 'cerrado';
+
+    @IsOptional()
+    @IsBoolean()
+    isInternalDebt?: boolean;
 }
 
 export class GetDebtsResponseDto {

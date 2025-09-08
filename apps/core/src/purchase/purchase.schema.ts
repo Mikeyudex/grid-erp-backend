@@ -4,6 +4,7 @@ import { Document, Types } from 'mongoose';
 import { Customer } from '../customers/customers.schema';
 import { PurchaseDetail } from './purchase-detail.schema';
 import { Income } from '../accounting/schemas/income.schema';
+import { Zone } from '../users/zone/zone.schema';
 
 export type PurchaseDocument = Purchase & Document;
 
@@ -19,6 +20,7 @@ export interface IPurchase {
     methodOfPayment: Types.ObjectId[];
     createdBy?: Types.ObjectId | string;
     updatedBy?: Types.ObjectId | string;
+    zoneId?: Types.ObjectId | string;
     createdAt: Date;
     updatedAt?: Date | null;
 }
@@ -48,6 +50,9 @@ export class Purchase {
 
     @Prop({ required: true, type: Array<Types.ObjectId>, ref: Income.name, default: [] })
     methodOfPayment: Types.ObjectId[];
+
+    @Prop({ required: false, ref: Zone.name, type: Types.ObjectId }) //Id de la sede donde se realiza la compra
+    zoneId: Types.ObjectId;
 
     @Prop({ required: false, ref: Customer.name, type: Types.ObjectId }) //Id del usuario que crea la compra
     createdBy: Types.ObjectId;

@@ -152,8 +152,8 @@ export class PurchaseService {
             }
 
             delete createPurchaseDto.methodOfPayment;
-
             createPurchaseDto.providerId = new Types.ObjectId(createPurchaseDto.providerId);
+            createPurchaseDto.zoneId = new Types.ObjectId(createPurchaseDto.zoneId);
 
             for (let detail of createPurchaseDto.detail) {
                 detail.createdBy = new Types.ObjectId(detail.createdBy);
@@ -163,12 +163,13 @@ export class PurchaseService {
                 detail.itemTotal = await this.calculateTotalItem(detail);
             }
 
-            createPurchaseDto.totalOrder = this.calculateTotalPurchase(createPurchaseDto);
+            //createPurchaseDto.totalOrder = this.calculateTotalPurchase(createPurchaseDto);
             let purchaseDocument = new this.purchaseModel(createPurchaseDto);
             purchaseDocument.methodOfPayment = incomeIds;
 
             let order = await purchaseDocument.save();
-            await this.createDebt(order, methodOfPayments);
+
+            await this.createDebt(order, methodOfPayments, true);
             await this.crossAdvancePayment(order, methodOfPayments);
             await this.incomeService.updatePurchaseOrderId(incomeIds, purchaseDocument._id);
             return ApiResponse.success('Orden de compra creada con éxito', order, HttpStatus.CREATED);
@@ -281,7 +282,7 @@ export class PurchaseService {
         }
     }
 
-    async createDebt(order: PurchaseDocument, methodOfPayments: CreateIncomeDto[]) {
+    async  createDebt(order: PurchaseDocument, methodOfPayments: CreateIncomeDto[], isInternalDebt: boolean) {
         try {
             let value = 0;
             for (let index = 0; index < methodOfPayments.length; index++) {
@@ -289,13 +290,15 @@ export class PurchaseService {
                 let typeOperation = methodOfPayment.typeOperation;
                 if (typeOperation === IncomeTypeOperation.CREDITO) {
                     value = value + methodOfPayment.value;
-                    // Crear el registro de la deuda
+                    // Crear el registro de la deuda, cuando es una deuda interna se guardar el id de la zona como customerId
                     const debt: CreateDebtDto = {
-                        customerId: order.providerId,
+                        customerId: order.zoneId,
+                        providerId: order.providerId,
                         purchaseOrderId: order._id as Types.ObjectId,
-                        description: `Deuda de $${order.totalOrder} por Compra #${order.orderNumber}`,
+                        description: `Deuda interna de $${order.totalOrder} por Compra #${order.orderNumber}`,
                         amountPayable: value,
                         status: DebtStatusEnum.ABIERTO,
+                        isInternalDebt: isInternalDebt,
                     };
 
                     let debtDocument = new this.debtModel(debt);

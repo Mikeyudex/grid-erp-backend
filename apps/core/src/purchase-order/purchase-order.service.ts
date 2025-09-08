@@ -88,7 +88,7 @@ export class PurchaseOrderService {
                 methodOfPayment: incomeIds,
             });
             let order = await createdOrder.save();
-            await this.createDebt(order, methodOfPayments);
+            await this.createDebt(order, methodOfPayments, false);
             await this.crossAdvancePayment(order, methodOfPayments);
             await this.incomeService.updatePurchaseOrderId(incomeIds, order._id);
             return ApiResponse.success('Orden creada con éxito', order, HttpStatus.CREATED);
@@ -106,7 +106,7 @@ export class PurchaseOrderService {
 
     }
 
-    async createDebt(order: PurchaseOrderDocument, methodOfPayments: CreateIncomeDto[]) {
+    async createDebt(order: PurchaseOrderDocument, methodOfPayments: CreateIncomeDto[], isInternalDebt: boolean) {
         try {
             let value = 0;
             for (let index = 0; index < methodOfPayments.length; index++) {
@@ -117,10 +117,12 @@ export class PurchaseOrderService {
                     // Crear el registro de la deuda
                     const debt: CreateDebtDto = {
                         customerId: order.clientId,
+                        providerId: null,
                         purchaseOrderId: order._id as Types.ObjectId,
                         description: `Deuda de $${order.totalOrder} por Pedido #${order.orderNumber}`,
                         amountPayable: value,
                         status: DebtStatusEnum.ABIERTO,
+                        isInternalDebt: isInternalDebt,
                     };
 
                     let debtDocument = new this.debtModel(debt);

@@ -12,6 +12,7 @@ export interface IDebt {
     description: string;
     amountPayable: number;
     status: 'abierto' | 'cerrado';
+    isInternalDebt?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -22,6 +23,9 @@ export class Debt {
 
     @Prop({ required: true, type: Types.ObjectId, ref: 'Customer' })
     customerId: Types.ObjectId;
+
+    @Prop({ required: false, type: Types.ObjectId, ref: 'Customer' })
+    providerId?: Types.ObjectId;
 
     @Prop({ required: true, type: Types.ObjectId, ref: 'PurchaseOrder' })
     purchaseOrderId: Types.ObjectId;
@@ -34,6 +38,9 @@ export class Debt {
 
     @Prop({ required: true, type: String, default: DebtStatusEnum.ABIERTO })
     status: 'abierto' | 'cerrado';
+
+    @Prop({ required: false, type: Boolean, default: false })
+    isInternalDebt?: boolean;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

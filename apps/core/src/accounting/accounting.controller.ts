@@ -131,6 +131,26 @@ export class AccountingController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get('income/getAllByProviderAndTypeOperation/:providerId/:typeOperation')
+    async getAllIncomeByProvider(
+        @Param('providerId') providerId: string,
+        @Param('typeOperation') typeOperation: string,
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Query('search') search: string,
+        @Query('sortBy') sortBy = 'createdAt',
+        @Query('sortOrder') sortOrder: 'asc' | 'desc',
+    ) {
+        if (!providerId || !typeOperation) {
+            throw new BadRequestException('ProviderId and TypeOperation are required');
+        }
+        return this.incomeService.findAllByProviderAndTypeOperation(
+            providerId,
+            typeOperation,
+            { page, limit, search, sortBy, sortOrder });
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Get('income/getById/:id')
     async getByIdIncome(@Param('id') id: string) {
         return this.incomeService.findById(id);
