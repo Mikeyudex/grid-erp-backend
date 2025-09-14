@@ -32,6 +32,10 @@ export class CreateDebtDto {
     @IsOptional()
     @IsBoolean()
     isInternalDebt?: boolean;
+
+    @IsOptional()
+    @IsString()
+    dueDate: string;
 }
 
 export class UpdateDebtDto {
@@ -55,6 +59,17 @@ export class UpdateDebtDto {
     @IsOptional()
     @IsNumber()
     amountPayable: number;
+
+    @IsOptional()
+    status: 'abierto' | 'cerrado';
+
+    @IsOptional()
+    @IsBoolean()
+    isInternalDebt?: boolean;
+
+    @IsOptional()
+    @IsString()
+    dueDate: string;
 }
 
 export class GetDebtsDto {
@@ -86,6 +101,10 @@ export class GetDebtsDto {
     @IsOptional()
     @IsBoolean()
     isInternalDebt?: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    dueDate: string;
 }
 
 export class GetDebtsResponseDto {

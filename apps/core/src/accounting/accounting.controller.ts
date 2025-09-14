@@ -8,6 +8,7 @@ import { IncomeService } from './services/Income.service';
 import { CreateIncomeDto } from './dtos/income.dto';
 import { TypeOfExpenseService } from './services/type-of-expense.service';
 import { CreateTypeOfExpenseDto, UpdateTypeOfExpenseDto } from './dtos/type-of-expense.dto';
+import { ExpenseService } from './services/expense.service';
 
 @Controller('accounting')
 export class AccountingController {
@@ -16,6 +17,7 @@ export class AccountingController {
         private readonly accountService: AccountService,
         private readonly incomeService: IncomeService,
         private readonly typeOfExpenseService: TypeOfExpenseService,
+        private readonly expenseService: ExpenseService,
     ) { }
 
     @UseGuards(JwtAuthGuard)
@@ -208,5 +210,19 @@ export class AccountingController {
     @Delete('type-of-expense/bulkDelete')
     async bulkDeleteTypeOfExpense(@Body() payload: Record<string, any>) {
         return this.typeOfExpenseService.bulkDelete(payload?.ids);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('expense/getAll')
+    async getAllExpense(
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Query('search') search: string,
+        @Query('sortBy') sortBy = 'createdAt',
+        @Query('sortOrder') sortOrder: 'asc' | 'desc',
+    ) {
+        return this.expenseService.findAll(
+            { page, limit, search, sortBy, sortOrder }
+        );
     }
 }

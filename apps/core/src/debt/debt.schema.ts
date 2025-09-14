@@ -13,6 +13,7 @@ export interface IDebt {
     amountPayable: number;
     status: 'abierto' | 'cerrado';
     isInternalDebt?: boolean;
+    dueDate: Date;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -41,6 +42,9 @@ export class Debt {
 
     @Prop({ required: false, type: Boolean, default: false })
     isInternalDebt?: boolean;
+
+    @Prop({ required: true, type: Date, default: () => getCurrentUTCDate() })
+    dueDate: Date;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

@@ -1,56 +1,41 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Types } from "mongoose";
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
 
-
-export class CreateIncomeDto {
-
+export class CreateExpenseDto {
     @IsOptional()
-    incomeId?: string | Types.ObjectId;
+    expenseId?: string | Types.ObjectId;
 
     @IsString()
     @IsOptional()
-    @ApiProperty({ description: 'Id del pedido' })
-    purchaseOrderId: string | Types.ObjectId;
-
-    @IsNumber()
-    @IsOptional()
-    @ApiProperty({ description: 'Secuencia' })
-    sequence?: number;
-
-    @IsString()
-    @IsNotEmpty()
-    @ApiProperty({ description: 'Tipo de operación' })
-    typeOperation: string;
+    @ApiProperty({ description: 'Número de secuencia' })
+    sequence: number;
 
     @IsString()
     @IsNotEmpty()
     @ApiProperty({ description: 'Fecha de pago' })
     paymentDate: Date;
 
-    @IsString()
     @IsOptional()
-    @ApiProperty({ description: 'Id del cliente' })
-    customerId: string | Types.ObjectId;
-
     @IsString()
-    @IsOptional()
+    @IsMongoId()
     @ApiProperty({ description: 'Id del proveedor' })
     providerId: string | Types.ObjectId;
 
+    @IsNotEmpty()
     @IsString()
-    @IsOptional()
+    @IsMongoId()
     @ApiProperty({ description: 'Id de la cuenta' })
     accountId: string | Types.ObjectId;
 
-    @IsArray()
     @IsOptional()
-    @ApiProperty({ description: 'Ids de las deudas' })
+    @IsArray()
     debtIds: string[] | Types.ObjectId[];
 
     @IsNumber()
     @IsNotEmpty()
-    @ApiProperty({ description: 'Valor' })
+    @Min(0)
+    @ApiProperty({ description: 'Valor del egreso' })
     value: number;
 
     @IsString()
@@ -65,9 +50,13 @@ export class CreateIncomeDto {
 
     @IsOptional()
     @ApiProperty({ description: 'Indica si el anticipo es vigente' })
+    @IsBoolean()
     hasCurrentAdvancePayment?: boolean;
 
-    @IsOptional()
-    @ApiProperty({ description: 'Indica si el pago es interno' })
-    isInternalPayment?: boolean;
+    @IsNotEmpty()
+    @IsString()
+    @IsMongoId()
+    @ApiProperty({ description: 'tipo de egreso' })
+    typeOfExpenseId: string | Types.ObjectId;
+
 }

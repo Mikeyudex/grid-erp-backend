@@ -12,6 +12,8 @@ import { AccountService } from './services/account.service';
 import { Debt, DebtSchema } from '../debt/debt.schema';
 import { TypeOfExpense, TypeOfExpenseSchema } from './schemas/type-of-expense.schema';
 import { TypeOfExpenseService } from './services/type-of-expense.service';
+import { ExpenseService } from './services/expense.service';
+import { Expense, ExpenseSchema } from './schemas/expense.schema';
 
 @Module({
   imports: [
@@ -21,9 +23,23 @@ import { TypeOfExpenseService } from './services/type-of-expense.service';
     MongooseModule.forFeature([{ name: Income.name, schema: IncomeSchema }]),
     MongooseModule.forFeature([{ name: Debt.name, schema: DebtSchema }]),
     MongooseModule.forFeature([{ name: TypeOfExpense.name, schema: TypeOfExpenseSchema }]),
+    MongooseModule.forFeature([{ name: Expense.name, schema: ExpenseSchema }]),
   ],
-  providers: [AccountingService, PaymentMethodService, IncomeService, AccountService, TypeOfExpenseService],
+  providers: [
+    AccountingService,
+    PaymentMethodService,
+    IncomeService,
+    AccountService,
+    TypeOfExpenseService,
+    ExpenseService
+  ],
   controllers: [AccountingController],
-  exports: [AccountingService, PaymentMethodService, IncomeService, AccountService, TypeOfExpenseService]
+  exports: [AccountingService,
+    PaymentMethodService,
+    IncomeService,
+    AccountService,
+    TypeOfExpenseService,
+    ExpenseService
+  ]
 })
 export class AccountingModule { }

@@ -15,6 +15,7 @@ import { ApiResponse } from '../common/api-response';
 import { CreateDebtDto } from '../debt/debt.dto';
 import { DebtStatusEnum } from '../debt/debt.enum';
 import { Debt, DebtDocument } from '../debt/debt.schema';
+import moment from 'moment';
 
 interface GetPurchaseParams {
     page: number
@@ -299,6 +300,7 @@ export class PurchaseService {
                         amountPayable: value,
                         status: DebtStatusEnum.ABIERTO,
                         isInternalDebt: isInternalDebt,
+                        dueDate: moment(methodOfPayment.paymentDate).toISOString(),
                     };
 
                     let debtDocument = new this.debtModel(debt);

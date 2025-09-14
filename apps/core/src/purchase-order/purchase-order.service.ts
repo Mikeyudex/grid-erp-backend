@@ -123,6 +123,7 @@ export class PurchaseOrderService {
                         amountPayable: value,
                         status: DebtStatusEnum.ABIERTO,
                         isInternalDebt: isInternalDebt,
+                        dueDate: moment(methodOfPayment.paymentDate).toISOString(),
                     };
 
                     let debtDocument = new this.debtModel(debt);
