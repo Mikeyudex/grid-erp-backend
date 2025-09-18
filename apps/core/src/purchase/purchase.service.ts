@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model, Types } from "mongoose";
 import { Purchase, PurchaseDocument } from './purchase.schema';
 import { PaginatedResponse } from '../common/interfaces/paginated.interface';
-import { CreateAccountDto } from '../accounting/dtos/account.dto';
 import { CreatePurchaseDetailDto, CreatePurchaseDto, UpdatePurchaseDto } from './purchase.dto';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Tax, TaxDocument } from '../taxes/taxes.schema';
@@ -15,7 +14,7 @@ import { ApiResponse } from '../common/api-response';
 import { CreateDebtDto } from '../debt/debt.dto';
 import { DebtStatusEnum } from '../debt/debt.enum';
 import { Debt, DebtDocument } from '../debt/debt.schema';
-import moment from 'moment';
+import * as moment from "moment";
 
 interface GetPurchaseParams {
     page: number
@@ -24,7 +23,6 @@ interface GetPurchaseParams {
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
 }
-
 
 @Injectable()
 export class PurchaseService {
@@ -300,7 +298,7 @@ export class PurchaseService {
                         amountPayable: value,
                         status: DebtStatusEnum.ABIERTO,
                         isInternalDebt: isInternalDebt,
-                        dueDate: moment(methodOfPayment.paymentDate).toISOString(),
+                        dueDate: moment(methodOfPayment.paymentDate, "YYYY-MM-DD").toDate(),
                     };
 
                     let debtDocument = new this.debtModel(debt);

@@ -9,6 +9,7 @@ import { CreateIncomeDto } from './dtos/income.dto';
 import { TypeOfExpenseService } from './services/type-of-expense.service';
 import { CreateTypeOfExpenseDto, UpdateTypeOfExpenseDto } from './dtos/type-of-expense.dto';
 import { ExpenseService } from './services/expense.service';
+import { CreateExpenseDto } from './dtos/expense.dto';
 
 @Controller('accounting')
 export class AccountingController {
@@ -224,5 +225,11 @@ export class AccountingController {
         return this.expenseService.findAll(
             { page, limit, search, sortBy, sortOrder }
         );
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('expense/create')
+    async createExpense(@Body() CreateExpenseDto: CreateExpenseDto) {
+        return this.expenseService.create(CreateExpenseDto);
     }
 }

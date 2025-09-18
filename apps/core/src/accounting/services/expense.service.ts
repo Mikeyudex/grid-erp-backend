@@ -145,7 +145,7 @@ export class ExpenseService {
                     let debt = await this.debtModel.findById(debtIdParsed);
                     if (debt) {
                         totalDebts += debt.amountPayable;
-                        await this.crossDebt(debtIdParsed, createExpenseDto.value);
+                        await this.crossDebt(debtIdParsed, createExpenseDto.value, createExpenseDto);
                     }
                 }
             }
@@ -199,7 +199,7 @@ export class ExpenseService {
             return expenseDocument;
         } catch (error) {
             this.logger.error('Error al crear el egreso', error);
-            
+
             if (DbErrorUtils.isMongoConnectionError(error)) {
                 this.logger.warn(`Error de conexión MongoDB: ${error.message}`);
                 throw new Error(`No se pudo conectar a la base de datos. Por favor, intente nuevamente más tarde.`);
@@ -266,16 +266,41 @@ export class ExpenseService {
         }
     }
 
-    async crossDebt(debtId: Types.ObjectId, amount: number) {
+    async crossDebt(debtId: Types.ObjectId, amount: number, createExpenseDto: CreateExpenseDto) {
         try {
             let debt = await this.debtModel.findOne({ _id: debtId, status: DebtStatusEnum.ABIERTO });
             if (!debt) return null;
             let balance = debt.amountPayable;
-            if (amount >= balance) {
+            if (amount >= balance) {// abono total
                 debt.status = DebtStatusEnum.CERRADO;
                 debt.amountPayable = 0;
-            } else if (amount < balance) {
+            } else if (amount < balance) {// abono parcial
                 debt.amountPayable = balance - amount;
+
+                //Crear abono a deuda
+                let createIncomeDto: CreateIncomeDto = {
+                    customerId: null,
+                    providerId: createExpenseDto.providerId,
+                    purchaseOrderId: null,
+                    accountId: createExpenseDto.accountId,
+                    debtIds: debtId ? [debtId] : [],
+                    value: amount,
+                    observations: `Abono a deuda ${debt._id}`,
+                    paymentSupport: createExpenseDto.paymentSupport,
+                    hasCurrentAdvancePayment: createExpenseDto.hasCurrentAdvancePayment,
+                    isInternalPayment: true,
+                    typeOperation: IncomeTypeOperation.ABONO,
+                    paymentDate: createExpenseDto.paymentDate,
+                };
+
+                this.crearAnticipo(createIncomeDto)
+                    .then(anticipo => {
+                        this.logger.log(`Anticipo creado con éxito: ${anticipo?.id}`);
+                    })
+                    .catch(error => {
+                        throw new Error(`Error creando anticipo: ${error.message}`);
+                    });
+                    
             }
             const updatedDebt = await this.debtModel.findByIdAndUpdate(debtId, debt, { new: true });
             return updatedDebt;
@@ -288,6 +313,15 @@ export class ExpenseService {
         try {
             let anticipo = await this.incomeModel.create(createIncomeDto);
             return anticipo;
+        } catch (error) {
+            throw new Error(`Error creating anticipo: ${error.message}`);
+        }
+    }
+
+    async abonarADeuda(createIncomeDto: CreateIncomeDto) {
+        try {
+            let abono = await this.incomeModel.create(createIncomeDto);
+            return abono;
         } catch (error) {
             throw new Error(`Error creating anticipo: ${error.message}`);
         }

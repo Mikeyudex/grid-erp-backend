@@ -35,7 +35,7 @@ export class CreateDebtDto {
 
     @IsOptional()
     @IsString()
-    dueDate: string;
+    dueDate: string | Date;
 }
 
 export class UpdateDebtDto {
