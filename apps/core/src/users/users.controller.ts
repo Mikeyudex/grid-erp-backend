@@ -96,6 +96,12 @@ export class UsersController {
   getAccountsFromZone(@Param('id') id: string) {
     return this.usersService.getAccountsFromZone(id);
   }
+  
+  @UseGuards(JwtAuthGuard)
+  @Get('/advisors/getAll')//Obtener todos los usuarios con rol asesor
+  getAllAdvisors() {
+    return this.usersService.getAllAdvisors();
+  }
 
   @Get('/generateQrCode/:email')
   async generate(@Param('email') email: string) {

@@ -222,6 +222,41 @@ export class UsersService {
         }
     }
 
+    async getAllAdvisors() {
+        try {
+            const advisors = await this.userModel.find({ role: 'asesor' })
+            .populate('zoneId')
+            .exec();
+            if (!advisors || advisors.length === 0) {
+                throw new NotFoundException({
+                    statusCode: 404,
+                    message: 'No se encontraron usuarios',
+                });
+            }
+            
+            let advisorsMap = advisors.map((user: User) => {
+                return {
+                    id: user._id.toString(),
+                    email: user?.email,
+                    phone: user?.phone,
+                    name: user?.name,
+                    lastname: user?.lastname,
+                    role: user?.role,
+                    active: user?.active,
+                    zoneId: user?.zoneId ? user?.zoneId?._id.toString() : null,
+                }
+            });
+            return ApiResponse.success('Success', advisorsMap);
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     /**
      * Restablece la contraseña si el token es válido
      */
