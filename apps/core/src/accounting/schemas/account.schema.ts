@@ -11,6 +11,7 @@ export interface IAccount {
     numberAccount: string;
     isActive: boolean;
     description: string;
+    balance: number;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -36,6 +37,9 @@ export class Account {
 
     @Prop({ required: false, type: String })
     description: string;
+
+    @Prop({ required: false, type: Number, default: 0 })
+    balance?: number;
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

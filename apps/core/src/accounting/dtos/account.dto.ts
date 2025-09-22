@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateAccountDto {
 
@@ -27,6 +27,16 @@ export class CreateAccountDto {
     @IsNotEmpty()
     @ApiProperty({description: 'Activo'})
     isActive: boolean;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({description: 'Descripción'})
+    description: string;
+
+    @IsNumber()
+    @IsOptional()
+    @ApiProperty({description: 'Balance'})
+    balance: number;
 }
 
 export class UpdateAccountDto {
@@ -55,4 +65,14 @@ export class UpdateAccountDto {
     @IsNotEmpty()
     @ApiProperty({description: 'Activo'})
     isActive: boolean;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({description: 'Descripción'})
+    description: string;
+
+    @IsNumber()
+    @IsOptional()
+    @ApiProperty({description: 'Balance'})
+    balance: number;
 }

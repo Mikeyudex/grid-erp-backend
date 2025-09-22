@@ -102,6 +102,7 @@ export class UsersController {
   getAllAdvisors() {
     return this.usersService.getAllAdvisors();
   }
+  
 
   @Get('/generateQrCode/:email')
   async generate(@Param('email') email: string) {

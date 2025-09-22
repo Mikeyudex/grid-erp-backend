@@ -223,7 +223,6 @@ export class IncomeService {
     async create(createIncomeDto: CreateIncomeDto): Promise<IncomeDocument> {
         try {
             let totalDebts = 0;
-
             //Cruzar deudas si existen
             if (createIncomeDto?.debtIds && createIncomeDto.debtIds.length > 0) {
                 for (let debtId of createIncomeDto.debtIds) {
@@ -235,6 +234,9 @@ export class IncomeService {
                         await this.crossDebt(debtIdParsed, createIncomeDto.value);
                     }
                 }
+                createIncomeDto.debtIds = (createIncomeDto.debtIds as string[]).map(
+                    (debtId) => new Types.ObjectId(debtId)
+                );
             }
             createIncomeDto.purchaseOrderId = new Types.ObjectId(createIncomeDto.purchaseOrderId);
 
@@ -243,13 +245,7 @@ export class IncomeService {
             } else {
                 createIncomeDto.customerId = new Types.ObjectId(createIncomeDto.customerId);
             }
-
             createIncomeDto.accountId = new Types.ObjectId(createIncomeDto.accountId);
-            if (createIncomeDto.debtIds.length > 0) {
-                createIncomeDto.debtIds = (createIncomeDto.debtIds as string[]).map(
-                    (debtId) => new Types.ObjectId(debtId)
-                );
-            }
 
             let incomeDocument = await this.incomeModel.create(createIncomeDto);
 
@@ -270,6 +266,7 @@ export class IncomeService {
                         throw new Error(`Error creando anticipo: ${error.message}`);
                     });
             }
+
             return incomeDocument;
         } catch (error) {
             throw new Error(`Error creating income: ${error.message}`);

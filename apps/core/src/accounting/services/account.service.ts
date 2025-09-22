@@ -120,4 +120,18 @@ export class AccountService {
         }
     }
 
+    async updateBalance(id: string, balance: number) {
+        try {
+            let castedId = new Types.ObjectId(id);
+            let updated = await this.accounModel.findByIdAndUpdate(castedId, { balance }, { new: true }).exec();
+            return ApiResponse.success('Registro actualizado con éxito', updated);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
 }
