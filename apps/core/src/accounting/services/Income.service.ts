@@ -3,10 +3,12 @@ import { Model, Types } from "mongoose";
 import { Income, IncomeDocument, IncomeTypeOperation } from "../schemas/income.schema";
 import { CreateIncomeDto } from "../dtos/income.dto";
 import { PaginatedResponse } from "../../common/interfaces/paginated.interface";
-import { BadRequestException, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { ApiResponse } from "../../common/api-response";
 import { Debt, DebtDocument } from "../../debt/debt.schema";
 import { DebtStatusEnum } from "../../debt/debt.enum";
+import { Account, AccountDocument } from "../schemas/account.schema";
+import { AccountService } from "./account.service";
 
 interface GetIncomesParams {
     page: number
@@ -23,6 +25,7 @@ export class IncomeService {
     constructor(
         @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
         @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
+        @Inject(AccountService) private readonly accountService: AccountService,
     ) { }
 
     async findAll(params: GetIncomesParams): Promise<PaginatedResponse<IncomeDocument>> {
@@ -258,6 +261,7 @@ export class IncomeService {
                 createIncomeDto.hasCurrentAdvancePayment = true;
                 createIncomeDto.purchaseOrderId = null;
                 createIncomeDto.observations = `Anticipo creado por saldo de pago de deudas pendientes. Total de deudas pagado: ${totalDebts}, saldo del pago: ${saldo}`;
+
                 this.crearAnticipo(createIncomeDto)
                     .then(anticipo => {
                         this.logger.log(`Anticipo creado con éxito: ${anticipo.id}`);
@@ -383,6 +387,20 @@ export class IncomeService {
             return anticipo;
         } catch (error) {
             throw new Error(`Error creating anticipo: ${error.message}`);
+        }
+    }
+
+    async handleUpdateBalance(accountId: string, amount: number) {
+        try {
+            if (!Types.ObjectId.isValid(new Types.ObjectId(accountId))) {
+                throw new Error('Invalid account ID');
+            }
+            let accountResponse = await this.accountService.findById(accountId);
+            let balance = accountResponse.data.balance + amount;
+            await this.accountService.updateBalance(accountId, balance);
+            return accountResponse;
+        } catch (error) {
+            throw new Error(`Error handling update balance: ${error.message}`);
         }
     }
 
