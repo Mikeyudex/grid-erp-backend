@@ -76,6 +76,10 @@ export class PurchaseOrderService {
             createPurchaseOrderDto.zoneId = new Types.ObjectId(createPurchaseOrderDto.zoneId);
             createPurchaseOrderDto.createdBy = new Types.ObjectId(createPurchaseOrderDto.createdBy);
 
+            createPurchaseOrderDto.details.forEach(detail => {
+                detail.productId = new Types.ObjectId(detail.productId);
+            });
+
             const createdOrder = new this.purchaseOrderModel({
                 ...createPurchaseOrderDto,
                 history: [

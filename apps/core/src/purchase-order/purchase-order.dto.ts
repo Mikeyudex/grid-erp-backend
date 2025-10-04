@@ -25,7 +25,7 @@ class CreatePurchaseOrderItemDto {
   materialType: string;
 
   @IsMongoId()
-  productId: string;
+  productId: string | Types.ObjectId;
 
   @IsNumber()
   @Min(1)

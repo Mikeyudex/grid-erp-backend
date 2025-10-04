@@ -39,4 +39,30 @@ export class ReportsController {
         };
         return this.reportsService.detailedSalesReport(params);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('product-sales-report')
+    async productSalesReport(
+        @Query('zoneId') zoneId: string,
+        @Query('advisorId') advisorId: string,
+        @Query('clientId') clientId: string,
+        @Query('productId') productId: string,
+        @Query('matType') matType: string,
+        @Query('materialType') materialType: string,
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+        @Query('global') global: boolean) {
+        const params = {
+            zoneId,
+            advisorId,
+            clientId,
+            productId,
+            matType,
+            materialType,
+            startDate,
+            endDate,
+            global,
+        };
+        return this.reportsService.ProductSalesReport(params);
+    }
 }
