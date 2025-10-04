@@ -37,6 +37,7 @@ import { UploadModule } from './upload/upload.module';
 import { DebtModule } from './debt/debt.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { RetentionModule } from './retention/retention.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { RetentionModule } from './retention/retention.module';
     DebtModule,
     PurchaseModule,
     RetentionModule,
+    ReportsModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],
