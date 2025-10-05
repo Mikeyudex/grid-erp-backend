@@ -65,4 +65,21 @@ export class ReportsController {
         };
         return this.reportsService.ProductSalesReport(params);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('accounts-receivable-report')//CXC (Consolidado por cliente - Detallado por pedido): global = Consolidado por cliente, detallado = Detallado por pedido
+    async accountsReceivableReport(
+        @Query('clientId') clientId: string,
+        @Query('zoneId') zoneId: string,
+        @Query('advisorId') advisorId: string,
+        @Query('mode') mode: 'global' | 'detallado' = 'global',
+    ) {
+        const params = {
+            clientId,
+            zoneId,
+            advisorId,
+            mode,
+        };
+        return this.reportsService.AccountsReceivableReport(params);
+    }
 }

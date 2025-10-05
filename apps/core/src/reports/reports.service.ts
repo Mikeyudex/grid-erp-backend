@@ -1,11 +1,13 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, Types, PipelineStage } from 'mongoose';
 import { PurchaseOrder, PurchaseOrderDocument } from '../purchase-order/purchase-order.schema';
 import { CumulativeSalesReportDto } from './interfaces/cumulative-sales-report.interface';
 import { DetailedSalesReportDto } from './interfaces/detailed-sales-report';
 import { ProductSalesReportParams } from './interfaces/product-sales-report-params.interface';
 import { ProductSalesReportDto } from './interfaces/ProductSalesReportDto.interface';
+import { Debt, DebtDocument } from '../debt/debt.schema';
+import { AccountsReceivableParams } from './interfaces/AccountsReceivableParams.interface';
 
 interface GetreportsParams {
     zoneId?: string
@@ -20,6 +22,7 @@ export class ReportsService {
 
     constructor(
         @InjectModel(PurchaseOrder.name) private readonly purchaseOrderModel: Model<PurchaseOrderDocument>,
+        @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
     ) { }
 
     async CumulativeSalesReport(params: GetreportsParams): Promise<CumulativeSalesReportDto[]> {
@@ -527,4 +530,175 @@ export class ReportsService {
             });
         }
     }
+
+    async AccountsReceivableReport(params: AccountsReceivableParams) {
+        try {
+            const { clientId, zoneId, advisorId, mode = 'global' } = params;
+
+            const match: any = {
+                status: 'abierto',
+                isInternalDebt: false
+            };
+
+            if (clientId) match.customerId = new Types.ObjectId(clientId);
+
+
+            const pipeline: PipelineStage[] = [
+                { $match: match },
+                // 🔗 Join con PurchaseOrders
+                {
+                    $lookup: {
+                        from: 'purchaseorders',
+                        localField: 'purchaseOrderId',
+                        foreignField: '_id',
+                        as: 'purchaseOrder'
+                    }
+                },
+                { $unwind: { path: '$purchaseOrder', preserveNullAndEmptyArrays: true } },
+
+                // 🔗 Join con Clientes
+                {
+                    $lookup: {
+                        from: 'customers',
+                        localField: 'customerId',
+                        foreignField: '_id',
+                        as: 'customer'
+                    }
+                },
+                { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+
+                // 🔗 Join con Asesores
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'purchaseOrder.createdBy',
+                        foreignField: '_id',
+                        as: 'advisor'
+                    }
+                },
+                { $unwind: { path: '$advisor', preserveNullAndEmptyArrays: true } },
+
+                // 🔗 Join con Zonas (Sedes)
+                {
+                    $lookup: {
+                        from: 'zones',
+                        let: { zoneId: '$purchaseOrder.zoneId' },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$_id', '$$zoneId'] }
+                                }
+                            }
+                        ],
+                        as: 'zone'
+                    }
+                },
+                { $unwind: { path: '$zone', preserveNullAndEmptyArrays: true } },
+
+                // 🧮 Calcular días de mora
+                {
+                    $addFields: {
+                        diasMora: {
+                            $dateDiff: {
+                                startDate: '$dueDate',
+                                endDate: '$$NOW',
+                                unit: 'day'
+                            }
+                        }
+                    }
+                },
+
+                // 🎨 Clasificar color según días de mora
+                {
+                    $addFields: {
+                        colorMora: {
+                            $switch: {
+                                branches: [
+                                    { case: { $lt: ['$diasMora', 0] }, then: 'verde' },
+                                    {
+                                        case: {
+                                            $and: [{ $gte: ['$diasMora', 0] }, { $lte: ['$diasMora', 30] }]
+                                        },
+                                        then: 'amarillo'
+                                    },
+                                    { case: { $gt: ['$diasMora', 30] }, then: 'rojo' }
+                                ],
+                                default: 'sin datos'
+                            }
+                        }
+                    }
+                }
+            ] as PipelineStage[];
+
+            // 📍 Aplicar filtros opcionales
+            if (zoneId) {
+                pipeline.splice(3, 0, {
+                    $match: { 'purchaseOrder.zoneId': new Types.ObjectId(zoneId) }
+                });
+            }
+
+            if (advisorId) {
+                pipeline.splice(3, 0, {
+                    $match: { 'purchaseOrder.createdBy': new Types.ObjectId(advisorId) }
+                });
+            }
+
+            // 🧾 Modo GLOBAL (consolidado por cliente)
+            if (mode === 'global') {
+                pipeline.push(
+                    {
+                        $group: {
+                            _id: '$customer._id',
+                            cliente: {
+                                $first: { $concat: ['$customer.name', ' ', '$customer.lastname'] }
+                            },
+                            nombreComercial: { $first: '$customer.commercialName' },
+                            ciudad: { $first: '$customer.city' },
+                            asesor: {
+                                $first: { $concat: ['$advisor.name', ' ', '$advisor.lastname'] }
+                            },
+                            sede: { $first: '$zone.name' },
+                            totalDeuda: { $sum: '$amountPayable' },
+                            diasMora: { $max: '$diasMora' },
+                            colorMora: { $first: '$colorMora' },
+                            cantidadFacturas: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { cliente: 1 } }
+                );
+            }
+
+            // 🧾 Modo DETALLADO (por pedido)
+            if (mode === 'detallado') {
+                pipeline.push(
+                    {
+                        $project: {
+                            _id: 0,
+                            cliente: { $concat: ['$customer.name', ' ', '$customer.lastname'] },
+                            nombreComercial: '$customer.commercialName',
+                            ciudad: '$customer.city',
+                            asesor: { $concat: ['$advisor.name', ' ', '$advisor.lastname'] },
+                            sede: '$zone.name',
+                            nroFactura: '$purchaseOrder.orderNumber',
+                            vence: '$dueDate',
+                            diasMora: 1,
+                            colorMora: 1,
+                            valorTotal: '$amountPayable'
+                        }
+                    },
+                    { $sort: { cliente: 1, diasMora: -1 } }
+                );
+            }
+
+            const result = await this.debtModel.aggregate(pipeline);
+            return result;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: "Error generando el reporte de cuentas por cobrar consolidado",
+                error: error.message,
+            });
+        }
+    }
+
 }
