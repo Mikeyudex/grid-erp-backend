@@ -82,4 +82,17 @@ export class ReportsController {
         };
         return this.reportsService.AccountsReceivableReport(params);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('bank-accounts-balance-report') //Reporte de saldos de cuentas bancarias
+    async bankAccountsBalanceReport(
+        @Query('typeAccount') typeAccount: string,
+        @Query('bankAccount') bankAccount: string,
+    ) {
+        const params = {
+            typeAccount,
+            bankAccount,
+        };
+        return this.reportsService.getBankAccountsBalanceReport(params);
+    }
 }

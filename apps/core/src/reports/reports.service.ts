@@ -8,6 +8,7 @@ import { ProductSalesReportParams } from './interfaces/product-sales-report-para
 import { ProductSalesReportDto } from './interfaces/ProductSalesReportDto.interface';
 import { Debt, DebtDocument } from '../debt/debt.schema';
 import { AccountsReceivableParams } from './interfaces/AccountsReceivableParams.interface';
+import { Account, AccountDocument } from '../accounting/schemas/account.schema';
 
 interface GetreportsParams {
     zoneId?: string
@@ -23,6 +24,7 @@ export class ReportsService {
     constructor(
         @InjectModel(PurchaseOrder.name) private readonly purchaseOrderModel: Model<PurchaseOrderDocument>,
         @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
+        @InjectModel(Account.name) private readonly accountModel: Model<AccountDocument>,
     ) { }
 
     async CumulativeSalesReport(params: GetreportsParams): Promise<CumulativeSalesReportDto[]> {
@@ -700,5 +702,65 @@ export class ReportsService {
             });
         }
     }
+
+    async getBankAccountsBalanceReport(filters?: { typeAccount?: string; bankAccount?: string }) {
+        const match: any = { isActive: true, deletedAt: null };
+
+        if (filters?.typeAccount) match.typeAccount = filters.typeAccount;
+        if (filters?.bankAccount) match.bankAccount = filters.bankAccount;
+
+        const pipeline: any[] = [
+            //Filtro base
+            { $match: match },
+
+            // 🧩 Construir nombre de cuenta
+            {
+                $addFields: {
+                    cuenta: { $concat: ['$bankAccount', ' - ', '$numberAccount'] },
+                },
+            },
+
+            //Proyección principal
+            {
+                $project: {
+                    _id: 0,
+                    cuenta: 1,
+                    saldo: { $ifNull: ['$balance', 0] },
+                },
+            },
+
+            // 📋 Ordenar por nombre
+            { $sort: { cuenta: 1 } },
+
+            // Agrupar en un array y calcular total general
+            {
+                $group: {
+                    _id: null,
+                    cuentas: { $push: { cuenta: '$cuenta', saldo: '$saldo' } },
+                    totalGeneral: { $sum: '$saldo' },
+                },
+            },
+
+            //Reestructurar salida
+            {
+                $project: {
+                    _id: 0,
+                    cuentas: 1,
+                    totalGeneral: 1,
+                },
+            },
+        ];
+
+        const result = await this.accountModel.aggregate(pipeline);
+
+        if (result.length > 0) {
+            return {
+                cuentas: result[0].cuentas,
+                totalGeneral: result[0].totalGeneral,
+            };
+        }
+        return { cuentas: [], totalGeneral: 0 };
+    }
+
 
 }
