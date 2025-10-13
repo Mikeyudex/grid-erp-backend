@@ -9,10 +9,12 @@ import { ProductSalesReportDto } from './interfaces/ProductSalesReportDto.interf
 import { Debt, DebtDocument } from '../debt/debt.schema';
 import { AccountsReceivableParams } from './interfaces/AccountsReceivableParams.interface';
 import { Account, AccountDocument } from '../accounting/schemas/account.schema';
+import { Income, IncomeDocument } from '../accounting/schemas/income.schema';
 
 interface GetreportsParams {
     zoneId?: string
     advisorId?: string
+    clientId?: string
     startDate?: string
     endDate?: string
 }
@@ -25,6 +27,7 @@ export class ReportsService {
         @InjectModel(PurchaseOrder.name) private readonly purchaseOrderModel: Model<PurchaseOrderDocument>,
         @InjectModel(Debt.name) private readonly debtModel: Model<DebtDocument>,
         @InjectModel(Account.name) private readonly accountModel: Model<AccountDocument>,
+        @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
     ) { }
 
     async CumulativeSalesReport(params: GetreportsParams): Promise<CumulativeSalesReportDto[]> {
@@ -32,15 +35,18 @@ export class ReportsService {
             const { zoneId, advisorId, startDate, endDate } = params;
             const filters: any = {};
 
-            if (zoneId) filters.zoneId = new Types.ObjectId(zoneId);
-            if (advisorId) filters.createdBy = new Types.ObjectId(advisorId);
+            if (zoneId && zoneId !== null && zoneId !== 'null') {
+                filters.zoneId = new Types.ObjectId(zoneId)
+            };
+            if (advisorId && advisorId !== null && advisorId !== 'null') {
+                filters.createdBy = new Types.ObjectId(advisorId)
+            };
 
             if (startDate || endDate) {
-                filters.createdAt = {};
+                filters.deliveryDate = {};
                 if (startDate) filters.deliveryDate.$gte = new Date(startDate);
                 if (endDate) filters.deliveryDate.$lte = new Date(endDate);
             }
-
             const report = await this.purchaseOrderModel.aggregate([
                 { $match: filters },
                 { $unwind: "$details" },
@@ -103,7 +109,18 @@ export class ReportsService {
                 {
                     $project: {
                         sede: { $ifNull: ["$sede.name", "Sin sede"] },
-                        asesor: { $ifNull: ["$asesor.name", "Sin asesor"] },
+                        asesor: {
+                            $ifNull: [
+                                {
+                                    $concat: [
+                                        { $ifNull: ["$asesor.name", ""] },
+                                        " ",
+                                        { $ifNull: ["$asesor.lastname", ""] },
+                                    ],
+                                },
+                                "Sin asesor",
+                            ],
+                        },
                         pedidos: 1,
                         tapetes: 1,
                         valorBase: 1,
@@ -171,12 +188,15 @@ export class ReportsService {
 
     async detailedSalesReport(params: GetreportsParams): Promise<DetailedSalesReportDto[]> {
         try {
-            const { zoneId, advisorId, startDate, endDate } = params;
+            const { zoneId, advisorId, clientId, startDate, endDate } = params;
             const filters: any = {};
-            if (zoneId) {
+            if (zoneId && zoneId !== null && zoneId !== 'null' && zoneId !== 'all') {
                 filters.zoneId = new Types.ObjectId(zoneId);
             }
-            if (advisorId) {
+            if (clientId && clientId !== null && clientId !== 'null' && clientId !== 'all') {
+                filters.clientId = new Types.ObjectId(clientId);
+            }
+            if (advisorId && advisorId !== null && advisorId !== 'null' && advisorId !== 'all') {
                 filters.advisorId = new Types.ObjectId(advisorId);
             }
             if (startDate || endDate) {
@@ -343,16 +363,15 @@ export class ReportsService {
 
             const filters: any = {};
 
-            if (zoneId) filters.zoneId = new Types.ObjectId(zoneId);
-            if (advisorId) filters.createdBy = new Types.ObjectId(advisorId);
-            if (clientId) filters.clientId = new Types.ObjectId(clientId);
+            if (zoneId && zoneId !== null && zoneId !== 'null' && zoneId !== 'all') filters.zoneId = new Types.ObjectId(zoneId);
+            if (advisorId && advisorId !== null && advisorId !== 'null' && advisorId !== 'all') filters.createdBy = new Types.ObjectId(advisorId);
+            if (clientId && clientId !== null && clientId !== 'null' && clientId !== 'all') filters.clientId = new Types.ObjectId(clientId);
 
             if (startDate || endDate) {
                 filters.deliveryDate = {};
                 if (startDate) filters.deliveryDate.$gte = new Date(startDate);
                 if (endDate) filters.deliveryDate.$lte = new Date(endDate);
             }
-
             const pipeline: any[] = [
                 { $match: filters },
                 { $unwind: "$details" },
@@ -542,7 +561,7 @@ export class ReportsService {
                 isInternalDebt: false
             };
 
-            if (clientId) match.customerId = new Types.ObjectId(clientId);
+            if (clientId && clientId !== null && clientId !== 'null') match.customerId = new Types.ObjectId(clientId);
 
 
             const pipeline: PipelineStage[] = [
@@ -726,6 +745,9 @@ export class ReportsService {
                     _id: 0,
                     cuenta: 1,
                     saldo: { $ifNull: ['$balance', 0] },
+                    typeAccount: 1,
+                    bankAccount: 1,
+                    numberAccount: 1,
                 },
             },
 
@@ -736,7 +758,7 @@ export class ReportsService {
             {
                 $group: {
                     _id: null,
-                    cuentas: { $push: { cuenta: '$cuenta', saldo: '$saldo' } },
+                    cuentas: { $push: { cuenta: '$cuenta', saldo: '$saldo', typeAccount: '$typeAccount', bankAccount: '$bankAccount', numberAccount: '$numberAccount' } },
                     totalGeneral: { $sum: '$saldo' },
                 },
             },
@@ -762,5 +784,143 @@ export class ReportsService {
         return { cuentas: [], totalGeneral: 0 };
     }
 
+    async getAccountMovementsReport(params: {
+        accountId?: string;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<any[]> {
+        const { accountId, startDate, endDate } = params;
 
+        const dateFilter: any = {};
+        if (startDate) dateFilter.$gte = new Date(startDate);
+        if (endDate) dateFilter.$lte = new Date(endDate);
+
+        const matchIncome: any = { deletedAt: null, isInternalPayment: false };
+        const matchExpense: any = { deletedAt: null };
+        if (accountId) {
+            matchIncome.accountId = new Types.ObjectId(accountId);
+            matchExpense.accountId = new Types.ObjectId(accountId);
+        }
+        if (Object.keys(dateFilter).length > 0) {
+            matchIncome.paymentDate = dateFilter;
+            matchExpense.paymentDate = dateFilter;
+        }
+
+        // 🔹 PIPELINE DE INGRESOS
+        const incomePipeline: any[] = [
+            { $match: matchIncome },
+            {
+                $lookup: {
+                    from: 'accounts',
+                    localField: 'accountId',
+                    foreignField: '_id',
+                    as: 'account',
+                },
+            },
+            { $unwind: { path: '$account', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'customerId',
+                    foreignField: '_id',
+                    as: 'customer',
+                },
+            },
+            { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    cuenta: {
+                        $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'],
+                    },
+                    nombreTercero: {
+                        $ifNull: ['$customer.name', 'Sin cliente'],
+                    },
+                    comprobante: {
+                        $concat: ['REC-', { $toString: '$sequence' }],
+                    },
+                    fecha: '$paymentDate',
+                    ingreso: '$value',
+                    egreso: { $literal: 0 },
+                },
+            },
+        ];
+
+        // 🔹 PIPELINE DE EGRESOS
+        const expensePipeline: any[] = [
+            { $match: matchExpense },
+            {
+                $lookup: {
+                    from: 'accounts',
+                    localField: 'accountId',
+                    foreignField: '_id',
+                    as: 'account',
+                },
+            },
+            { $unwind: { path: '$account', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'providerId',
+                    foreignField: '_id',
+                    as: 'provider',
+                },
+            },
+            { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    cuenta: {
+                        $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'],
+                    },
+                    nombreTercero: {
+                        $ifNull: ['$provider.name', 'Sin proveedor'],
+                    },
+                    comprobante: {
+                        $concat: ['EGR-', { $toString: '$sequence' }],
+                    },
+                    fecha: '$paymentDate',
+                    ingreso: { $literal: 0 },
+                    egreso: '$value',
+                },
+            },
+        ];
+
+        // 🔹 FUSIONAR INGRESOS Y EGRESOS + CALCULAR SALDO
+        const combinedPipeline: any[] = [
+            { $unionWith: { coll: 'expenses', pipeline: expensePipeline } },
+            { $sort: { fecha: 1 } },
+            {
+                $setWindowFields: {
+                    sortBy: { fecha: 1 },
+                    output: {
+                        saldo: {
+                            $sum: {
+                                $subtract: ['$ingreso', '$egreso'],
+                            },
+                            window: { documents: ['unbounded', 'current'] },
+                        },
+                    },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    cuenta: 1,
+                    nombreTercero: 1,
+                    comprobante: 1,
+                    fecha: 1,
+                    ingreso: 1,
+                    egreso: 1,
+                    saldo: 1,
+                },
+            },
+        ];
+
+        // 🔹 EJECUTAR PIPELINE COMPLETO
+        const result = await this.incomeModel.aggregate([
+            ...incomePipeline,
+            ...combinedPipeline,
+        ]);
+
+        return result;
+    }
 }

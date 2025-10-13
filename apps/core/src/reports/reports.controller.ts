@@ -95,4 +95,19 @@ export class ReportsController {
         };
         return this.reportsService.getBankAccountsBalanceReport(params);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('get-account-movements-report') //Reporte de movimientos de cuentas
+    async getAccountMovementsReport(
+        @Query('accountId') accountId: string,
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+    ) {
+        const params = {
+            accountId,
+            startDate,
+            endDate,
+        };
+        return this.reportsService.getAccountMovementsReport(params);
+    }
 }
