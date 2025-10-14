@@ -832,8 +832,11 @@ export class ReportsService {
                     cuenta: {
                         $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'],
                     },
+                    accountNumber: '$account.numberAccount',
+                    bankAccount: '$account.bankAccount',
+                    typeAccount: '$account.typeAccount',
                     nombreTercero: {
-                        $ifNull: ['$customer.name', 'Sin cliente'],
+                        $ifNull: ['$customer.commercialName', 'Sin cliente'],
                     },
                     comprobante: {
                         $concat: ['REC-', { $toString: '$sequence' }],
@@ -871,8 +874,11 @@ export class ReportsService {
                     cuenta: {
                         $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'],
                     },
+                    accountNumber: '$account.numberAccount',
+                    bankAccount: '$account.bankAccount',
+                    typeAccount: '$account.typeAccount',
                     nombreTercero: {
-                        $ifNull: ['$provider.name', 'Sin proveedor'],
+                        $ifNull: ['$provider.commercialName', 'Sin proveedor'],
                     },
                     comprobante: {
                         $concat: ['EGR-', { $toString: '$sequence' }],
@@ -905,6 +911,9 @@ export class ReportsService {
                 $project: {
                     _id: 0,
                     cuenta: 1,
+                    accountNumber: 1,
+                    bankAccount: 1,
+                    typeAccount: 1,
                     nombreTercero: 1,
                     comprobante: 1,
                     fecha: 1,
