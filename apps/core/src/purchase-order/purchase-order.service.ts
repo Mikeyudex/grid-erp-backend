@@ -275,7 +275,7 @@ export class PurchaseOrderService {
                         nombre: `${order.clientId?.name} ${order.clientId?.lastname}`,
                         email: order.clientId?.email,
                         empresa: order.clientId?.commercialName,
-                        ciudad: order.clientId?.billingCity,
+                        ciudad: order.clientId?.city,
                         direccion: order.clientId?.billingAddress,
                     },
                     details: detailsNew,
