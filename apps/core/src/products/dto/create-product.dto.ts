@@ -14,18 +14,18 @@ export class CreateProductDto {
 
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
   @IsOptional()
-    @IsMongoId()
+  @IsMongoId()
   companyId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
   @IsOptional()
   @IsMongoId()
-  warehouseId: string | Types.ObjectId;
+  warehouseId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Id del proovedor', description: '12234' })
   @IsOptional()
   @IsMongoId()
-  providerId: string | Types.ObjectId;
+  providerId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Id del usuario que creó el producto', description: '12234' })
   @IsOptional()

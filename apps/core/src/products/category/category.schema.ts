@@ -31,3 +31,7 @@ export class ProductCategory {
     updatedAt: Date;
 }
 export const ProductCategorySchema = SchemaFactory.createForClass(ProductCategory);
+
+ProductCategorySchema.index({
+  name: 'text',
+});

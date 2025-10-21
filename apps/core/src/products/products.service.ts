@@ -567,8 +567,8 @@ export class ProductsService {
 
   async searchProduct(typeProduct: string, search: string): Promise<PaginatedResponse<ProductDocument>> {
     let typeProductDocument = await this.typeProductModel.findOne({ name: new RegExp(typeProduct, 'i') })
-    .lean()
-    .exec();
+      .lean()
+      .exec();
     if (!typeProductDocument) {
       throw new NotFoundException(`TypeProduct not found`);
     }
@@ -620,4 +620,104 @@ export class ProductsService {
 
   }
 
+  async searchProductByFullText(
+    search?: string,
+    typeProduct?: string,
+    page = 1,
+    limit = 10
+  ): Promise<PaginatedResponse<ProductDocument>> {
+    try {
+      const filtersBase: any = {};
+
+      // 1️⃣ Filtrar por tipo de producto si llega
+      if (typeProduct) {
+        const typeProductDoc = await this.typeProductModel
+          .findOne({ name: new RegExp(typeProduct, 'i') })
+          .lean();
+        if (!typeProductDoc) throw new NotFoundException(`TypeProduct "${typeProduct}" not found`);
+        filtersBase.id_type_product = typeProductDoc._id;
+      }
+
+      let productIds: string[] = [];
+
+      // 2️⃣ Buscar por texto en productos
+      if (search) {
+        const textMatches = await this.productModel.find(
+          { ...filtersBase, $text: { $search: search } },
+          { score: { $meta: 'textScore' } }
+        )
+          .sort({ score: { $meta: 'textScore' } })
+          .select('_id')
+          .lean()
+          .catch(() => []);
+
+        productIds = textMatches.map(p => p._id.toString());
+
+        // 3️⃣ Buscar categorías coincidentes
+        const matchedCategories = await this.productCategoryModel
+          .find({ $text: { $search: search } })
+          .select('_id')
+          .lean()
+          .catch(() => []);
+
+        const categoryIds = matchedCategories.map(c => c._id);
+
+        // 4️⃣ Buscar productos por categorías (sin repetir los anteriores)
+        const categoryProducts = await this.productModel.find({
+          ...filtersBase,
+          id_category: { $in: categoryIds },
+          _id: { $nin: productIds },
+        }).select('_id').lean();
+
+        productIds.push(...categoryProducts.map(p => p._id.toString()));
+      }
+
+      // Si no hay término de búsqueda, obtener todos
+      let finalFilter: any = filtersBase;
+      if (productIds.length > 0) {
+        finalFilter = { ...filtersBase, _id: { $in: productIds } };
+      }
+
+      // 5️⃣ Paginación
+      const totalItems = await this.productModel.countDocuments(finalFilter);
+      const skip = (page - 1) * limit;
+
+      const products = await this.productModel.find(finalFilter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('id_category', 'name')
+        .populate('warehouseId', 'name')
+        .populate('id_type_product', 'name')
+        .populate('taxId', 'name percentage')
+        .lean();
+
+      const productsWithStock = await Promise.all(
+        products.map(async (product) => {
+          const stockProduct = await this.stockService.findOneByProductId(product._id.toString());
+          return {
+            ...product,
+            stock: stockProduct?.quantity ?? 0,
+          };
+        })
+      );
+
+      return {
+        data: productsWithStock,
+        meta: {
+          currentPage: page,
+          totalPages: Math.ceil(totalItems / limit),
+          totalItems,
+          itemsPerPage: limit,
+        },
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Error interno del servidor',
+        error: error.message || 'Unknown error',
+      });
+    }
+  }
 }

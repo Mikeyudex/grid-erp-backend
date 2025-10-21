@@ -390,4 +390,13 @@ export class ProductsController {
     }
     return this.productService.searchProduct(typeProduct, search);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/searchProductByFullText')
+  async searchProductByFullText(@Query('typeProduct') typeProduct: string, @Query('search') search: string) {
+    if (!typeProduct || !search) {
+      throw new BadRequestException('TypeProduct and Search are required');
+    }
+    return this.productService.searchProductByFullText(search, typeProduct);
+  }
 }
