@@ -690,6 +690,7 @@ export class ProductsService {
         .populate('warehouseId', 'name')
         .populate('id_type_product', 'name')
         .populate('taxId', 'name percentage')
+        .populate('typeOfPieces', 'name')
         .lean();
 
       const productsWithStock = await Promise.all(
