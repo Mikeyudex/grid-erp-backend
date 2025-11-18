@@ -83,4 +83,25 @@ export class PreciosTapeteMaterialController {
         }
 
     }
+
+    @Get('/calcular-precio-final-from-baseprice-v2/:basePrice/:tipoTapete/:material/:cantidad/:typeCustomerId')
+    async calcularPrecioFinalFromBasePriceV2(
+        @Param('basePrice') basePrice: string,
+        @Param('tipoTapete') tipoTapete: string,
+        @Param('material') material: string,
+        @Param('cantidad') cantidad: number,
+        @Param('typeCustomerId') typeCustomerId: string
+    ) {
+        try {
+            return this.preciosTapeteMaterialService.calcularPrecioFinalDesdePrecioBaseV2(basePrice, tipoTapete, material, cantidad, typeCustomerId);
+        } catch (error) {
+            console.log(error);
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: error,
+                error: error.message || 'Unknown error',
+            });
+        }
+
+    }
 }

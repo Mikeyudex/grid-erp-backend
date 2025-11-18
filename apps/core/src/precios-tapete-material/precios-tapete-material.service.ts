@@ -19,7 +19,9 @@ export class PreciosTapeteMaterialService {
     ) { }
 
     async findAll(): Promise<MatMaterialPrices[]> {
-        return this.matMaterialPricesModel.find().exec();
+        return this.matMaterialPricesModel.find({
+            tipo_tapete: { $ne: 'REF' },
+        }).exec();
     }
 
     async findOne(id: string): Promise<MatMaterialPrices> {
@@ -75,6 +77,10 @@ export class PreciosTapeteMaterialService {
         } catch (error) {
             throw new InternalServerErrorException(error);
         }
+    }
+
+    calcularPrecioFinalV2(tapeteMaterialRefPrice: number, matMaterialPrice: number, salePrice: number, quantity: number) {
+        return (salePrice * matMaterialPrice / tapeteMaterialRefPrice) * quantity;
     }
 
     async retornaPrecioBaseMatMaterial(material: string, tipoTapete: string): Promise<number> {
@@ -176,6 +182,39 @@ export class PreciosTapeteMaterialService {
 
             const precioAjustado = Math.round(salePrice * factorAjuste / 1000) * 1000;
             const precioFinal = precioAjustado * cantidad;
+            if (typeCustomerData.percentDiscount > 0) {
+                const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+            }
+            return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+
+        } catch (error) {
+            this.logger.error('Error al calcular el precio final', error);
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async calcularPrecioFinalDesdePrecioBaseV2(basePrice: string, tipoTapete: string, material: string, cantidad: number, typeCustomerId: string) {
+        const materialRef = "REF";
+        try {
+            if (!Types.ObjectId.isValid(typeCustomerId)) {
+                throw new InternalServerErrorException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'typeCustomerId no es un ObjectId válido',
+                });
+            }
+            let salePrice = parseInt(basePrice);
+            let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
+
+            const precioBaseMatMaterial = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
+            const precioBaseMatMaterialRef = await this.retornaPrecioBaseMatMaterial(materialRef, materialRef);
+
+            const precioFinal = this.calcularPrecioFinalV2(precioBaseMatMaterialRef, precioBaseMatMaterial, salePrice, cantidad);
+
             if (typeCustomerData.percentDiscount > 0) {
                 const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
                 return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
