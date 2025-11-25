@@ -642,36 +642,56 @@ export class ProductsService {
 
       // 2️⃣ Buscar por texto en productos
       if (search) {
-        const textMatches = await this.productModel.find(
-          { ...filtersBase, $text: { $search: search } },
-          { score: { $meta: 'textScore' } }
-        )
-          .sort({ score: { $meta: 'textScore' } })
-          .select('_id')
-          .lean()
-          .catch(() => []);
+        // Cuando el usuario escribe poco texto (<4), usar RegExp
+        const useRegex = search.length < 4;
+
+        let textMatches = [];
+
+        if (!useRegex) {
+          textMatches = await this.productModel.find(
+            { ...filtersBase, $text: { $search: search } },
+            { score: { $meta: 'textScore' } }
+          )
+            .sort({ score: { $meta: 'textScore' } })
+            .select('_id')
+            .lean()
+            .catch(() => []);
+        } else {
+          textMatches = await this.productModel.find(
+            {
+              ...filtersBase,
+              $or: [
+                { name: new RegExp(search, "i") },
+                { brand: new RegExp(search, "i") }
+              ]
+            }
+          )
+            .select('_id')
+            .lean()
+            .catch(() => []);
+        }
 
         productIds = textMatches.map(p => p._id.toString());
 
-        // 3️⃣ Buscar categorías coincidentes
-        const matchedCategories = await this.productCategoryModel
-          .find({ $text: { $search: search } })
-          .select('_id')
-          .lean()
-          .catch(() => []);
+        // Categorías (solo si search >= 4)
+        if (!useRegex) {
+          const matchedCategories = await this.productCategoryModel
+            .find({ $text: { $search: search } })
+            .select('_id')
+            .lean()
+            .catch(() => []);
 
-        const categoryIds = matchedCategories.map(c => c._id);
+          const categoryIds = matchedCategories.map(c => c._id);
 
-        // 4️⃣ Buscar productos por categorías (sin repetir los anteriores)
-        const categoryProducts = await this.productModel.find({
-          ...filtersBase,
-          id_category: { $in: categoryIds },
-          _id: { $nin: productIds },
-        }).select('_id').lean();
+          const categoryProducts = await this.productModel.find({
+            ...filtersBase,
+            id_category: { $in: categoryIds },
+            _id: { $nin: productIds },
+          }).select('_id').lean();
 
-        productIds.push(...categoryProducts.map(p => p._id.toString()));
+          productIds.push(...categoryProducts.map(p => p._id.toString()));
+        }
       }
-
       // Si no hay término de búsqueda, obtener todos
       let finalFilter: any = filtersBase;
       if (productIds.length > 0) {
