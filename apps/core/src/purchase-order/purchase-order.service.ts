@@ -8,7 +8,7 @@ import {
     PurchaseOrderItem,
     PurchaseOrderItemDocument,
 } from './purchase-order.schema';
-import { CreatePurchaseOrderDto } from './purchase-order.dto';
+import { CreatePurchaseOrderDto, CreatePurchaseOrderItemDto } from './purchase-order.dto';
 import { ApiResponse } from '../common/api-response';
 import { PurchaseOrderDAO } from './purchase-order.dao';
 import { ProductsService } from '../products/products.service';
@@ -71,14 +71,26 @@ export class PurchaseOrderService {
             }
 
             delete createPurchaseOrderDto.methodOfPayment;
-            
+
             createPurchaseOrderDto.clientId = new Types.ObjectId(createPurchaseOrderDto.clientId);
             createPurchaseOrderDto.zoneId = new Types.ObjectId(createPurchaseOrderDto.zoneId);
             createPurchaseOrderDto.createdBy = new Types.ObjectId(createPurchaseOrderDto.createdBy);
 
-            createPurchaseOrderDto.details.forEach(detail => {
-                detail.productId = new Types.ObjectId(detail.productId);
-            });
+            // Convertir productId a ObjectId
+            createPurchaseOrderDto.details = createPurchaseOrderDto.details.map(detail => ({
+                ...detail,
+                productId: new Types.ObjectId(detail.productId),
+            }));
+
+            // Expandir items según quantityItem
+            createPurchaseOrderDto.details = this.expandDetails(createPurchaseOrderDto.details);
+
+            // Recalcular contador de items
+            createPurchaseOrderDto.itemsQuantity = createPurchaseOrderDto.details.length;
+
+            // Recalcular total de la orden
+            createPurchaseOrderDto.totalOrder = createPurchaseOrderDto.details
+                .reduce((acc, item) => acc + item.totalItem, 0);
 
             const createdOrder = new this.purchaseOrderModel({
                 ...createPurchaseOrderDto,
@@ -740,4 +752,67 @@ export class PurchaseOrderService {
             });
         }
     }
+
+    /**
+    * Duplica los items según quantityItem para procesarlos individualmente.
+    */
+    public expandDetails(details: CreatePurchaseOrderItemDto[]): CreatePurchaseOrderItemDto[] {
+        const expanded: CreatePurchaseOrderItemDto[] = [];
+
+        for (const item of details) {
+            const repeat = item.quantityItem || 1;
+
+            for (let i = 0; i < repeat; i++) {
+                const newItem = {
+                    ...item,
+                    _id: undefined,
+                    quantityItem: 1,
+                    totalItem: item.priceItem,
+                    assignedId: null,
+                    assignedAt: null,
+                    updatedAt: null
+                };
+
+                expanded.push(newItem);
+            }
+        }
+
+        return expanded;
+    }
+
+    /**
+    * Compacta los items expandidos, agrupándolos por mismas características
+    * para volver a tener quantityItem > 1.
+    */
+    public compactDetails(expanded: CreatePurchaseOrderItemDto[]): CreatePurchaseOrderItemDto[] {
+        const groups = new Map<string, CreatePurchaseOrderItemDto>();
+
+        for (const item of expanded) {
+            // Crear clave única por producto + tipo de tapete + material + piezas
+            const key = [
+                item.productId.toString(),
+                item.matType,
+                item.materialType,
+                item.pieces,
+                JSON.stringify(item.piecesNames),
+                item.priceItem
+            ].join("|");
+
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    ...item,
+                    quantityItem: 1,
+                    totalItem: item.priceItem,
+                });
+            } else {
+                const group = groups.get(key);
+                group.quantityItem += 1;
+                group.totalItem = group.quantityItem * group.priceItem;
+            }
+        }
+
+        return Array.from(groups.values());
+    }
+
+
 }

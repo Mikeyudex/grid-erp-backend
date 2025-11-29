@@ -15,7 +15,7 @@ import { Type } from 'class-transformer';
 import { Types } from 'mongoose';
 import { CreateIncomeDto } from '../accounting/dtos/income.dto';
 
-class CreatePurchaseOrderItemDto {
+export class CreatePurchaseOrderItemDto {
   @IsString()
   @IsNotEmpty()
   matType: string;
