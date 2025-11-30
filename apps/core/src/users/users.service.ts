@@ -7,7 +7,7 @@ import { generateSecret, GeneratedSecret, totp, Encoding } from '@levminer/speak
 import * as qrcode from 'qrcode';
 
 import { User } from './users.schema';
-import { CreateUserDto, UpdateUserDto } from './dtos/users.dto';
+import { CreateUserDto, UpdatedResponseDto, UpdateUserDto } from './dtos/users.dto';
 import { LoginResponseDto } from '../auth/dtos/login.dto';
 import { ApiResponse } from '../common/api-response';
 import { ZoneDocument, Zone } from './zone/zone.schema';
@@ -97,10 +97,19 @@ export class UsersService {
         return this.userModel.findById({ id }).exec();
     }
 
-    update(id: string, changes: UpdateUserDto) {
-        return this.userModel
-            .findByIdAndUpdate(id, { $set: changes }, { new: true })
-            .exec();
+    async update(id: string, changes: UpdateUserDto) {
+        let updated = await this.userModel.findByIdAndUpdate(id, { $set: changes }, { new: true }).exec();
+        let userResponse = new UpdatedResponseDto();
+        userResponse.id = updated._id.toString();
+        userResponse.email = updated.email;
+        userResponse.phone = updated.phone;
+        userResponse.name = updated.name;
+        userResponse.lastname = updated.lastname;
+        userResponse.role = updated.role;
+        userResponse.active = updated.active;
+        userResponse.zoneId = updated.zoneId.toString();
+        return userResponse;
+        
     }
 
     remove(id: string) {
@@ -225,15 +234,15 @@ export class UsersService {
     async getAllAdvisors() {
         try {
             const advisors = await this.userModel.find({ role: 'asesor' })
-            .populate('zoneId')
-            .exec();
+                .populate('zoneId')
+                .exec();
             if (!advisors || advisors.length === 0) {
                 throw new NotFoundException({
                     statusCode: 404,
                     message: 'No se encontraron usuarios',
                 });
             }
-            
+
             let advisorsMap = advisors.map((user: User) => {
                 return {
                     id: user._id.toString(),

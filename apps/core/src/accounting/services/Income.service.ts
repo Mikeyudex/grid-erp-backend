@@ -226,11 +226,13 @@ export class IncomeService {
     async create(createIncomeDto: CreateIncomeDto): Promise<IncomeDocument> {
         try {
             let totalDebts = 0;
+            
             //Cruzar deudas si existen
             if (createIncomeDto?.debtIds && createIncomeDto.debtIds.length > 0) {
                 for (let debtId of createIncomeDto.debtIds) {
                     let debtIdParsed = new Types.ObjectId(debtId);
                     let debt = await this.debtModel.findById(debtIdParsed);
+ 
                     if (debt) {
                         totalDebts += debt.amountPayable;
                         createIncomeDto.purchaseOrderId = debt.purchaseOrderId;
@@ -253,7 +255,7 @@ export class IncomeService {
             let incomeDocument = await this.incomeModel.create(createIncomeDto);
 
             // si el total del pago es mayor a las deudas, crear anticipo
-            if (totalDebts < createIncomeDto.value) {
+            if (totalDebts > 0 && totalDebts < createIncomeDto.value) {
                 //Crear income como anticipo
                 let saldo = createIncomeDto.value - totalDebts;
                 createIncomeDto.typeOperation = IncomeTypeOperation.ANTICIPO;

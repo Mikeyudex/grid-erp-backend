@@ -44,3 +44,14 @@ export class CreateUserDto {
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) { }
+
+export class UpdatedResponseDto {
+    id: string;
+    email: string;
+    phone: string;
+    name: string;
+    lastname: string;
+    role: string;
+    active: boolean;
+    zoneId: string;
+}

@@ -16,6 +16,8 @@ import { Types } from 'mongoose';
 import { CreateIncomeDto } from '../accounting/dtos/income.dto';
 
 export class CreatePurchaseOrderItemDto {
+  _id?: string | Types.ObjectId;
+
   @IsString()
   @IsNotEmpty()
   matType: string;
@@ -49,6 +51,26 @@ export class CreatePurchaseOrderItemDto {
   @IsOptional()
   @IsString()
   observations?: string;
+
+  @IsOptional()
+  @IsString()
+  itemStatus?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  assignedId?: string | Types.ObjectId;
+
+  @IsOptional()
+  @IsDate()
+  assignedAt?: Date;
+
+  @IsOptional()
+  @IsMongoId()
+  updatedBy?: string | Types.ObjectId;
+
+  @IsOptional()
+  @IsDate()
+  updatedAt?: Date;
 }
 
 export class CreatePurchaseOrderDto {

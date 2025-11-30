@@ -55,11 +55,48 @@ export class PurchaseOrderService {
             for (let index = 0; index < createPurchaseOrderDto.methodOfPayment.length; index++) {
                 let methodOfPaymentDto = createPurchaseOrderDto.methodOfPayment[index];
 
-                if (
-                    methodOfPaymentDto.typeOperation === IncomeTypeOperation.RECEIPTS
-                    || methodOfPaymentDto.typeOperation === IncomeTypeOperation.SALES
-                    /* || methodOfPaymentDto.typeOperation === IncomeTypeOperation.CREDITO */
-                ) {
+                // Normalizar IDs
+                if (methodOfPaymentDto.customerId) {
+                    methodOfPaymentDto.customerId = new Types.ObjectId(methodOfPaymentDto.customerId);
+                }
+                if (methodOfPaymentDto.accountId) {
+                    methodOfPaymentDto.accountId = new Types.ObjectId(methodOfPaymentDto.accountId);
+                }
+
+                // 1) Intentar buscar una cuenta bancaria con ese id
+                let account = await this.accountModel.findById(methodOfPaymentDto.accountId).lean().catch(() => null);
+
+                // 2) Si NO existe una cuenta, intentar buscar un anticipo (advance) con ese id
+                let advance = null;
+                if (!account) {
+                    // Asumo que tienes un servicio para anticipos. Si el nombre es distinto, ajusta.
+                    advance = await this.incomeModel.findById(methodOfPaymentDto.accountId.toString()).catch(() => null);
+                }
+
+                // 3) Determinar el tipo de operación
+                let operationType: IncomeTypeOperation;
+                if (advance) {
+                    // Si se encontró un anticipo, es ANTICIPO
+                    operationType = IncomeTypeOperation.ANTICIPO;
+                } else if (account) {
+                    // Si existe cuenta bancaria, resolver según su tipo (CRÉDITO / EFECTIVO / AHORROS ...)
+                    operationType = this.resolveOperationTypeFromAccount(account);
+                } else {
+                    // Ni cuenta ni anticipo: lanzar error para evitar estados inconsistentes
+                    throw new NotFoundException(`Cuenta o anticipo con id ${methodOfPaymentDto.accountId} no encontrado`);
+                }
+
+                // 4) Asignar typeOperation internamente
+                methodOfPaymentDto.typeOperation = operationType;
+
+                // 5) Flag que usan otras funciones (por ejemplo crossAdvancePayment)
+                methodOfPaymentDto.hasCurrentAdvancePayment = (operationType === IncomeTypeOperation.ANTICIPO);
+
+                // 6) Crear Income si aplica
+                if ([
+                    IncomeTypeOperation.SALES,
+                    IncomeTypeOperation.RECEIPTS
+                ].includes(operationType)) {
                     methodOfPaymentDto.customerId = new Types.ObjectId(methodOfPaymentDto.customerId);
                     methodOfPaymentDto.accountId = new Types.ObjectId(methodOfPaymentDto.accountId);
                     methodOfPaymentDto.hasCurrentAdvancePayment = false;
@@ -67,6 +104,8 @@ export class PurchaseOrderService {
                     incomeIds.push(incomeDocument._id);
                     methodOfPaymentDto.incomeId = incomeDocument._id.toString();
                 }
+
+                // 7) Añadir al array local para posteriores procesos (deuda, cruce, etc.)
                 methodOfPayments.push(methodOfPaymentDto);
             }
 
@@ -337,10 +376,11 @@ export class PurchaseOrderService {
             let order = await this.purchaseOrderModel.findById(orderIdCasted).populate('clientId').lean();
             let detailsNew = [];
             let historyNew = [];
-            for (let index = 0; index < order.details.length; index++) {
-                let product = await this.productsService.findOne(order.details[index].productId);
+            let collapsedDetails = this.compactDetails(order.details);
+            for (let index = 0; index < collapsedDetails.length; index++) {
+                let product = await this.productsService.findOne(collapsedDetails[index].productId);
                 detailsNew.push({
-                    ...order.details[index],
+                    ...collapsedDetails[index],
                     productName: product.name,
                 });
             }
@@ -813,6 +853,27 @@ export class PurchaseOrderService {
 
         return Array.from(groups.values());
     }
+
+    private resolveOperationTypeFromAccount(account: any): IncomeTypeOperation {
+        if (!account) return IncomeTypeOperation.SALES;
+
+        const typeAccount = (account.typeAccount || "").toString().toUpperCase();
+        const bankAccount = (account.bankAccount || "").toString().toUpperCase();
+
+        // Cuentas de crédito
+        if (typeAccount === 'CRÉDITO' || bankAccount === 'CXC' || bankAccount === 'CXC') {
+            return IncomeTypeOperation.CREDITO;
+        }
+
+        // Efectivo / cuentas corrientes / ahorros => ventas/recibos
+        if (['EFECTIVO', 'AHORROS', 'CORRIENTE'].includes(typeAccount)) {
+            return IncomeTypeOperation.SALES;
+        }
+
+        // Default
+        return IncomeTypeOperation.SALES;
+    }
+
 
 
 }

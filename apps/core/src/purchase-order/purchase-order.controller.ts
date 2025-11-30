@@ -129,7 +129,7 @@ export class PurchaseOrderController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Put('auto-assign-order/:orderId/:userId')
+    @Put('auto-assign-order/:orderId/:userId/:zoneId')
     async autoAssignOrder(@Param('orderId') orderId: string, @Param('userId') userId: string, @Param('zoneId') zoneId: string) {
         if (!Types.ObjectId.isValid(orderId)) {
             throw new BadRequestException('orderId no es un ObjectId válido');
