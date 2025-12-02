@@ -634,68 +634,48 @@ export class ProductsService {
         const typeProductDoc = await this.typeProductModel
           .findOne({ name: new RegExp(typeProduct, 'i') })
           .lean();
-        if (!typeProductDoc) throw new NotFoundException(`TypeProduct "${typeProduct}" not found`);
+
+        if (!typeProductDoc) {
+          throw new NotFoundException(`TypeProduct "${typeProduct}" not found`);
+        }
+
         filtersBase.id_type_product = typeProductDoc._id;
       }
 
-      let productIds: string[] = [];
+      // 2️⃣ Inicializamos filtro final
+      let finalFilter: any = { ...filtersBase };
 
-      // 2️⃣ Buscar por texto en productos
-      if (search) {
-        // Cuando el usuario escribe poco texto (<4), usar RegExp
-        const useRegex = search.length < 4;
+      // 3️⃣ Si hay texto de búsqueda → construir búsqueda inteligente
+      if (search && search.trim() !== '') {
+        const normalized = search.trim();
+        const useRegex = normalized.length < 4; // búsquedas cortas → regex
 
-        let textMatches = [];
+        // A) Buscar coincidencias por nombre del producto
+        let productQuery: any = {
+          ...filtersBase,
+          name: useRegex
+            ? new RegExp(normalized, 'i')
+            : { $regex: normalized, $options: 'i' } // evitamos $text si no hay índice
+        };
 
-        if (!useRegex) {
-          textMatches = await this.productModel.find(
-            { ...filtersBase, $text: { $search: search } },
-            { score: { $meta: 'textScore' } }
-          )
-            .sort({ score: { $meta: 'textScore' } })
-            .select('_id')
-            .lean()
-            .catch(() => []);
-        } else {
-          textMatches = await this.productModel.find(
-            {
-              ...filtersBase,
-              $or: [
-                { name: new RegExp(search, "i") },
-                { brand: new RegExp(search, "i") }
-              ]
-            }
-          )
-            .select('_id')
-            .lean()
-            .catch(() => []);
-        }
+        // B) Buscar marcas (categorías)
+        const matchedCategories = await this.productCategoryModel
+          .find({
+            name: new RegExp(normalized, 'i')
+          })
+          .select('_id')
+          .lean();
 
-        productIds = textMatches.map(p => p._id.toString());
+        const categoryIds = matchedCategories.map(c => c._id);
 
-        // Categorías (solo si search >= 4)
-        if (!useRegex) {
-          const matchedCategories = await this.productCategoryModel
-            .find({ $text: { $search: search } })
-            .select('_id')
-            .lean()
-            .catch(() => []);
-
-          const categoryIds = matchedCategories.map(c => c._id);
-
-          const categoryProducts = await this.productModel.find({
-            ...filtersBase,
-            id_category: { $in: categoryIds },
-            _id: { $nin: productIds },
-          }).select('_id').lean();
-
-          productIds.push(...categoryProducts.map(p => p._id.toString()));
-        }
-      }
-      // Si no hay término de búsqueda, obtener todos
-      let finalFilter: any = filtersBase;
-      if (productIds.length > 0) {
-        finalFilter = { ...filtersBase, _id: { $in: productIds } };
+        // C) Si coincide con marca, agregamos OR
+        finalFilter = {
+          ...filtersBase,
+          $or: [
+            productQuery, // buscar por nombre
+            { id_category: { $in: categoryIds } } // buscar por marca
+          ]
+        };
       }
 
       // 5️⃣ Paginación
@@ -713,6 +693,7 @@ export class ProductsService {
         .populate('typeOfPieces', 'name')
         .lean();
 
+      // 6️⃣ Añadir stock
       const productsWithStock = await Promise.all(
         products.map(async (product) => {
           const stockProduct = await this.stockService.findOneByProductId(product._id.toString());
@@ -732,6 +713,7 @@ export class ProductsService {
           itemsPerPage: limit,
         },
       };
+
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException({
@@ -741,4 +723,5 @@ export class ProductsService {
       });
     }
   }
+
 }

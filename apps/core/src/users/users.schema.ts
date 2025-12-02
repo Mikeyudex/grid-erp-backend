@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
 import { Document, Types } from 'mongoose';
+import { RoleUser } from '../role-user/role-user.schema';
 @Schema()
 export class User extends Document {
     @Prop({ required: true, type: Types.ObjectId, ref: 'Company' })
@@ -27,9 +28,6 @@ export class User extends Document {
     @Prop({ required: false, default: '' })
     secret: string;
 
-    @Prop({ required: true })
-    role: string;
-
     @Prop({ required: true, default: true })
     active: boolean;
 
@@ -53,6 +51,9 @@ export class User extends Document {
 
     @Prop()
     avatar?: string;
+
+    @Prop({ required: true, ref: RoleUser.name, type: Types.ObjectId })
+    roleId: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

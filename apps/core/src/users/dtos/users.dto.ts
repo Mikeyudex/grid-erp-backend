@@ -1,6 +1,5 @@
-import { IsString, IsNotEmpty, IsEmail, Length, IsOptional, IsEnum, IsMongoId } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, Length, IsOptional, IsMongoId } from 'class-validator';
 import { PartialType, ApiProperty } from '@nestjs/swagger';
-import { RolesEnum } from '../enums/roles.enum';
 import { Types } from 'mongoose';
 
 export class CreateUserDto {
@@ -31,9 +30,10 @@ export class CreateUserDto {
     @ApiProperty({ description: "the user' password", deprecated: true })
     readonly password: string;
 
-    @IsOptional()
-    @IsEnum(RolesEnum, { message: 'El rol debe ser un valor válido.' })
-    readonly role: string;
+    @IsNotEmpty({ message: 'El atributo roleId es requerido.' })
+    @IsMongoId({ message: 'El atributo roleId debe ser un identificador de MongoDB.' })
+    @IsString({ message: 'El atributo roleId debe ser una cadena de texto.' })
+    readonly roleId: string | Types.ObjectId;
 
     @IsOptional()
     @IsMongoId({ message: 'El atributo zoneId debe ser un identificador de MongoDB.' })
@@ -51,7 +51,7 @@ export class UpdatedResponseDto {
     phone: string;
     name: string;
     lastname: string;
-    role: string;
+    roleId: string;
     active: boolean;
     zoneId: string;
 }

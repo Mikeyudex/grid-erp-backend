@@ -38,6 +38,8 @@ import { DebtModule } from './debt/debt.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { RetentionModule } from './retention/retention.module';
 import { ReportsModule } from './reports/reports.module';
+import { ResourceModule } from './resource/resource.module';
+import { RoleUserModule } from './role-user/role-user.module';
 
 @Module({
   imports: [
@@ -104,6 +106,8 @@ import { ReportsModule } from './reports/reports.module';
     PurchaseModule,
     RetentionModule,
     ReportsModule,
+    ResourceModule,
+    RoleUserModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],

@@ -66,7 +66,7 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
           id: userSocket.userId?._id,
           name: userSocket.userId?.name,
           email: userSocket.userId?.email,
-          role: userSocket.userId?.role,
+          role: userSocket?.role,
           status: userSocket.status,
           avatar: userSocket.userId?.avatar || '',
           socketId: userSocket.socketId,
@@ -110,7 +110,7 @@ export class UserGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       const backOfficeUser: any = await this.backOfficeUserModel.findById(userData.id)
-        .populate('role')
+        //.populate('role')
         .exec();
       if (!backOfficeUser) return;
 
