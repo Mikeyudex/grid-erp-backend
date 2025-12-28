@@ -198,29 +198,49 @@ export class PreciosTapeteMaterialService {
         }
     }
 
-    async calcularPrecioFinalDesdePrecioBaseV2(basePrice: string, tipoTapete: string, material: string, cantidad: number, typeCustomerId: string) {
+    async calcularPrecioFinalDesdePrecioBaseV2(basePrice: string, tipoTapete: string, material: string, cantidad: number, typeCustomerId: string, productId: string) {
         const materialRef = "REF";
+        let unitPriceModifiedFromApp = false;
+
         try {
-            if (!Types.ObjectId.isValid(typeCustomerId)) {
+            if (!Types.ObjectId.isValid(typeCustomerId) || !Types.ObjectId.isValid(productId)) {
                 throw new InternalServerErrorException({
                     statusCode: HttpStatus.BAD_REQUEST,
-                    message: 'typeCustomerId no es un ObjectId válido',
+                    message: 'typeCustomerId o productId no es un ObjectId válido',
                 });
             }
-            let salePrice = parseInt(basePrice);
+            let salePriceFromApp = parseInt(basePrice);
+            let productIdCasted = new Types.ObjectId(productId);
+            const producto = await this.productsServicee.findOne(productIdCasted);
+
+            if (producto) {
+                let salePriceProduct = producto.salePrice;
+                if (salePriceProduct !== salePriceFromApp) {
+                    unitPriceModifiedFromApp = true;
+                }
+            }
+
             let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
-            const precioBaseMatMaterial = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
-            const precioBaseMatMaterialRef = await this.retornaPrecioBaseMatMaterial(materialRef, materialRef);
+            if (!unitPriceModifiedFromApp) {
+                const precioBaseMatMaterial = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
+                const precioBaseMatMaterialRef = await this.retornaPrecioBaseMatMaterial(materialRef, materialRef);
 
-            const precioFinal = this.calcularPrecioFinalV2(precioBaseMatMaterialRef, precioBaseMatMaterial, salePrice, cantidad);
+                let precioFinal = this.calcularPrecioFinalV2(precioBaseMatMaterialRef, precioBaseMatMaterial, salePriceFromApp, cantidad);
 
-            if (typeCustomerData.percentDiscount > 0) {
-                const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                if (typeCustomerData.percentDiscount > 0) {
+                    const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                    return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                }
+                return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+            } else {
+                let precioFinal = salePriceFromApp * cantidad;
+                if (typeCustomerData.percentDiscount > 0) {
+                    const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
+                    return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                }
+                return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
             }
-            return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
-
         } catch (error) {
             this.logger.error('Error al calcular el precio final', error);
             throw new InternalServerErrorException({
