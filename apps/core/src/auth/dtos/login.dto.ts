@@ -1,5 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { User } from "../../users/users.schema";
+import { Types } from 'mongoose';
+import { IUser, User } from "../../users/users.schema";
+import { RoleUserDocument } from "../../role-user/role-user.schema";
 
 export class LoginResponseDto {
 
@@ -19,7 +21,7 @@ export class LoginResponseDto {
     phone: string;
 
     @ApiProperty({ description: "the user' role" })
-    role: string;
+    roleId: string | Types.ObjectId;
 
     @ApiProperty({ description: "the user' company" })
     companyId: string;
@@ -31,18 +33,21 @@ export class LoginResponseDto {
 
     zoneId: string;
 
-    constructor(user: User) {
-        this.id = user.id;
+    role : RoleUserDocument;
+
+    constructor(user: IUser) {
+        this.id = user._id.toString();
         this.name = user.name;
         this.lastname = user.lastname;
         this.email = user.email;
         this.phone = user.phone;
-        this.role = user.role;
+        this.roleId = user.roleId;
         this.companyId = user.companyId.toString();
         this.active = user.active;
         this.activeOtp = user.activeOtp; {
         this.zoneId = user.zoneId.toString();
-        }
+        this.role = user.role;
+        } 
     }
 
 }

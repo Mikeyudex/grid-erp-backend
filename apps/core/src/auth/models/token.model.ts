@@ -1,5 +1,7 @@
+import { Types } from 'mongoose';
+
 export interface PayloadToken {
-    role: string,
+    role: string | Types.ObjectId,
     sub: string,
-    companyId: string
+    companyId: string | Types.ObjectId
 }

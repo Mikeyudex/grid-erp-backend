@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
 import { UsersService } from '../users/users.service';
-import { User } from '../users/users.schema';
+import { IUser, User } from '../users/users.schema';
 import { PayloadToken } from './models/token.model';
 import { LoginResponseDto } from './dtos/login.dto';
 import { ApiResponse } from '../common/api-response';
@@ -28,13 +28,13 @@ export class AuthService {
     }
 
     generateJwtGlobal(user: User): string {
-        const payload: PayloadToken = { sub: user._id.toString(), role: user.roleId.toString(), companyId: user.companyId.toString() };
+        const payload: PayloadToken = { sub: user.id, role: user.roleId, companyId: user.companyId.toString() };
         return this.jwtService.sign(payload);
     }
 
     generateJwt(user: User) {
-        const payload: PayloadToken = { sub: user.id, role: user?.roleId?.toString(), companyId: user?.companyId?.toString() };
-        return ApiResponse.success('Login exitoso', { access_token: this.jwtService.sign(payload), user: new LoginResponseDto(user) }, HttpStatus.OK);
+        const payload: PayloadToken = { sub: user.id, role: user?.roleId, companyId: user?.companyId.toString() };
+        return ApiResponse.success('Login exitoso', { access_token: this.jwtService.sign(payload), user: new LoginResponseDto(user as IUser) }, HttpStatus.OK);
     }
 
     validateToken(token: string) {

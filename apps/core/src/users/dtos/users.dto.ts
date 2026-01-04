@@ -8,11 +8,14 @@ export class CreateUserDto {
     @ApiProperty({ description: "the user' email" })
     readonly email: string;
 
+    @IsString({ message: 'El documento debe ser una cadena de texto.' })
+    @ApiProperty({ description: "the user' document" })
+    readonly documento: string;
+
     @IsString({ message: 'El telefono debe ser una cadena de texto.' })
     @IsEmail()
     @ApiProperty({ description: "the user' phone" })
     readonly phone: string;
-
 
     @IsString({ message: 'El atributo name debe ser una cadena de texto.' })
     @IsNotEmpty({ message: 'El atributo name es requerido.' })
@@ -54,4 +57,5 @@ export class UpdatedResponseDto {
     roleId: string;
     active: boolean;
     zoneId: string;
+    documento: string;
 }

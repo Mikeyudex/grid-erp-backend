@@ -6,7 +6,7 @@ import * as crypto from "crypto";
 import { generateSecret, GeneratedSecret, totp, Encoding } from '@levminer/speakeasy';
 import * as qrcode from 'qrcode';
 
-import { User } from './users.schema';
+import { IUser, User } from './users.schema';
 import { CreateUserDto, UpdatedResponseDto, UpdateUserDto } from './dtos/users.dto';
 import { LoginResponseDto } from '../auth/dtos/login.dto';
 import { ApiResponse } from '../common/api-response';
@@ -35,7 +35,9 @@ export class UsersService {
     async findAll(filter?: string, value?: string) {
         let filterBy = filter ? { [filter]: value } : {};
         try {
-            let users = await this.userModel.find(filterBy).exec();
+            let users = await this.userModel.find(filterBy)
+            .populate('roleId')
+            .exec();
             if (!users || users.length === 0) {
                 throw new InternalServerErrorException({
                     statusCode: 404,
@@ -49,9 +51,10 @@ export class UsersService {
                     phone: user?.phone,
                     name: user?.name,
                     lastname: user?.lastname,
-                    role: user?.role,
+                    role: user?.roleId,
                     active: user?.active,
                     zoneId: user?.zoneId ? user?.zoneId.toString() : null,
+                    documento: user?.documento,
                 }
             });
             return ApiResponse.success('Lista de usuarios obtenida con éxito', usersMap);
@@ -78,7 +81,7 @@ export class UsersService {
 
             const model = await newModel.save();
             const modelObject = model.toObject();
-            return ApiResponse.success('Usuario creado con éxito', new LoginResponseDto(modelObject), HttpStatus.CREATED);
+            return ApiResponse.success('Usuario creado con éxito', new LoginResponseDto(modelObject as IUser), HttpStatus.CREATED);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
@@ -105,11 +108,12 @@ export class UsersService {
         userResponse.phone = updated.phone;
         userResponse.name = updated.name;
         userResponse.lastname = updated.lastname;
-        userResponse.role = updated.role;
+        userResponse.roleId = updated.roleId.toString();
         userResponse.active = updated.active;
         userResponse.zoneId = updated.zoneId.toString();
+        userResponse.documento = updated.documento;
         return userResponse;
-        
+
     }
 
     remove(id: string) {
@@ -250,7 +254,7 @@ export class UsersService {
                     phone: user?.phone,
                     name: user?.name,
                     lastname: user?.lastname,
-                    role: user?.role,
+                    role: user?.roleId,
                     active: user?.active,
                     zoneId: user?.zoneId ? user?.zoneId?._id.toString() : null,
                 }
@@ -415,7 +419,9 @@ export class UsersService {
 
     async verifyotp(email: string, otp: string) {
         try {
-            let user = await this.userModel.findOne({ email: email }).exec();
+            let user = await this.userModel.findOne({ email: email })
+                .populate('roleId')
+                .exec();
             if (!user) throw new NotFoundException({
                 statusCode: 404,
                 message: 'Usuario no encontrado',
@@ -439,8 +445,13 @@ export class UsersService {
                 error: 'Error al verificar secret',
             });
             let isValid = await this.verifyOtpService(secretDecrypted, otp);
+
             if (isValid) {
-                return ApiResponse.success('Código válido', { isValid: true }, HttpStatus.OK);
+                let token = this.authService.generateJwtGlobal(user);
+                user = user.toObject();
+                let userParsed = { ...user, roleId: user.roleId?._id, role: user.roleId as any };
+                let userDto = new LoginResponseDto(userParsed as IUser);
+                return ApiResponse.success('Código válido', { isValid: true, access_token: token, user: userDto }, HttpStatus.OK);
             } else {
                 return ApiResponse.error('Código inválido', 'OTP incorrecto', HttpStatus.BAD_REQUEST);
             }
