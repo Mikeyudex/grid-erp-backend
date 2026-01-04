@@ -9,6 +9,9 @@ import {
   Query,
   NotFoundException,
   UseGuards,
+  UseInterceptors,
+  BadRequestException,
+  UploadedFile,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -16,6 +19,9 @@ import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dtos/users.dto';
 import { CreateZoneDto, UpdateZoneDto } from './dtos/zones.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
 
 @ApiTags('users')
 @Controller('users')
@@ -96,13 +102,13 @@ export class UsersController {
   getAccountsFromZone(@Param('id') id: string) {
     return this.usersService.getAccountsFromZone(id);
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @Get('/advisors/getAll')//Obtener todos los usuarios con rol asesor
   getAllAdvisors() {
     return this.usersService.getAllAdvisors();
   }
-  
+
 
   @Get('/generateQrCode/:email')
   async generate(@Param('email') email: string) {
@@ -137,5 +143,32 @@ export class UsersController {
   @Post('reset-password')
   async resetPassword(@Body('token') token: string, @Body('newPassword') newPassword: string) {
     return this.usersService.resetPassword(token, newPassword);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('/upload-avatar/:id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './static/avatars',
+        filename: (req, file, cb) => {
+          // Generar un nombre único para el archivo
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+          cb(null, filename);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        // Validación de tipo de archivo de tipo imagen
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(new BadRequestException('Solo se permiten archivos de tipo imagen.'), false);
+        }
+        cb(null, true);
+      }
+    }),
+  )
+  async uploadAvatar(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    return this.usersService.uploadAvatar(id, file);
   }
 }

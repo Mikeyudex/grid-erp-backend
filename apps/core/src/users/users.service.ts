@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from "crypto";
 import { generateSecret, GeneratedSecret, totp, Encoding } from '@levminer/speakeasy';
 import * as qrcode from 'qrcode';
+import * as fs from 'fs';
 
 import { IUser, User } from './users.schema';
 import { CreateUserDto, UpdatedResponseDto, UpdateUserDto } from './dtos/users.dto';
@@ -546,5 +547,34 @@ export class UsersService {
                 reject(error);
             }
         })
+    }
+
+    async uploadAvatar(id: string, file: Express.Multer.File) {
+        try {
+            let user = await this.userModel.findById(id).exec();
+            if (!user) throw new NotFoundException({
+                statusCode: 404,
+                message: 'Usuario no encontrado',
+                error: 'Usuario no encontrado',
+            });
+            if (!user.active) throw new BadRequestException({
+                statusCode: 400,
+                message: 'El usuario no está activo',
+                error: 'El usuario no está activo',
+            });
+
+            let urlImage = `/static/avatars/${file.filename}`;
+
+            await this.userModel.findByIdAndUpdate(id, { $set: { avatar: urlImage } });
+
+            return ApiResponse.success('Avatar actualizado correctamente', { url: urlImage }, HttpStatus.OK);
+        } catch (error) {
+            if(error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
     }
 }
