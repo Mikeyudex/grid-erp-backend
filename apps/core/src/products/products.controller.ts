@@ -117,6 +117,9 @@ export class ProductsController {
   @Get('/attributes/getByCompanyId/:companyId')
   async findAttributeConfigs(@Param('companyId') companyId: string, @Res() res: Response) {
     try {
+      if (!companyId) {
+        companyId = this.mockupCompanyId;
+      }
       let data = await this.productService.findAttributeConfigsByCompanyId(companyId);
       return res.status(200).json({
         success: true,
@@ -176,6 +179,9 @@ export class ProductsController {
   // Endpoint para obtener las categorías
   @Get('/category/getByCompanyId/:companyId')
   async findProductCategory(@Param('companyId') companyId: string, @Res() res: Response, @Query('page') page: number, @Query('limit') limit: number) {
+    if (!companyId) {
+      companyId = this.mockupCompanyId;
+    }
     let response = await this.productService.findProductCategorysByCompanyId(companyId, page, limit);
     return res.status(200).json({
       success: true,
@@ -188,6 +194,9 @@ export class ProductsController {
   @Get('/category/getCategoriesFull')
   async findProductCategoryFull(@Query('companyId') companyId: string, @Query('page') page: number, @Query('limit') limit: number, @Res() res: Response) {
     try {
+      if (!companyId) {
+        companyId = this.mockupCompanyId;
+      }
       let data = await this.productService.findProductCategoriesFull(companyId, page, limit);
       return res.status(200).json({
         success: true,
@@ -207,6 +216,9 @@ export class ProductsController {
   @Get('/category/getCategoriesFullSelect')
   async findProductCategoryFullSelect(@Query('companyId') companyId: string, @Res() res: Response) {
     try {
+      if (!companyId) {
+        companyId = this.mockupCompanyId;
+      }
       let data = await this.productService.findProductCategoriesFullSelect(companyId);
       return res.status(200).json({
         success: true,
@@ -276,6 +288,9 @@ export class ProductsController {
 
   @Get('last-sku/:companyId')
   async getLastSku(@Param('companyId') companyId: string): Promise<{ lastSku: string | null }> {
+    if (!companyId) {
+      companyId = this.mockupCompanyId;
+    }
     const lastSku = await this.productService.getLastSkuByCompany(companyId);
     return { lastSku };
   }
