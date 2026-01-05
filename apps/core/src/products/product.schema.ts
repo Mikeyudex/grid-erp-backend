@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { getCurrentUTCDate } from '../../utils/getUtcDate';
+import { User } from '../users/users.schema';
+import { Zone } from '../users/zone/zone.schema';
 
 export type ProductDocument = HydratedDocument<Product>;
 
@@ -21,7 +23,7 @@ export class Product {
     @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: 'Provider' }) //Id del proveedor
     providerId?: Types.ObjectId;
 
-    @Prop({ required:false, type: mongoose.Schema.Types.ObjectId, ref: 'User' }) //id de usuario que creó el producto
+    @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: 'User' }) //id de usuario que creó el producto
     historyActivityUserId: Types.ObjectId;
 
     @Prop({ required: true, type: String })
@@ -112,11 +114,17 @@ export class Product {
             lastSyncedAt: Date;
         }
     };
+
+    @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: User.name })
+    takenById: Types.ObjectId;
+
+    @Prop({ required: false, type: mongoose.Schema.Types.ObjectId, ref: Zone.name })
+    physicalMoldsId: Types.ObjectId;
 }
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
 ProductSchema.index({
-  name: 'text',
-  description: 'text',
-  sku: 'text',
+    name: 'text',
+    description: 'text',
+    sku: 'text',
 });

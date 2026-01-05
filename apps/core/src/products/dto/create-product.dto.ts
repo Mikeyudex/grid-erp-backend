@@ -130,4 +130,8 @@ export class CreateProductDto {
   })
   @IsOptional()
   readonly additionalConfigs?: Record<string, any>;
+
+  takenById?: String | Types.ObjectId;
+
+  physicalMoldsId?: String | Types.ObjectId;
 }

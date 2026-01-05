@@ -8,24 +8,15 @@ import {
   Delete,
   Res,
   Query,
-  UploadedFiles,
-  UseInterceptors,
-  UseFilters,
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Inject,
   UseGuards,
-  SetMetadata,
-  UploadedFile,
   InternalServerErrorException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ConfigType } from '@nestjs/config';
 import { Response } from 'express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+
 
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';

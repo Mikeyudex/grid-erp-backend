@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Types } from 'mongoose';
 
 export class GetAllByCompanyProductsResponseDto {
   @ApiPropertyOptional({ example: '232324gg44545', description: 'ID del producto' })
@@ -64,7 +65,7 @@ export class GetAllByCompanyProductsResponseDto {
   @ApiProperty({ example: 'Observaciones del producto', description: 'Observaciones del producto' })
   observations: string;
 
-  @ApiProperty({ example: 'Código de barras del producto', description: 'Código de barras del producto' })  
+  @ApiProperty({ example: 'Código de barras del producto', description: 'Código de barras del producto' })
   barCode: string;
 
   @ApiProperty({
@@ -101,4 +102,8 @@ export class GetAllByCompanyProductsResponseDto {
       lastSyncedAt: { type: Date, default: null },
     },
   };
+
+  takenById?: String | Types.ObjectId;
+
+  physicalMoldsId?: String | Types.ObjectId;
 }
