@@ -269,6 +269,7 @@ export class PurchaseOrderService {
             }
             return ApiResponse.success('Ordenes libres obtenidas con éxito', orders);
         } catch (error) {
+            if (error instanceof NotFoundException) throw error;
             throw new InternalServerErrorException({
                 statusCode: 500,
                 message: 'Error interno del servidor',
