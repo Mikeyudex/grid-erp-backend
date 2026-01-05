@@ -6,7 +6,10 @@ import { TaxDocument } from './taxes.schema';
 
 @Controller('taxes')
 export class TaxesController {
-    constructor(private readonly taxesService: TaxesService) { }
+    private mockupCompanyId: string;
+    constructor(private readonly taxesService: TaxesService) {
+        this.mockupCompanyId = "66becedd790bddbc9b1e2cbc";
+    }
 
     @Post()
     async create(@Body() createTaxDto: CreateTaxDto): Promise<TaxDocument> {
@@ -20,6 +23,7 @@ export class TaxesController {
 
     @Get('/getbyCompany/:companyId')
     async findAllByCompany(@Param('companyId') companyId: string): Promise<TaxDocument[]> {
+        companyId = this.mockupCompanyId;
         return this.taxesService.findAllByCompany(companyId);
     }
 
