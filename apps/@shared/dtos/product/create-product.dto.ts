@@ -14,7 +14,7 @@ export class CreateProductDto {
 
   @ApiProperty({ example: 'Codigo de la empresa', description: 'AHU' })
   @IsOptional()
-    @IsMongoId()
+  @IsMongoId()
   companyId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Codigo de la bodega', description: '12234' })
@@ -30,7 +30,7 @@ export class CreateProductDto {
   @ApiProperty({ example: 'Id del usuario que creó el producto', description: '12234' })
   @IsOptional()
   @IsMongoId()
-  historyActivityUserId: string | Types.ObjectId;
+  historyActivityUserId?: string | Types.ObjectId;
 
   @ApiProperty({ example: 'Camiseta', description: 'Nombre del producto' })
   @IsNotEmpty({ message: 'El nombre es un campo requerido.' })
@@ -120,7 +120,7 @@ export class CreateProductDto {
   @ApiProperty({ type: 'array', example: ['Conductor', 'Copiloto'], description: 'Tipos de pieza' })
   @IsOptional()
   @IsArray()
-  typeOfPieces?: string[];
+  typeOfPieces?: string[] | Types.ObjectId[];
 
   @ApiProperty({
     type: 'object',
@@ -130,4 +130,8 @@ export class CreateProductDto {
   })
   @IsOptional()
   readonly additionalConfigs?: Record<string, any>;
+
+  takenById?: String | Types.ObjectId;
+
+  physicalMoldsId?: String | Types.ObjectId;
 }

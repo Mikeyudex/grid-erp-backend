@@ -4,79 +4,35 @@ import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-val
 export class ExcelPayloadDto {
     @IsString()
     @IsNotEmpty()
-    codigoexterno: string;
+    marca: string;
 
     @IsString()
     @IsNotEmpty()
-    bodega: string;
+    linea: string;
 
     @IsString()
     @IsNotEmpty()
-    categoria: string;
-
-    @IsString()
-    @IsNotEmpty()
-    subcategoria: string;
-
-    @IsString()
-    @IsNotEmpty()
-    proveedor: string;
-
-    @IsString()
-    @IsNotEmpty()
-    nombre: string;
-
-    @IsString()
-    @IsNotEmpty()
-    descripcion: string;
-
-    @IsString()
-    @IsNotEmpty()
-    tipoproducto: string;
-
-    @IsString()
-    @IsNotEmpty()
-    sku: string;
-
-    @IsString()
-    @IsNotEmpty()
-    unidadmedida: string;
+    piezas: string;
 
     @IsNumber()
     @IsNotEmpty()
-    precioventa: number;
+    precio_base: number;
 
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    preciocosto: number;
+    observaciones: string;
+
+    @IsString()
+    @IsNotEmpty()
+    tipo_vehiculo: string;
 
     @IsString()
     @IsOptional()
-    color: string;
+    tomado_por: string;
 
     @IsString()
     @IsOptional()
-    talla: string;
-
-    @IsString()
-    @IsOptional()
-    material: string;
-
-    @IsString()
-    @IsOptional()
-    peso: string;
-
-    @IsBoolean()
-    @IsOptional()
-    edicionlimitada: boolean | string;
-
-    @IsString()
-    @IsOptional()
-    generacodigodebarra: string;
-
-    @IsString()
-    @IsOptional()
-    imagenes: { text: string, hyperlink: string };
+    moldes_fisicos: string;
 }
 
 export class ExcelPayloadDtoTapete {

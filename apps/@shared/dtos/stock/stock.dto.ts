@@ -1,10 +1,10 @@
 import { IsNotEmpty, IsNumber, IsString, IsMongoId, IsOptional, IsBoolean } from 'class-validator';
-import { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 
 export class CreateStockDto {
     @IsNotEmpty()
     @IsMongoId()
-    productId: string | ObjectId;
+    productId: string | Types.ObjectId;
   
     @IsNotEmpty()
     @IsNumber()
@@ -12,7 +12,7 @@ export class CreateStockDto {
   
     @IsNotEmpty()
     @IsMongoId()
-    warehouseId: string | ObjectId;
+    warehouseId: string | Types.ObjectId;
   
     @IsOptional()
     @IsNumber()
