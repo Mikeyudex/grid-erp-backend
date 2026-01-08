@@ -396,7 +396,7 @@ export class ProductsService {
     }
   }
 
-  async findProductCategoriesFull(companyId: string, page: number = 1, limit: number = 10): Promise<any> {
+  async findProductCategoriesFull(companyId: string, page: number = 1, limit: number = 50): Promise<any> {
     let companyIdCasted = new Types.ObjectId(companyId);
     if (!Types.ObjectId.isValid(companyIdCasted)) {
       throw new BadRequestException(`Invalid ID: ${companyId}`);
