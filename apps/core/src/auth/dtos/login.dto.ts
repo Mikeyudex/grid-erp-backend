@@ -36,18 +36,17 @@ export class LoginResponseDto {
     role : RoleUserDocument;
 
     constructor(user: IUser) {
-        this.id = user._id.toString();
+        this.id = user._id?.toString();
         this.name = user.name;
         this.lastname = user.lastname;
         this.email = user.email;
         this.phone = user.phone;
         this.roleId = user.roleId;
-        this.companyId = user.companyId.toString();
+        this.companyId = user.companyId?.toString();
         this.active = user.active;
-        this.activeOtp = user.activeOtp; {
-        this.zoneId = user.zoneId.toString();
+        this.activeOtp = user.activeOtp; 
+        this.zoneId = user.zoneId?.toString();
         this.role = user.role;
-        } 
     }
 
 }

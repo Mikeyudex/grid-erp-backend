@@ -28,12 +28,12 @@ export class AuthService {
     }
 
     generateJwtGlobal(user: User): string {
-        const payload: PayloadToken = { sub: user.id, role: user.roleId, companyId: user.companyId.toString() };
+        const payload: PayloadToken = { sub: user.id, role: user.roleId, companyId: user.companyId?.toString() };
         return this.jwtService.sign(payload);
     }
 
     generateJwt(user: User) {
-        const payload: PayloadToken = { sub: user.id, role: user?.roleId, companyId: user?.companyId.toString() };
+        const payload: PayloadToken = { sub: user.id, role: user?.roleId, companyId: user?.companyId?.toString() };
         return ApiResponse.success('Login exitoso', { access_token: this.jwtService.sign(payload), user: new LoginResponseDto(user as IUser) }, HttpStatus.OK);
     }
 
