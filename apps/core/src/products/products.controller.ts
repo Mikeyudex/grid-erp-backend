@@ -62,8 +62,8 @@ export class ProductsController {
   @Get('/getAllByCompany')
   @ApiOperation({ summary: 'Obtener todos los productos de una compañía' })
   @ApiResponse({ status: 200, description: 'Lista de productos obtenida exitosamente.' })
-  async findAll(@Query('page') page: number, @Query('limit') limit: number): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
-    return this.productService.findAllByCompany(this.mockupCompanyId, page, limit);
+  async findAll(@Query('page') page: number, @Query('limit') limit: number, @Query('search') search?: string): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
+    return this.productService.findAllByCompany(this.mockupCompanyId, page, limit, search);
   }
 
   @Get('/getAllByCompanyLite')

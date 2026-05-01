@@ -145,7 +145,7 @@ export class ProductsService {
     }
   }
 
-  async findAllByCompany(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
+  async findAllByCompany(companyId: string, page: number = 1, limit: number = 10, search?: string): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
 
     const skip = (page - 1) * limit;
     const companyIdCasted = new Types.ObjectId(companyId);
@@ -153,9 +153,30 @@ export class ProductsService {
       throw new BadRequestException(`Invalid ID: ${companyId}`);
     }
 
+    let filter: any = { companyId: companyIdCasted };
+
+    if (search && search.trim() !== '') {
+      const regex = new RegExp(search.trim(), 'i');
+
+      const matchedCategories = await this.productCategoryModel
+        .find({
+          companyId: companyIdCasted,
+          name: regex
+        })
+        .select('_id')
+        .lean();
+
+      const categoryIds = matchedCategories.map((c: any) => c._id);
+
+      filter.$or = [
+        { name: regex },
+        { id_category: { $in: categoryIds } }
+      ];
+    }
+
     const [products, totalRowCount] = await Promise.all([
       this.productModel
-        .find({ companyId: companyIdCasted })
+        .find(filter)
         .populate('id_category')
         .populate('id_sub_category')
         .sort({ createdAt: -1 })
@@ -163,7 +184,7 @@ export class ProductsService {
         .limit(limit)
         .lean()
         .exec(),
-      this.productModel.countDocuments({ companyId: companyIdCasted }),
+      this.productModel.countDocuments(filter),
     ]);
 
     if (products.length === 0) {
