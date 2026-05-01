@@ -34,6 +34,18 @@ export class StockService {
     return stock;
   }
 
+  async findManyByProductIds(productIds: string[]): Promise<Map<string, StockDocument>> {
+    const stocks = await this.stockModel
+      .find({ productId: { $in: productIds } })
+      .lean()
+      .exec();
+    const stockMap = new Map<string, StockDocument>();
+    for (const stock of stocks) {
+      stockMap.set(stock.productId.toString(), stock as StockDocument);
+    }
+    return stockMap;
+  }
+
   async getStockByProductAndWarehouse(productId: string, warehouseId: string): Promise<number> {
     const stock = await this.stockModel.findOne({ productId, warehouseId }).exec();
     if (!stock) {

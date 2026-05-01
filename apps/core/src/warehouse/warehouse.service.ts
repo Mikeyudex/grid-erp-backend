@@ -64,6 +64,19 @@ export class WarehouseService {
         return warehouse;
     }
 
+    async findManyByIds(ids: string[]): Promise<Map<string, Warehouse>> {
+        const objectIds = ids.map(id => new Types.ObjectId(id));
+        const warehouses = await this.warehouseModel
+            .find({ _id: { $in: objectIds } })
+            .lean()
+            .exec();
+        const map = new Map<string, Warehouse>();
+        for (const w of warehouses) {
+            map.set((w as any)._id.toString(), w as Warehouse);
+        }
+        return map;
+    }
+
     async getIdFromShortCode(value: string): Promise<string> {
         try {
             let warehouseId = await this.warehouseModel.findOne({ shortCode: value }).lean();

@@ -147,52 +147,65 @@ export class ProductsService {
 
   async findAllByCompany(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
 
-    let response = [];
     const skip = (page - 1) * limit;
-    let companyIdCasted = new Types.ObjectId(companyId);
+    const companyIdCasted = new Types.ObjectId(companyId);
     if (!Types.ObjectId.isValid(companyIdCasted)) {
       throw new BadRequestException(`Invalid ID: ${companyId}`);
     }
-    let products = await this.productModel.find({ companyId: companyIdCasted })
-      .populate('id_category')
-      .populate('id_sub_category')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+
+    const [products, totalRowCount] = await Promise.all([
+      this.productModel
+        .find({ companyId: companyIdCasted })
+        .populate('id_category')
+        .populate('id_sub_category')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.productModel.countDocuments({ companyId: companyIdCasted }),
+    ]);
+
     if (products.length === 0) {
       throw new NotFoundException(`Products by company not found`);
     }
 
-    for (let index = 0; index < products.length; index++) {
-      try {
-        const product: any = products[index];
+    // Recolectar IDs únicos para batch queries
+    const productIds = products.map((p: any) => p._id.toString());
+    const warehouseIds = [...new Set(
+      products.map((p: any) => p.warehouseId?.toString()).filter(Boolean)
+    )];
 
-        let warehouse = await this.warehouseService.findOne(product.warehouseId);
-        let stockProduct = await this.stockService.findOneByProductId(product.id);
+    // Batch queries en paralelo: 1 query stocks + 1 query warehouses
+    const [stockMap, warehouseResults] = await Promise.all([
+      this.stockService.findManyByProductIds(productIds),
+      warehouseIds.length > 0
+        ? this.warehouseService.findManyByIds(warehouseIds)
+        : Promise.resolve(new Map<string, any>()),
+    ]);
 
-        const transformedProduct = {
-          ...product.toObject(),
-          categoryName: product?.id_category?.name ?? "No Definido",
-          subCategoryName: product?.id_sub_category?.name ?? "No Definido",
-          warehouseName: warehouse?.name ?? "No Definido",
-          stock: stockProduct?.quantity ?? 0,
-          attributes: product.attributes || {},
-          additionalConfigs: product?.additionalConfigs || {}
-        }
-        response.push(transformedProduct)
-      } catch (error) {
-        console.log(error?.message);
-      }
-    }
-
-    const totalRowCount = await this.productModel.countDocuments({ companyId })
+    // Transformar con lookups en memoria (sin queries adicionales)
+    const response = products.map((product: any) => {
+      const warehouse = warehouseResults.get(product.warehouseId?.toString());
+      const stockProduct = stockMap.get(product._id.toString());
+      return {
+        ...product,
+        categoryName: product?.id_category?.name ?? 'No Definido',
+        subCategoryName: product?.id_sub_category?.name ?? 'No Definido',
+        warehouseName: warehouse?.name ?? 'No Definido',
+        stock: stockProduct?.quantity ?? 0,
+        attributes: product.attributes || {},
+        additionalConfigs: product?.additionalConfigs || {},
+      };
+    });
 
     return {
-      totalRowCount: totalRowCount,
-      data: response as GetAllByCompanyProductsResponseDto[]
-    }
+      totalRowCount,
+      data: response as GetAllByCompanyProductsResponseDto[],
+    };
   }
+
+
 
   async findAllByCompanyLite(companyId: string, page: number = 1, limit: number = 10) {
     try {
@@ -408,14 +421,31 @@ export class ProductsService {
       .skip(skip)
       .limit(limit)
       .lean();
-    let categoriesFull = [];
 
-    for (let index = 0; index < categories.length; index++) {
-      const category = categories[index];
-      let subCat = await this.findProductSubCategorysByCategoryId(category._id.toString());
-      categoriesFull.push(Object.assign({ ...category, subcategories: subCat }));
+    if (categories.length === 0) {
+      return [];
     }
-    return categoriesFull;
+
+    const categoryIds = categories.map(c => c._id);
+
+    const subCategories = await this.productSubCategoryModel
+      .find({ categoryId: { $in: categoryIds } })
+      .lean()
+      .exec();
+
+    const subCategoriesMap = new Map<string, any[]>();
+    for (const subCat of subCategories) {
+      const catIdStr = subCat.categoryId.toString();
+      if (!subCategoriesMap.has(catIdStr)) {
+        subCategoriesMap.set(catIdStr, []);
+      }
+      subCategoriesMap.get(catIdStr)!.push(subCat);
+    }
+
+    return categories.map(category => ({
+      ...category,
+      subcategories: subCategoriesMap.get(category._id.toString()) || []
+    }));
   }
 
   async findProductCategoriesFullSelect(companyId: string): Promise<any> {
