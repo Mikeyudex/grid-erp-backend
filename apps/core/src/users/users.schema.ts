@@ -22,7 +22,7 @@ export interface IUser {
     resetPasswordExpires?: Date,
     avatar?: string,
     companyId: string | Types.ObjectId,
-    zoneId: string | Types.ObjectId,
+    zoneId: (string | Types.ObjectId)[],
     role?: RoleUserDocument | null
 }
 
@@ -62,8 +62,8 @@ export class User extends Document {
     @Prop({ required: true, default: false })
     activeOtp: boolean;
 
-    @Prop({ required: false, ref: 'Zone', type: Types.ObjectId })
-    zoneId: Types.ObjectId;
+    @Prop({ required: false, ref: 'Zone', type: [{ type: Types.ObjectId }] })
+    zoneId: Types.ObjectId[];
 
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;

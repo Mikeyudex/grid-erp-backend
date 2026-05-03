@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, Length, IsOptional, IsMongoId } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, Length, IsOptional, IsMongoId, IsArray } from 'class-validator';
 import { PartialType, ApiProperty } from '@nestjs/swagger';
 import { Types } from 'mongoose';
 
@@ -39,10 +39,10 @@ export class CreateUserDto {
     readonly roleId: string | Types.ObjectId;
 
     @IsOptional()
-    @IsMongoId({ message: 'El atributo zoneId debe ser un identificador de MongoDB.' })
-    @IsString({ message: 'El atributo zoneId debe ser una cadena de texto.' })
-    @ApiProperty({ description: 'Identificador de zona del usuario' })
-    zoneId: string | Types.ObjectId;
+    @IsArray({ message: 'El atributo zoneId debe ser un arreglo.' })
+    @IsMongoId({ each: true, message: 'Cada elemento en zoneId debe ser un identificador de MongoDB.' })
+    @ApiProperty({ description: 'Identificadores de zona del usuario', type: [String] })
+    zoneId: string[] | Types.ObjectId[];
     
 }
 
@@ -56,6 +56,6 @@ export class UpdatedResponseDto {
     lastname: string;
     roleId: string;
     active: boolean;
-    zoneId: string;
+    zoneId: string[];
     documento: string;
 }

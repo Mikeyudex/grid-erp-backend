@@ -13,7 +13,7 @@ export class AccountService {
 
     async findAll() {
         try {
-            let accounts = await this.accounModel.find().exec();
+            let accounts = await this.accounModel.find().collation({ locale: 'es', strength: 1 }).sort({ name: 1 }).exec();
             return ApiResponse.success('Registros obtenidos con éxito', accounts);
         } catch (error) {
             throw new InternalServerErrorException({

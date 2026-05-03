@@ -54,7 +54,7 @@ export class UsersService {
                     lastname: user?.lastname,
                     role: user?.roleId,
                     active: user?.active,
-                    zoneId: user?.zoneId ? user?.zoneId.toString() : null,
+                    zoneId: user?.zoneId && Array.isArray(user.zoneId) ? user.zoneId.map((z: any) => z.toString()) : [],
                     documento: user?.documento,
                 }
             });
@@ -78,7 +78,7 @@ export class UsersService {
             const hashPassword = await bcrypt.hash(newModel.password, 10);
             newModel.password = hashPassword;
             newModel.companyId = this.companyId;
-            newModel.zoneId = new MongooseTypes.ObjectId(data.zoneId);
+            newModel.zoneId = data.zoneId && Array.isArray(data.zoneId) ? data.zoneId.map((id: any) => new MongooseTypes.ObjectId(id)) : [];
 
             const model = await newModel.save();
             const modelObject = model.toObject();
@@ -111,7 +111,7 @@ export class UsersService {
         userResponse.lastname = updated.lastname;
         userResponse.roleId = updated.roleId.toString();
         userResponse.active = updated.active;
-        userResponse.zoneId = updated.zoneId.toString();
+        userResponse.zoneId = updated.zoneId && Array.isArray(updated.zoneId) ? updated.zoneId.map((z: any) => z.toString()) : [];
         userResponse.documento = updated.documento;
         return userResponse;
 
@@ -257,7 +257,7 @@ export class UsersService {
                     lastname: user?.lastname,
                     role: user?.roleId,
                     active: user?.active,
-                    zoneId: user?.zoneId ? user?.zoneId?._id.toString() : null,
+                    zoneId: user?.zoneId && Array.isArray(user.zoneId) ? user.zoneId.map((z: any) => z?._id ? z._id.toString() : z.toString()) : [],
                 }
             });
             return ApiResponse.success('Success', advisorsMap);

@@ -14,7 +14,7 @@ export class PaymentMethodService {
 
     async findAll() {
         try {
-            let paymentMethods = await this.paymentMethodModel.find().lean().exec();
+            let paymentMethods = await this.paymentMethodModel.find().sort({ name: 1 }).lean().exec();
             return ApiResponse.success('Registros obtenidos con éxito', paymentMethods);
         } catch (error) {
             throw new InternalServerErrorException({

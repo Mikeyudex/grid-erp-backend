@@ -31,7 +31,7 @@ export class LoginResponseDto {
 
     activeOtp: boolean;
 
-    zoneId: string;
+    zoneId: string[];
 
     role : RoleUserDocument;
 
@@ -45,7 +45,7 @@ export class LoginResponseDto {
         this.companyId = user.companyId?.toString();
         this.active = user.active;
         this.activeOtp = user.activeOtp; 
-        this.zoneId = user.zoneId?.toString();
+        this.zoneId = user.zoneId && Array.isArray(user.zoneId) ? user.zoneId.map((z: any) => z.toString()) : [];
         this.role = user.role;
     }
 

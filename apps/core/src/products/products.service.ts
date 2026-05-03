@@ -147,7 +147,9 @@ export class ProductsService {
 
   async findAllByCompany(companyId: string, page: number = 1, limit: number = 10, search?: string): Promise<{ totalRowCount: number, data: GetAllByCompanyProductsResponseDto[] }> {
 
-    const skip = (page - 1) * limit;
+    const parsedLimit = Number(limit) || 10;
+    const parsedPage = Number(page) || 1;
+    const skip = (parsedPage - 1) * parsedLimit;
     const companyIdCasted = new Types.ObjectId(companyId);
     if (!Types.ObjectId.isValid(companyIdCasted)) {
       throw new BadRequestException(`Invalid ID: ${companyId}`);
@@ -174,17 +176,36 @@ export class ProductsService {
       ];
     }
 
-    const [products, totalRowCount] = await Promise.all([
-      this.productModel
-        .find(filter)
-        .populate('id_category')
-        .populate('id_sub_category')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
+    const aggPipeline: any[] = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'product-category',
+          localField: 'id_category',
+          foreignField: '_id',
+          as: 'categoryDoc'
+        }
+      },
+      { $unwind: { path: '$categoryDoc', preserveNullAndEmptyArrays: true } },
+      { 
+        $sort: { 
+          'categoryDoc.name': 1, 
+          name: 1 
+        } 
+      },
+      { $skip: skip },
+      { $limit: parsedLimit },
+      { $project: { categoryDoc: 0 } }
+    ];
+
+    const [productsAgg, totalRowCount] = await Promise.all([
+      this.productModel.aggregate(aggPipeline).collation({ locale: 'es', strength: 1 }),
       this.productModel.countDocuments(filter),
+    ]);
+
+    const products = await this.productModel.populate(productsAgg, [
+      { path: 'id_category' },
+      { path: 'id_sub_category' }
     ]);
 
     if (products.length === 0) {
@@ -731,18 +752,41 @@ export class ProductsService {
 
       // 5️⃣ Paginación
       const totalItems = await this.productModel.countDocuments(finalFilter);
-      const skip = (page - 1) * limit;
+      const parsedLimit = Number(limit) || 10;
+      const parsedPage = Number(page) || 1;
+      const skip = (parsedPage - 1) * parsedLimit;
 
-      const products = await this.productModel.find(finalFilter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('id_category', 'name')
-        .populate('warehouseId', 'name')
-        .populate('id_type_product', 'name')
-        .populate('taxId', 'name percentage')
-        .populate('typeOfPieces', 'name')
-        .lean();
+      const aggPipeline: any[] = [
+        { $match: finalFilter },
+        {
+          $lookup: {
+            from: 'product-category',
+            localField: 'id_category',
+            foreignField: '_id',
+            as: 'categoryDoc'
+          }
+        },
+        { $unwind: { path: '$categoryDoc', preserveNullAndEmptyArrays: true } },
+        { 
+          $sort: { 
+            name: 1, 
+            'categoryDoc.name': 1 
+          } 
+        },
+        { $skip: skip },
+        { $limit: parsedLimit },
+        { $project: { categoryDoc: 0 } }
+      ];
+
+      const productsAgg = await this.productModel.aggregate(aggPipeline).collation({ locale: 'es', strength: 1 });
+
+      const products = await this.productModel.populate(productsAgg, [
+        { path: 'id_category', select: 'name' },
+        { path: 'warehouseId', select: 'name' },
+        { path: 'id_type_product', select: 'name' },
+        { path: 'taxId', select: 'name percentage' },
+        { path: 'typeOfPieces', select: 'name' }
+      ]);
 
       // 6️⃣ Añadir stock
       const productsWithStock = await Promise.all(
@@ -756,7 +800,7 @@ export class ProductsService {
       );
 
       return {
-        data: productsWithStock,
+        data: productsWithStock as unknown as ProductDocument[],
         meta: {
           currentPage: page,
           totalPages: Math.ceil(totalItems / limit),
