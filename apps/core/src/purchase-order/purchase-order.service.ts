@@ -262,7 +262,7 @@ export class PurchaseOrderService {
         try {
             let orders = await this.purchaseOrderDAO.findPaginated(page, limit, {
                 status: PurchaseStatusEnum.LIBRE,
-                zoneId: null,
+                /* zoneId: null, */
             });
             if (!orders || orders.length === 0) {
                 throw new NotFoundException(`No se encontraron ordenes de pedido libres`);
