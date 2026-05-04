@@ -68,6 +68,19 @@ export class RoleUserService {
         }
     }
 
+    async getRoleByName(name: string) {
+        try {
+            let roleUser = await this.roleUserModel.findOne({ name });
+            return roleUser;
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async addResource(payload: AddResourceDto, id: string) {
         try {
             let roleUser = await this.roleUserModel.findById(id).exec();

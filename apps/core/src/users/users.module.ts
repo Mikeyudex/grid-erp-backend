@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Zone, ZoneSchema } from './zone/zone.schema';
 import { AuthModule } from '../auth/auth.module';
 import { AccountingModule } from '../accounting/accounting.module';
+import { RoleUserModule } from '../role-user/role-user.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AccountingModule } from '../accounting/accounting.module';
     MongooseModule.forFeature([{ name: Zone.name, schema: ZoneSchema }]),
     forwardRef(() => AuthModule),
     AccountingModule,
+    RoleUserModule,
   ],
   providers: [UsersService],
   controllers: [UsersController],

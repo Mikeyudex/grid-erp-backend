@@ -20,6 +20,7 @@ import { AuthService } from '../auth/auth.service';
 import { MailerService } from '../mailer.service';
 import { TransporterOptions } from '../interfaces/transporterOptions.interface';
 import { AccountService } from '../accounting/services/account.service';
+import { RoleUserService } from '../role-user/role-user.service';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +32,7 @@ export class UsersService {
         @Inject(config.KEY) private configService: ConfigType<typeof config>,
         @Inject(forwardRef(() => AuthService)) private readonly authService: AuthService,
         private readonly accountService: AccountService,
+        private readonly roleUserService: RoleUserService,
     ) { this.companyId = new Types.ObjectId("66becedd790bddbc9b1e2cbc"); }
 
     async findAll(filter?: string, value?: string) {
@@ -238,7 +240,15 @@ export class UsersService {
 
     async getAllAdvisors() {
         try {
-            const advisors = await this.userModel.find({ role: 'asesor' })
+            const roleAsesor = await this.roleUserService.getRoleByName('asesor');
+            if (!roleAsesor) {
+                throw new NotFoundException({
+                    statusCode: 404,
+                    message: 'Rol de asesor no encontrado',
+                });
+            }
+
+            const advisors = await this.userModel.find({ roleId: roleAsesor._id })
                 .populate('zoneId')
                 .exec();
             if (!advisors || advisors.length === 0) {
