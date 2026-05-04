@@ -39,8 +39,8 @@ export class UsersService {
         let filterBy = filter ? { [filter]: value } : {};
         try {
             let users = await this.userModel.find(filterBy)
-            .populate('roleId')
-            .exec();
+                .populate('roleId')
+                .exec();
             if (!users || users.length === 0) {
                 throw new InternalServerErrorException({
                     statusCode: 404,
@@ -76,6 +76,7 @@ export class UsersService {
 
     async create(data: CreateUserDto) {
         try {
+            data.roleId = new MongooseTypes.ObjectId(data.roleId);
             const newModel = new this.userModel(data);
             const hashPassword = await bcrypt.hash(newModel.password, 10);
             newModel.password = hashPassword;
@@ -248,7 +249,7 @@ export class UsersService {
                 });
             }
 
-            const advisors = await this.userModel.find({ roleId: roleAsesor._id })
+            const advisors = await this.userModel.find({ roleId: new MongooseTypes.ObjectId(roleAsesor._id as string) })
                 .populate('zoneId')
                 .exec();
             if (!advisors || advisors.length === 0) {
@@ -579,7 +580,7 @@ export class UsersService {
 
             return ApiResponse.success('Avatar actualizado correctamente', { url: urlImage }, HttpStatus.OK);
         } catch (error) {
-            if(error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+            if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
             throw new InternalServerErrorException({
                 statusCode: 500,
                 message: 'Error interno del servidor',

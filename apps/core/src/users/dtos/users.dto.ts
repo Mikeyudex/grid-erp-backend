@@ -36,14 +36,14 @@ export class CreateUserDto {
     @IsNotEmpty({ message: 'El atributo roleId es requerido.' })
     @IsMongoId({ message: 'El atributo roleId debe ser un identificador de MongoDB.' })
     @IsString({ message: 'El atributo roleId debe ser una cadena de texto.' })
-    readonly roleId: string | Types.ObjectId;
+    roleId: string | Types.ObjectId;
 
     @IsOptional()
     @IsArray({ message: 'El atributo zoneId debe ser un arreglo.' })
     @IsMongoId({ each: true, message: 'Cada elemento en zoneId debe ser un identificador de MongoDB.' })
     @ApiProperty({ description: 'Identificadores de zona del usuario', type: [String] })
     zoneId: string[] | Types.ObjectId[];
-    
+
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) { }
