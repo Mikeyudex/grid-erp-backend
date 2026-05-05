@@ -51,6 +51,11 @@ export class UsersController {
     return this.usersService.update(id, payload);
   }
 
+  @Put('/update-role/:id')
+  updateRole(@Param('id') id: string, @Body('roleId') roleId: string[]) {
+    return this.usersService.updateRole(id, roleId);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);

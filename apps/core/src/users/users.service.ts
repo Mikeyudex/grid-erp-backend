@@ -120,6 +120,33 @@ export class UsersService {
 
     }
 
+    async updateRole(id: string, roleIds: string[]) {
+        try {
+            const roleObjectIds = roleIds.map(roleId => new Types.ObjectId(roleId));
+            const updated = await this.userModel.findByIdAndUpdate(
+                id,
+                { $set: { roleId: roleObjectIds } },
+                { new: true }
+            ).exec();
+
+            if (!updated) {
+                throw new NotFoundException({
+                    statusCode: 404,
+                    message: 'Usuario no encontrado',
+                });
+            }
+
+            return ApiResponse.success('Rol actualizado con éxito', null);
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error al actualizar el rol',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     remove(id: string) {
         return this.userModel.findByIdAndDelete(id);
     }
