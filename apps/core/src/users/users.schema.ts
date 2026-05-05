@@ -13,7 +13,7 @@ export interface IUser {
     password: string,
     otp: string,
     secret: string,
-    roleId: string | Types.ObjectId,
+    roleId: (string | Types.ObjectId)[],
     active: boolean,
     activeOtp: boolean,
     createdAt: Date,
@@ -23,7 +23,7 @@ export interface IUser {
     avatar?: string,
     companyId: string | Types.ObjectId,
     zoneId: (string | Types.ObjectId)[],
-    role?: RoleUserDocument | null
+    role?: RoleUserDocument[] | null
 }
 
 
@@ -80,8 +80,8 @@ export class User extends Document {
     @Prop()
     avatar?: string;
 
-    @Prop({ required: true, ref: RoleUser.name, type: Types.ObjectId })
-    roleId: Types.ObjectId;
+    @Prop({ required: true, ref: RoleUser.name, type: [{ type: Types.ObjectId }] })
+    roleId: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

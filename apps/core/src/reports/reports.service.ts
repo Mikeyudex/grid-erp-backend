@@ -49,16 +49,23 @@ export class ReportsService {
             }
             const report = await this.purchaseOrderModel.aggregate([
                 { $match: filters },
-                { $unwind: "$details" },
+                {
+                    $addFields: {
+                        totalTapetesDoc: { $sum: "$details.quantityItem" },
+                        totalBaseDoc: { $sum: "$details.totalItem" },
+                    },
+                },
                 {
                     $group: {
-                        _id: {
-                            zoneId: "$zoneId",
-                            advisorId: "$createdBy",
-                        },
-                        pedidos: { $addToSet: "$_id" },
-                        tapetes: { $sum: "$details.quantityItem" },
-                        valorBase: { $sum: "$details.totalItem" },
+                        _id: "$orderNumber",
+                        sedeId: { $first: "$zoneId" },
+                        asesorId: { $first: "$createdBy" },
+                        clientId: { $first: "$clientId" },
+                        numeroFactura: { $first: "$orderNumber" },
+                        fecha: { $first: "$deliveryDate" },
+                        pedidos: { $sum: 1 },
+                        tapetes: { $sum: "$totalTapetesDoc" },
+                        valorBase: { $sum: "$totalBaseDoc" },
                         descuento: { $sum: "$discount" },
                         subtotal: { $sum: "$totalOrder" },
                         iva: { $sum: "$tax" },
@@ -74,24 +81,18 @@ export class ReportsService {
                     },
                 },
                 {
-                    $project: {
-                        _id: 0,
-                        sede: "$_id.zoneId",
-                        asesor: "$_id.advisorId",
-                        pedidos: { $size: "$pedidos" },
-                        tapetes: 1,
-                        valorBase: 1,
-                        descuento: 1,
-                        subtotal: 1,
-                        iva: 1,
-                        retencion: 1,
-                        valorTotal: 1,
+                    $lookup: {
+                        from: "customers",
+                        localField: "clientId",
+                        foreignField: "_id",
+                        as: "client",
                     },
                 },
+                { $unwind: { path: "$client", preserveNullAndEmptyArrays: true } },
                 {
                     $lookup: {
                         from: "zones",
-                        localField: "sede",
+                        localField: "sedeId",
                         foreignField: "_id",
                         as: "sede",
                     },
@@ -100,7 +101,7 @@ export class ReportsService {
                 {
                     $lookup: {
                         from: "users",
-                        localField: "asesor",
+                        localField: "asesorId",
                         foreignField: "_id",
                         as: "asesor",
                     },
@@ -108,6 +109,7 @@ export class ReportsService {
                 { $unwind: { path: "$asesor", preserveNullAndEmptyArrays: true } },
                 {
                     $project: {
+                        _id: 0,
                         sede: { $ifNull: ["$sede.name", "Sin sede"] },
                         asesor: {
                             $ifNull: [
@@ -121,6 +123,20 @@ export class ReportsService {
                                 "Sin asesor",
                             ],
                         },
+                        cliente: {
+                            $ifNull: [
+                                {
+                                    $concat: [
+                                        { $ifNull: ["$client.name", ""] },
+                                        " ",
+                                        { $ifNull: ["$client.lastname", ""] },
+                                    ],
+                                },
+                                "Sin cliente",
+                            ],
+                        },
+                        numeroFactura: 1,
+                        fecha: 1,
                         pedidos: 1,
                         tapetes: 1,
                         valorBase: 1,
@@ -132,47 +148,6 @@ export class ReportsService {
                     },
                 },
 
-                //Agregar un documento final con los totales generales
-                {
-                    $group: {
-                        _id: null,
-                        detalles: { $push: "$$ROOT" },
-                        totalPedidos: { $sum: "$pedidos" },
-                        totalTapetes: { $sum: "$tapetes" },
-                        totalValorBase: { $sum: "$valorBase" },
-                        totalDescuento: { $sum: "$descuento" },
-                        totalSubtotal: { $sum: "$subtotal" },
-                        totalIva: { $sum: "$iva" },
-                        totalRetencion: { $sum: "$retencion" },
-                        totalValorTotal: { $sum: "$valorTotal" },
-                    },
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        detalles: {
-                            $concatArrays: [
-                                "$detalles",
-                                [
-                                    {
-                                        sede: "TOTAL GENERAL",
-                                        asesor: "",
-                                        pedidos: "$totalPedidos",
-                                        tapetes: "$totalTapetes",
-                                        valorBase: "$totalValorBase",
-                                        descuento: "$totalDescuento",
-                                        subtotal: "$totalSubtotal",
-                                        iva: "$totalIva",
-                                        retencion: "$totalRetencion",
-                                        valorTotal: "$totalValorTotal",
-                                    },
-                                ],
-                            ],
-                        },
-                    },
-                },
-                { $unwind: "$detalles" },
-                { $replaceRoot: { newRoot: "$detalles" } },
             ]);
 
             return report;
@@ -211,8 +186,36 @@ export class ReportsService {
 
             const report = await this.purchaseOrderModel.aggregate([
                 { $match: filters },
-                { $unwind: "$details" },
-
+                {
+                    $addFields: {
+                        totalTapetesDoc: { $sum: "$details.quantityItem" },
+                        totalBaseDoc: { $sum: "$details.totalItem" },
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$orderNumber",
+                        fecha: { $first: "$deliveryDate" },
+                        zoneId: { $first: "$zoneId" },
+                        createdBy: { $first: "$createdBy" },
+                        clientId: { $first: "$clientId" },
+                        numeroFactura: { $first: "$orderNumber" },
+                        tapetes: { $sum: "$totalTapetesDoc" },
+                        valorBase: { $sum: "$totalBaseDoc" },
+                        descuento: { $sum: "$discount" },
+                        subtotal: { $sum: "$totalOrder" },
+                        iva: { $sum: "$tax" },
+                        retencion: { $sum: { $multiply: ["$totalOrder", 0.025] } },
+                        valorTotal: {
+                            $sum: {
+                                $subtract: [
+                                    { $add: ["$totalOrder", "$tax"] },
+                                    "$discount",
+                                ],
+                            },
+                        },
+                    },
+                },
                 {
                     $lookup: {
                         from: "zones",
@@ -243,7 +246,7 @@ export class ReportsService {
                 {
                     $project: {
                         _id: 0,
-                        fecha: "$deliveryDate",
+                        fecha: 1,
                         sede: { $ifNull: ["$zone.name", "Sin sede"] },
                         asesor: {
                             $ifNull: [
@@ -270,19 +273,14 @@ export class ReportsService {
                             ],
                         },
                         nombreComercial: { $ifNull: ["$client.commercialName", ""] },
-                        numeroFactura: "$orderNumber",
-                        tapetes: "$details.quantityItem",
-                        valorBase: "$details.totalItem",
-                        descuento: "$discount",
-                        subtotal: "$totalOrder",
-                        iva: "$tax",
-                        retencion: { $multiply: ["$totalOrder", 0.025] }, // 2.5% ejemplo
-                        valorTotal: {
-                            $subtract: [
-                                { $add: ["$totalOrder", "$tax"] },
-                                "$discount",
-                            ],
-                        },
+                        numeroFactura: 1,
+                        tapetes: 1,
+                        valorBase: 1,
+                        descuento: 1,
+                        subtotal: 1,
+                        iva: 1,
+                        retencion: 1,
+                        valorTotal: 1,
                     },
                 },
                 { $sort: { fecha: 1 } }, // orden por fecha ascendente
@@ -498,44 +496,6 @@ export class ReportsService {
             }
 
             const report = await this.purchaseOrderModel.aggregate(pipeline);
-
-            // 🔹 Agregar TOTAL GENERAL al final
-            if (report.length > 0) {
-                const totalGeneral = report.reduce(
-                    (acc, curr) => ({
-                        sede: "TOTAL GENERAL",
-                        asesor: "",
-                        cliente: "",
-                        producto: "",
-                        tipoTapete: "",
-                        material: "",
-                        cantidad: acc.cantidad + (curr.cantidad || 0),
-                        valorBase: acc.valorBase + (curr.valorBase || 0),
-                        descuento: acc.descuento + (curr.descuento || 0),
-                        subtotal: acc.subtotal + (curr.subtotal || 0),
-                        iva: acc.iva + (curr.iva || 0),
-                        retencion: acc.retencion + (curr.retencion || 0),
-                        valorTotal: acc.valorTotal + (curr.valorTotal || 0),
-                    }),
-                    {
-                        sede: "TOTAL GENERAL",
-                        asesor: "",
-                        cliente: "",
-                        producto: "",
-                        tipoTapete: "",
-                        material: "",
-                        cantidad: 0,
-                        valorBase: 0,
-                        descuento: 0,
-                        subtotal: 0,
-                        iva: 0,
-                        retencion: 0,
-                        valorTotal: 0,
-                    },
-                );
-
-                report.push(totalGeneral);
-            }
 
             // 🔹 Limpieza de espacios extra
             return report.map((r) => ({

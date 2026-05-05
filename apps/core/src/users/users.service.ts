@@ -76,7 +76,7 @@ export class UsersService {
 
     async create(data: CreateUserDto) {
         try {
-            data.roleId = new MongooseTypes.ObjectId(data.roleId);
+            data.roleId = data.roleId && Array.isArray(data.roleId) ? data.roleId.map((id: any) => new MongooseTypes.ObjectId(id)) : [];
             const newModel = new this.userModel(data);
             const hashPassword = await bcrypt.hash(newModel.password, 10);
             newModel.password = hashPassword;
@@ -112,7 +112,7 @@ export class UsersService {
         userResponse.phone = updated.phone;
         userResponse.name = updated.name;
         userResponse.lastname = updated.lastname;
-        userResponse.roleId = updated.roleId.toString();
+        userResponse.roleId = updated.roleId && Array.isArray(updated.roleId) ? updated.roleId.map((r: any) => r.toString()) : [];
         userResponse.active = updated.active;
         userResponse.zoneId = updated.zoneId && Array.isArray(updated.zoneId) ? updated.zoneId.map((z: any) => z.toString()) : [];
         userResponse.documento = updated.documento;
@@ -249,7 +249,7 @@ export class UsersService {
                 });
             }
 
-            const advisors = await this.userModel.find({ roleId: new MongooseTypes.ObjectId(roleAsesor._id as string) })
+            const advisors = await this.userModel.find({ roleId: { $in: [new MongooseTypes.ObjectId(roleAsesor._id as string)] } })
                 .populate('zoneId')
                 .exec();
             if (!advisors || advisors.length === 0) {
@@ -461,7 +461,7 @@ export class UsersService {
             if (isValid) {
                 let token = this.authService.generateJwtGlobal(user);
                 user = user.toObject();
-                let userParsed = { ...user, roleId: user.roleId?._id, role: user.roleId as any };
+                let userParsed = { ...user, roleId: Array.isArray(user.roleId) ? user.roleId.map((r: any) => r._id || r) : [], role: user.roleId as any };
                 let userDto = new LoginResponseDto(userParsed as IUser);
                 return ApiResponse.success('Código válido', { isValid: true, access_token: token, user: userDto }, HttpStatus.OK);
             } else {

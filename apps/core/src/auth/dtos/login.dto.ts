@@ -21,7 +21,7 @@ export class LoginResponseDto {
     phone: string;
 
     @ApiProperty({ description: "the user' role" })
-    roleId: string | Types.ObjectId;
+    roleId: string[] | Types.ObjectId[];
 
     @ApiProperty({ description: "the user' company" })
     companyId: string;
@@ -33,7 +33,7 @@ export class LoginResponseDto {
 
     zoneId: string[];
 
-    role : RoleUserDocument;
+    role : RoleUserDocument[] | null;
 
     constructor(user: IUser) {
         this.id = user._id?.toString();
@@ -41,7 +41,7 @@ export class LoginResponseDto {
         this.lastname = user.lastname;
         this.email = user.email;
         this.phone = user.phone;
-        this.roleId = user.roleId;
+        this.roleId = user.roleId && Array.isArray(user.roleId) ? user.roleId.map((r: any) => r.toString()) : [];
         this.companyId = user.companyId?.toString();
         this.active = user.active;
         this.activeOtp = user.activeOtp; 

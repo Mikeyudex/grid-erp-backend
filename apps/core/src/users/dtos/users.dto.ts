@@ -34,9 +34,10 @@ export class CreateUserDto {
     readonly password: string;
 
     @IsNotEmpty({ message: 'El atributo roleId es requerido.' })
-    @IsMongoId({ message: 'El atributo roleId debe ser un identificador de MongoDB.' })
-    @IsString({ message: 'El atributo roleId debe ser una cadena de texto.' })
-    roleId: string | Types.ObjectId;
+    @IsArray({ message: 'El atributo roleId debe ser un arreglo.' })
+    @IsMongoId({ each: true, message: 'Cada elemento en roleId debe ser un identificador de MongoDB.' })
+    @ApiProperty({ description: 'Identificadores de rol del usuario', type: [String] })
+    roleId: string[] | Types.ObjectId[];
 
     @IsOptional()
     @IsArray({ message: 'El atributo zoneId debe ser un arreglo.' })
@@ -54,7 +55,7 @@ export class UpdatedResponseDto {
     phone: string;
     name: string;
     lastname: string;
-    roleId: string;
+    roleId: string[];
     active: boolean;
     zoneId: string[];
     documento: string;
