@@ -283,51 +283,7 @@ export class ReportsService {
                         valorTotal: 1,
                     },
                 },
-                { $sort: { fecha: 1 } }, // orden por fecha ascendente
-
-                // Totales generales
-                {
-                    $group: {
-                        _id: null,
-                        detalles: { $push: "$$ROOT" },
-                        totalValorBase: { $sum: "$valorBase" },
-                        totalDescuento: { $sum: "$descuento" },
-                        totalSubtotal: { $sum: "$subtotal" },
-                        totalIva: { $sum: "$iva" },
-                        totalRetencion: { $sum: "$retencion" },
-                        totalValorTotal: { $sum: "$valorTotal" },
-                        totalTapetes: { $sum: "$tapetes" },
-                    },
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        detalles: {
-                            $concatArrays: [
-                                "$detalles",
-                                [
-                                    {
-                                        fecha: null,
-                                        sede: "TOTAL GENERAL",
-                                        asesor: "",
-                                        cliente: "",
-                                        nombreComercial: "",
-                                        numeroFactura: "",
-                                        tapetes: "$totalTapetes",
-                                        valorBase: "$totalValorBase",
-                                        descuento: "$totalDescuento",
-                                        subtotal: "$totalSubtotal",
-                                        iva: "$totalIva",
-                                        retencion: "$totalRetencion",
-                                        valorTotal: "$totalValorTotal",
-                                    },
-                                ],
-                            ],
-                        },
-                    },
-                },
-                { $unwind: "$detalles" },
-                { $replaceRoot: { newRoot: "$detalles" } },
+                { $sort: { fecha: 1 } },
             ]);
             //Limpieza de espacios extra en nombres
             return report.map((r) => ({

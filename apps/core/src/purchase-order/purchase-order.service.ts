@@ -374,27 +374,20 @@ export class PurchaseOrderService {
                 });
             }
             let orderIdCasted = new Types.ObjectId(id);
-            let order = await this.purchaseOrderModel.findById(orderIdCasted).populate('clientId').lean();
-            let detailsNew = [];
-            let historyNew = [];
-            let collapsedDetails = this.compactDetails(order.details);
-            for (let index = 0; index < collapsedDetails.length; index++) {
-                let product = await this.productsService.findOne(collapsedDetails[index].productId);
-                detailsNew.push({
-                    ...collapsedDetails[index],
-                    productName: product?.name ?? 'Producto eliminado',
-                });
-            }
-            for (let index = 0; index < order.history.length; index++) {
-                let userId = new Types.ObjectId(order.history[index].userId);
-                let user = await this.usersService.findOne(userId);
-                historyNew.push({
-                    ...order.history[index],
-                    userName: user ? user.name + ' ' + user.lastname : 'Usuario eliminado',
-                });
-            }
-            order.details = detailsNew;
-            order.history = historyNew;
+            let order = await this.purchaseOrderModel
+                .findById(orderIdCasted)
+                .populate('clientId')
+                .populate({ path: 'zoneId', select: 'name' })
+                .populate({ path: 'createdBy', select: 'name lastname' })
+                .populate({ path: 'methodOfPayment', populate: { path: 'accountId', select: 'name' } })
+                .lean();
+            const collapsedDetails = this.compactDetails(order.details);
+            order.details = await Promise.all(
+                collapsedDetails.map(async (detail) => {
+                    const product = await this.productsService.findOne(detail.productId);
+                    return { ...detail, productName: product?.name ?? 'Producto eliminado' };
+                })
+            );
             return ApiResponse.success('Orden obtenida con éxito', order);
         } catch (error) {
             throw new InternalServerErrorException({
@@ -875,6 +868,35 @@ export class PurchaseOrderService {
         return IncomeTypeOperation.SALES;
     }
 
-
-
+    async getByOrderNumber(orderNumber: number) {
+        try {
+            let order = await this.purchaseOrderModel
+                .findOne({ orderNumber })
+                .populate('clientId')
+                .populate({ path: 'zoneId', select: 'name' })
+                .populate({ path: 'createdBy', select: 'name lastname' })
+                .populate({ path: 'methodOfPayment', populate: { path: 'accountId', select: 'name' } })
+                .lean();
+            if (!order) {
+                throw new NotFoundException({
+                    statusCode: 404,
+                    message: `Orden #${orderNumber} no encontrada`,
+                });
+            }
+            const collapsedDetails = this.compactDetails(order.details);
+            order.details = await Promise.all(
+                collapsedDetails.map(async (detail) => {
+                    const product = await this.productsService.findOne(detail.productId);
+                    return { ...detail, productName: product?.name ?? 'Producto eliminado' };
+                })
+            );
+            return ApiResponse.success('Orden obtenida con éxito', order);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
 }

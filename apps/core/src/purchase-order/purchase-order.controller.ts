@@ -63,6 +63,15 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.getById(id);
     }
 
+    @Get('getByOrderNumber/:orderNumber')
+    async getByOrderNumber(@Param('orderNumber') orderNumber: string) {
+        const num = parseInt(orderNumber, 10);
+        if (isNaN(num)) {
+            throw new BadRequestException('orderNumber debe ser un número válido');
+        }
+        return this.purchaseOrderService.getByOrderNumber(num);
+    }
+
     @Put('update-order-status/:id/:userId')
     async updateOrderStatus(@Param('id') id: string, @Param('userId') userId: string, @Body() dto: { status: string }) {
         return this.purchaseOrderService.updateOrderStatus(id, dto.status, userId);
