@@ -382,7 +382,7 @@ export class PurchaseOrderService {
                 let product = await this.productsService.findOne(collapsedDetails[index].productId);
                 detailsNew.push({
                     ...collapsedDetails[index],
-                    productName: product.name,
+                    productName: product?.name ?? 'Producto eliminado',
                 });
             }
             for (let index = 0; index < order.history.length; index++) {
@@ -390,7 +390,7 @@ export class PurchaseOrderService {
                 let user = await this.usersService.findOne(userId);
                 historyNew.push({
                     ...order.history[index],
-                    userName: user.name + ' ' + user.lastname,
+                    userName: user ? user.name + ' ' + user.lastname : 'Usuario eliminado',
                 });
             }
             order.details = detailsNew;

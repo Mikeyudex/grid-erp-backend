@@ -140,13 +140,25 @@ export class RoleUserService {
 
     async getResourcesByRole(id: string) {
         try {
-            let roleUser = await this.roleUserModel.findById(id).populate('resources').exec();
-            if (!roleUser) throw new NotFoundException({
+            const ids = id.split(',').map(s => s.trim()).filter(Boolean);
+            const roleUsers = await this.roleUserModel.find({ _id: { $in: ids } }).populate('resources').exec();
+            if (!roleUsers || roleUsers.length === 0) throw new NotFoundException({
                 statusCode: 404,
                 message: 'Rol no encontrado',
                 error: 'rol no encontrado',
             });
-            return ApiResponse.success('Recursos obtenidos correctamente', roleUser.resources, HttpStatus.OK);
+            const seen = new Set<string>();
+            const mergedResources = [];
+            for (const roleUser of roleUsers) {
+                for (const resource of roleUser.resources as any[]) {
+                    const key = resource._id?.toString() ?? resource.toString();
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        mergedResources.push(resource);
+                    }
+                }
+            }
+            return ApiResponse.success('Recursos obtenidos correctamente', mergedResources, HttpStatus.OK);
         } catch (error) {
             throw new InternalServerErrorException({
                 statusCode: 500,
