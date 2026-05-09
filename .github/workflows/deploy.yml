@@ -3,11 +3,12 @@ name: Deploy app Backend GridErp
 on:
     push:
         branches:
-            - main
-            - sandbox
+            #- main
+            #- sandbox
+            - master
     pull_request:
         branches:
-            - main
+            #- main
 
 jobs:
     deploy_prod:
