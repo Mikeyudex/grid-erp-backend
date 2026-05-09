@@ -105,6 +105,12 @@ export class UsersService {
     }
 
     async update(id: string, changes: UpdateUserDto) {
+        if (changes.roleId && Array.isArray(changes.roleId)) {
+            changes.roleId = changes.roleId.map((rId: any) => new Types.ObjectId(rId));
+        }
+        if (changes.zoneId && Array.isArray(changes.zoneId)) {
+            changes.zoneId = changes.zoneId.map((zId: any) => new Types.ObjectId(zId));
+        }
         let updated = await this.userModel.findByIdAndUpdate(id, { $set: changes }, { new: true }).exec();
         let userResponse = new UpdatedResponseDto();
         userResponse.id = updated._id.toString();
@@ -278,7 +284,18 @@ export class UsersService {
                 });
             }
 
-            const advisors = await this.userModel.find({ roleId: { $in: [new MongooseTypes.ObjectId(roleAsesor._id as string)] } })
+            const roleIdStr = roleAsesor._id.toString();
+            const roleIdObj = new MongooseTypes.ObjectId(roleIdStr);
+
+            const advisors = await this.userModel.find({
+                $or: [
+                    { roleId: { $in: [roleIdObj] } },
+                    { roleId: { $in: [roleIdStr] } },
+                    // Also support the old singular format just in case
+                    { roleId: roleIdObj },
+                    { roleId: roleIdStr }
+                ]
+            })
                 .populate('zoneId')
                 .exec();
             if (!advisors || advisors.length === 0) {
