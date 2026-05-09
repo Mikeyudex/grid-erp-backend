@@ -41,12 +41,17 @@ export class LoginResponseDto {
         this.lastname = user.lastname;
         this.email = user.email;
         this.phone = user.phone;
-        this.roleId = user.roleId && Array.isArray(user.roleId) ? user.roleId.map((r: any) => r.toString()) : [];
+        let rIds = Array.isArray(user.roleId) ? user.roleId : (user.roleId ? [user.roleId] : []);
+        this.roleId = rIds.map((r: any) => r._id ? r._id.toString() : r.toString());
+        
         this.companyId = user.companyId?.toString();
         this.active = user.active;
         this.activeOtp = user.activeOtp; 
-        this.zoneId = user.zoneId && Array.isArray(user.zoneId) ? user.zoneId.map((z: any) => z.toString()) : [];
-        this.role = user.role;
+        
+        let zIds = Array.isArray(user.zoneId) ? user.zoneId : (user.zoneId ? [user.zoneId] : []);
+        this.zoneId = zIds.map((z: any) => z._id ? z._id.toString() : z.toString());
+        
+        this.role = Array.isArray(user.role) ? user.role : (user.role ? [user.role] : []);
     }
 
 }

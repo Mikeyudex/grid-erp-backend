@@ -33,8 +33,11 @@ export class AuthService {
     }
 
     generateJwt(user: User) {
-        const payload: PayloadToken = { sub: user.id, role: user?.roleId, companyId: user?.companyId?.toString() };
-        return ApiResponse.success('Login exitoso', { access_token: this.jwtService.sign(payload), user: new LoginResponseDto(user as IUser) }, HttpStatus.OK);
+        let userObj = typeof (user as any).toObject === 'function' ? (user as any).toObject() : user;
+        let rIds = Array.isArray(userObj?.roleId) ? userObj.roleId : (userObj?.roleId ? [userObj.roleId] : []);
+        let userParsed = { ...userObj, roleId: rIds.map((r: any) => r._id || r), role: rIds as any };
+        const payload: PayloadToken = { sub: userObj._id || userObj.id, role: userParsed.roleId, companyId: userObj?.companyId?.toString() };
+        return ApiResponse.success('Login exitoso', { access_token: this.jwtService.sign(payload), user: new LoginResponseDto(userParsed as IUser) }, HttpStatus.OK);
     }
 
     validateToken(token: string) {

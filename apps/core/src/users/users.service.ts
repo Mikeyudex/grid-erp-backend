@@ -97,7 +97,7 @@ export class UsersService {
     }
 
     findByEmail(email: string) {
-        return this.userModel.findOne({ email }).exec();
+        return this.userModel.findOne({ email }).populate('roleId').exec();
     }
 
     findById(id: string) {
@@ -112,9 +112,11 @@ export class UsersService {
         userResponse.phone = updated.phone;
         userResponse.name = updated.name;
         userResponse.lastname = updated.lastname;
-        userResponse.roleId = updated.roleId && Array.isArray(updated.roleId) ? updated.roleId.map((r: any) => r.toString()) : [];
+        let rIds = Array.isArray(updated.roleId) ? updated.roleId : (updated.roleId ? [updated.roleId] : []);
+        userResponse.roleId = rIds.map((r: any) => r.toString());
         userResponse.active = updated.active;
-        userResponse.zoneId = updated.zoneId && Array.isArray(updated.zoneId) ? updated.zoneId.map((z: any) => z.toString()) : [];
+        let zIds = Array.isArray(updated.zoneId) ? updated.zoneId : (updated.zoneId ? [updated.zoneId] : []);
+        userResponse.zoneId = zIds.map((z: any) => z.toString());
         userResponse.documento = updated.documento;
         return userResponse;
 
@@ -488,7 +490,8 @@ export class UsersService {
             if (isValid) {
                 let token = this.authService.generateJwtGlobal(user);
                 user = user.toObject();
-                let userParsed = { ...user, roleId: Array.isArray(user.roleId) ? user.roleId.map((r: any) => r._id || r) : [], role: user.roleId as any };
+                let rIds = Array.isArray(user.roleId) ? user.roleId : (user.roleId ? [user.roleId] : []);
+                let userParsed = { ...user, roleId: rIds.map((r: any) => r._id || r), role: rIds as any };
                 let userDto = new LoginResponseDto(userParsed as IUser);
                 return ApiResponse.success('Código válido', { isValid: true, access_token: token, user: userDto }, HttpStatus.OK);
             } else {
