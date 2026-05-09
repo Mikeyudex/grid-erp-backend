@@ -444,7 +444,7 @@ export class UsersService {
         try {
             let iv = Buffer.from(this.configService.iv, "hex");
             let encryptedKey = Buffer.from(this.configService.encryptionKey, "hex");
-            const cipher = crypto.createCipheriv("aes-256-cbc", encryptedKey, iv);
+            const cipher = crypto.createCipheriv("aes-256-cbc", encryptedKey as any, iv as any);
             let encrypted = cipher.update(value, "utf-8", "hex");
             encrypted += cipher.final("hex");
             return `${this.configService.iv}:${encrypted}`;
@@ -463,8 +463,8 @@ export class UsersService {
             const [iv, encrypted] = encryptedValue.split(":");
             const decipher = crypto.createDecipheriv(
                 "aes-256-cbc",
-                encryptedKey,
-                Buffer.from(iv, "hex")
+                encryptedKey as any,
+                Buffer.from(iv, "hex") as any
             );
             let decrypted = decipher.update(encrypted, "hex", "utf-8");
             decrypted += decipher.final("utf-8");

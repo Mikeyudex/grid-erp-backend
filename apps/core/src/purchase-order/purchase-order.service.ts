@@ -382,12 +382,12 @@ export class PurchaseOrderService {
                 .populate({ path: 'methodOfPayment', populate: { path: 'accountId', select: 'name' } })
                 .lean();
             const collapsedDetails = this.compactDetails(order.details);
-            order.details = await Promise.all(
+            order.details = (await Promise.all(
                 collapsedDetails.map(async (detail) => {
                     const product = await this.productsService.findOne(detail.productId);
                     return { ...detail, productName: product?.name ?? 'Producto eliminado' };
                 })
-            );
+            )) as any;
             return ApiResponse.success('Orden obtenida con éxito', order);
         } catch (error) {
             throw new InternalServerErrorException({
@@ -884,12 +884,12 @@ export class PurchaseOrderService {
                 });
             }
             const collapsedDetails = this.compactDetails(order.details);
-            order.details = await Promise.all(
+            order.details = (await Promise.all(
                 collapsedDetails.map(async (detail) => {
                     const product = await this.productsService.findOne(detail.productId);
                     return { ...detail, productName: product?.name ?? 'Producto eliminado' };
                 })
-            );
+            )) as any;
             return ApiResponse.success('Orden obtenida con éxito', order);
         } catch (error) {
             throw new InternalServerErrorException({
