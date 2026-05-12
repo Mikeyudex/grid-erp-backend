@@ -50,12 +50,14 @@ export class UsersService {
             let usersMap = users.map((user: User) => {
                 return {
                     id: user._id.toString(),
+                    _id: user._id.toString(),
                     email: user?.email,
                     phone: user?.phone,
                     name: user?.name,
                     lastname: user?.lastname,
                     role: user?.roleId,
                     active: user?.active,
+                    skipOtp: user?.skipOtp ?? false,
                     zoneId: user?.zoneId && Array.isArray(user.zoneId) ? user.zoneId.map((z: any) => z.toString()) : [],
                     documento: user?.documento,
                 }
@@ -150,6 +152,27 @@ export class UsersService {
             throw new InternalServerErrorException({
                 statusCode: 500,
                 message: 'Error al actualizar el rol',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async updateSkipOtp(id: string, skipOtp: boolean) {
+        try {
+            const updated = await this.userModel.findByIdAndUpdate(
+                id,
+                { $set: { skipOtp: !!skipOtp } },
+                { new: true }
+            ).exec();
+            if (!updated) {
+                throw new NotFoundException({ statusCode: 404, message: 'Usuario no encontrado' });
+            }
+            return ApiResponse.success('Configuración OTP actualizada', { skipOtp: updated.skipOtp });
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error al actualizar la configuración OTP',
                 error: error.message || 'Unknown error',
             });
         }

@@ -56,6 +56,11 @@ export class UsersController {
     return this.usersService.updateRole(id, roleId);
   }
 
+  @Put('/skip-otp/:id')
+  updateSkipOtp(@Param('id') id: string, @Body('skipOtp') skipOtp: boolean) {
+    return this.usersService.updateSkipOtp(id, skipOtp);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);

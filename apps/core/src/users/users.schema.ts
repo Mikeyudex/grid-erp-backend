@@ -16,6 +16,7 @@ export interface IUser {
     roleId: (string | Types.ObjectId)[],
     active: boolean,
     activeOtp: boolean,
+    skipOtp?: boolean,
     createdAt: Date,
     updatedAt: Date,
     resetPasswordToken?: string,
@@ -61,6 +62,9 @@ export class User extends Document {
 
     @Prop({ required: true, default: false })
     activeOtp: boolean;
+
+    @Prop({ required: false, default: false })
+    skipOtp: boolean;
 
     @Prop({ required: false, ref: 'Zone', type: [{ type: Types.ObjectId }] })
     zoneId: Types.ObjectId[];

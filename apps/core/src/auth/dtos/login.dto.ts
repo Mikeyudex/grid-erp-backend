@@ -31,6 +31,8 @@ export class LoginResponseDto {
 
     activeOtp: boolean;
 
+    skipOtp: boolean;
+
     zoneId: string[];
 
     role : RoleUserDocument[] | null;
@@ -46,8 +48,9 @@ export class LoginResponseDto {
         
         this.companyId = user.companyId?.toString();
         this.active = user.active;
-        this.activeOtp = user.activeOtp; 
-        
+        this.activeOtp = user.activeOtp;
+        this.skipOtp = user.skipOtp ?? false;
+
         let zIds = Array.isArray(user.zoneId) ? user.zoneId : (user.zoneId ? [user.zoneId] : []);
         this.zoneId = zIds.map((z: any) => z._id ? z._id.toString() : z.toString());
         
