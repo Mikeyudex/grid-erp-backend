@@ -117,9 +117,19 @@ export class PreciosTapeteMaterialService {
                     const precioFinal = precioBase * cantidad;
                     if (typeCustomerData.percentDiscount > 0) {
                         const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                        return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                        return ApiResponse.success('Precio final calculado correctamente con descuento', {
+                            precioFinal: precioFinal - discount,
+                            precioSinDescuento: precioFinal,
+                            descuento: discount,
+                            porcentajeDescuento: typeCustomerData.percentDiscount
+                        }, HttpStatus.OK);
                     }
-                    return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+                    return ApiResponse.success('Precio final calculado correctamente', {
+                        precioFinal,
+                        precioSinDescuento: precioFinal,
+                        descuento: 0,
+                        porcentajeDescuento: 0
+                    }, HttpStatus.OK);
                 } catch (error) {
                     this.logger.error('Error al calcular el precio final', error);
                     return ApiResponse.success('Precio final calculado correctamente', { precioFinal: producto.salePrice, errorMessage: error }, HttpStatus.OK);
@@ -133,9 +143,19 @@ export class PreciosTapeteMaterialService {
             const precioFinal = precioAjustado * cantidad;
             if (typeCustomerData.percentDiscount > 0) {
                 const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                return ApiResponse.success('Precio final calculado correctamente con descuento', {
+                    precioFinal: precioFinal - discount,
+                    precioSinDescuento: precioFinal,
+                    descuento: discount,
+                    porcentajeDescuento: typeCustomerData.percentDiscount
+                }, HttpStatus.OK);
             }
-            return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+            return ApiResponse.success('Precio final calculado correctamente', {
+                precioFinal,
+                precioSinDescuento: precioFinal,
+                descuento: 0,
+                porcentajeDescuento: 0
+            }, HttpStatus.OK);
         } catch (error) {
             this.logger.error('Error al calcular el precio final', error);
             throw new InternalServerErrorException({
@@ -168,9 +188,19 @@ export class PreciosTapeteMaterialService {
                     const precioFinal = precioBase * cantidad;
                     if (typeCustomerData.percentDiscount > 0) {
                         const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                        return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                        return ApiResponse.success('Precio final calculado correctamente con descuento', {
+                            precioFinal: precioFinal - discount,
+                            precioSinDescuento: precioFinal,
+                            descuento: discount,
+                            porcentajeDescuento: typeCustomerData.percentDiscount
+                        }, HttpStatus.OK);
                     }
-                    return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+                    return ApiResponse.success('Precio final calculado correctamente', {
+                        precioFinal,
+                        precioSinDescuento: precioFinal,
+                        descuento: 0,
+                        porcentajeDescuento: 0
+                    }, HttpStatus.OK);
                 } catch (error) {
                     this.logger.error('Error al calcular el precio final', error);
                     return ApiResponse.success('Precio final calculado correctamente', { precioFinal: salePrice, errorMessage: error }, HttpStatus.OK);
@@ -184,9 +214,19 @@ export class PreciosTapeteMaterialService {
             const precioFinal = precioAjustado * cantidad;
             if (typeCustomerData.percentDiscount > 0) {
                 const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                return ApiResponse.success('Precio final calculado correctamente con descuento', {
+                    precioFinal: precioFinal - discount,
+                    precioSinDescuento: precioFinal,
+                    descuento: discount,
+                    porcentajeDescuento: typeCustomerData.percentDiscount
+                }, HttpStatus.OK);
             }
-            return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+            return ApiResponse.success('Precio final calculado correctamente', {
+                precioFinal,
+                precioSinDescuento: precioFinal,
+                descuento: 0,
+                porcentajeDescuento: 0
+            }, HttpStatus.OK);
 
         } catch (error) {
             this.logger.error('Error al calcular el precio final', error);
@@ -230,16 +270,36 @@ export class PreciosTapeteMaterialService {
 
                 if (typeCustomerData.percentDiscount > 0) {
                     const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                    return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                    return ApiResponse.success('Precio final calculado correctamente con descuento', {
+                        precioFinal: precioFinal - discount,
+                        precioSinDescuento: precioFinal,
+                        descuento: discount,
+                        porcentajeDescuento: typeCustomerData.percentDiscount
+                    }, HttpStatus.OK);
                 }
-                return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+                return ApiResponse.success('Precio final calculado correctamente', {
+                    precioFinal,
+                    precioSinDescuento: precioFinal,
+                    descuento: 0,
+                    porcentajeDescuento: 0
+                }, HttpStatus.OK);
             } else {
                 let precioFinal = salePriceFromApp * cantidad;
                 if (typeCustomerData.percentDiscount > 0) {
                     const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
-                    return ApiResponse.success('Precio final calculado correctamente con descuento', { precioFinal: precioFinal - discount }, HttpStatus.OK);
+                    return ApiResponse.success('Precio final calculado correctamente con descuento', {
+                        precioFinal: precioFinal - discount,
+                        precioSinDescuento: precioFinal,
+                        descuento: discount,
+                        porcentajeDescuento: typeCustomerData.percentDiscount
+                    }, HttpStatus.OK);
                 }
-                return ApiResponse.success('Precio final calculado correctamente', { precioFinal }, HttpStatus.OK);
+                return ApiResponse.success('Precio final calculado correctamente', {
+                    precioFinal,
+                    precioSinDescuento: precioFinal,
+                    descuento: 0,
+                    porcentajeDescuento: 0
+                }, HttpStatus.OK);
             }
         } catch (error) {
             this.logger.error('Error al calcular el precio final', error);
