@@ -14,14 +14,14 @@ export class PurchaseOrderController {
     }
 
     @Get('findAll')
-    async findAll(@Query('page') page: number, @Query('limit') limit: number, @Query('zoneId') zoneId: string) {
+    async findAll(@Query('page') page: number, @Query('limit') limit: number, @Query('zoneId') zoneId: string, @Query('status') status?: string) {
         if (!page || !limit) {
             throw new BadRequestException('Faltan parámetros');
         }
         if (page < 1 || limit < 1) {
             throw new BadRequestException('page y limit deben ser mayores a 1');
         }
-        return this.purchaseOrderService.findAll(page, limit, zoneId);
+        return this.purchaseOrderService.findAll(page, limit, zoneId, status);
     }
 
     @UseGuards(JwtAuthGuard)

@@ -240,14 +240,22 @@ export class PurchaseOrderService {
         }
     }
 
-    async findAll(page: number, limit: number, zoneId: string) {
+    async findAll(page: number, limit: number, zoneId: string, status?: string) {
         try {
-            let orders = await this.purchaseOrderDAO.findPaginated(page, limit, {
-                status: {
+            let filter: any = {};
+            if (zoneId) {
+                filter.zoneId = new Types.ObjectId(zoneId);
+            }
+
+            if (status) {
+                filter.status = status;
+            } else {
+                filter.status = {
                     $in: [PurchaseStatusEnum.ASIGNADO, PurchaseStatusEnum.FABRICACION]
-                },
-                zoneId: new Types.ObjectId(zoneId)
-            });
+                };
+            }
+
+            let orders = await this.purchaseOrderDAO.findPaginated(page, limit, filter);
             return ApiResponse.success('Ordenes obtenidas con éxito', orders);
         } catch (error) {
             throw new InternalServerErrorException({
