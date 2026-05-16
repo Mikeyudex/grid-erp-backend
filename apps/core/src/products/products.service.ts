@@ -692,6 +692,22 @@ export class ProductsService {
 
   }
 
+  /**
+   * Construye un RegExp que ignora acentos/diacríticos además de mayúsculas.
+   * Ej: "baul" matchea "BAÚL", "tercel" matchea "TERCEL SD (1997)".
+   */
+  private buildAccentInsensitiveRegex(term: string): RegExp {
+    const map: Record<string, string> = {
+      a: '[aáàäâã]', e: '[eéèëê]', i: '[iíìïî]',
+      o: '[oóòöôõ]', u: '[uúùüû]', n: '[nñ]',
+      A: '[AÁÀÄÂÃaáàäâã]', E: '[EÉÈËÊeéèëê]', I: '[IÍÌÏÎiíìïî]',
+      O: '[OÓÒÖÔÕoóòöôõ]', U: '[UÚÙÜÛuúùüû]', N: '[NÑnñ]',
+    };
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escapar chars especiales regex
+    const pattern = escaped.replace(/[aeiounAEIOUN]/g, (ch) => map[ch] ?? ch);
+    return new RegExp(pattern, 'i');
+  }
+
   async searchProductByFullText(
     search?: string,
     typeProduct?: string,
@@ -701,52 +717,46 @@ export class ProductsService {
     try {
       const filtersBase: any = {};
 
-      // 1️⃣ Filtrar por tipo de producto si llega
+      // 1️⃣ Filtrar por tipo de producto si llega — fallo suave si no existe
       if (typeProduct) {
         const typeProductDoc = await this.typeProductModel
-          .findOne({ name: new RegExp(typeProduct, 'i') })
+          .findOne({ name: new RegExp(typeProduct.trim(), 'i') })
           .lean();
 
-        if (!typeProductDoc) {
-          throw new NotFoundException(`TypeProduct "${typeProduct}" not found`);
+        if (typeProductDoc) {
+          filtersBase.id_type_product = typeProductDoc._id;
         }
-
-        filtersBase.id_type_product = typeProductDoc._id;
+        // Si no se encuentra el tipo, se omite el filtro para no devolver vacío
       }
 
       // 2️⃣ Inicializamos filtro final
       let finalFilter: any = { ...filtersBase };
 
-      // 3️⃣ Si hay texto de búsqueda → construir búsqueda inteligente
+      // 3️⃣ Si hay texto de búsqueda → construir búsqueda insensible a acentos y mayúsculas
       if (search && search.trim() !== '') {
-        const normalized = search.trim();
-        const useRegex = normalized.length < 4; // búsquedas cortas → regex
+        const accentRegex = this.buildAccentInsensitiveRegex(search.trim());
 
-        // A) Buscar coincidencias por nombre del producto
-        let productQuery: any = {
+        // A) Buscar por nombre del producto
+        const productQuery: any = {
           ...filtersBase,
-          name: useRegex
-            ? new RegExp(normalized, 'i')
-            : { $regex: normalized, $options: 'i' } // evitamos $text si no hay índice
+          name: accentRegex,
         };
 
-        // B) Buscar marcas (categorías)
+        // B) Buscar marcas (categorías) que coincidan
         const matchedCategories = await this.productCategoryModel
-          .find({
-            name: new RegExp(normalized, 'i')
-          })
+          .find({ name: accentRegex })
           .select('_id')
           .lean();
 
         const categoryIds = matchedCategories.map(c => c._id);
 
-        // C) Si coincide con marca, agregamos OR
+        // C) OR: nombre o categoría
         finalFilter = {
           ...filtersBase,
           $or: [
-            productQuery, // buscar por nombre
-            { id_category: { $in: categoryIds } } // buscar por marca
-          ]
+            productQuery,
+            ...(categoryIds.length > 0 ? [{ id_category: { $in: categoryIds } }] : []),
+          ],
         };
       }
 
