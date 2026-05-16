@@ -189,6 +189,9 @@ export class PurchaseOrderService {
             if (dto.notes !== undefined) update.notes = dto.notes;
             if (dto.status) update.status = dto.status;
 
+            // Fetch the current order to get its methodOfPayment income IDs
+            const currentOrder = await this.purchaseOrderModel.findById(id).lean();
+
             const updated = await this.purchaseOrderModel.findByIdAndUpdate(
                 id,
                 { $set: update },
@@ -197,6 +200,22 @@ export class PurchaseOrderService {
 
             if (!updated) {
                 throw new NotFoundException(`Pedido con ID ${id} no encontrado`);
+            }
+
+            // Update linked income records with the new payment values from the payload
+            if (dto.methodOfPayment?.length > 0 && currentOrder?.methodOfPayment?.length > 0) {
+                const existingIncomeIds = currentOrder.methodOfPayment as Types.ObjectId[];
+                const updateCount = Math.min(dto.methodOfPayment.length, existingIncomeIds.length);
+                for (let i = 0; i < updateCount; i++) {
+                    const incomeId = existingIncomeIds[i];
+                    const paymentDto = dto.methodOfPayment[i];
+                    if (incomeId && paymentDto.value !== undefined) {
+                        await this.incomeModel.findByIdAndUpdate(
+                            incomeId,
+                            { $set: { value: paymentDto.value, updatedAt: getCurrentUTCDate() } }
+                        );
+                    }
+                }
             }
 
             return ApiResponse.success('Pedido actualizado con éxito', updated, HttpStatus.OK);
