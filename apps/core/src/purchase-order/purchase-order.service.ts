@@ -167,18 +167,96 @@ export class PurchaseOrderService {
                 throw new BadRequestException('id no es un ObjectId válido');
             }
 
+            // 1. Fetch current order to know which income IDs are already linked
+            const currentOrder = await this.purchaseOrderModel.findById(id).lean();
+            if (!currentOrder) {
+                throw new NotFoundException(`Pedido con ID ${id} no encontrado`);
+            }
+
+            // 2. Expand details and recalculate totals
             const details = dto.details.map(detail => ({
                 ...detail,
                 productId: new Types.ObjectId(detail.productId as string),
             }));
-
             const expandedDetails = this.expandDetails(details as CreatePurchaseOrderItemDto[]);
             const totalOrder = expandedDetails.reduce((acc, item) => acc + item.totalItem, 0);
 
+            // 3. Process methodOfPayment:
+            //    - Existing incomes (same position) → update value/account/date
+            //    - New positions → resolve account/advance and create a new Income record
+            const newIncomeIds: Types.ObjectId[] = [];
+            const existingIncomeIds: Types.ObjectId[] = (currentOrder.methodOfPayment || []) as Types.ObjectId[];
+
+            for (let i = 0; i < dto.methodOfPayment.length; i++) {
+                const paymentDto = { ...dto.methodOfPayment[i] };
+
+                if (paymentDto.customerId) {
+                    paymentDto.customerId = new Types.ObjectId(paymentDto.customerId as string);
+                }
+                const accountObjectId = paymentDto.accountId
+                    ? new Types.ObjectId(paymentDto.accountId as string)
+                    : null;
+                paymentDto.accountId = accountObjectId;
+
+                const existingIncomeId = existingIncomeIds[i];
+
+                if (existingIncomeId) {
+                    // Update the existing Income record in-place
+                    await this.incomeModel.findByIdAndUpdate(
+                        existingIncomeId,
+                        {
+                            $set: {
+                                value: paymentDto.value,
+                                accountId: accountObjectId,
+                                paymentDate: paymentDto.paymentDate,
+                                customerId: paymentDto.customerId,
+                                updatedAt: getCurrentUTCDate(),
+                            },
+                        }
+                    );
+                    newIncomeIds.push(existingIncomeId);
+                } else {
+                    // New payment slot → resolve account / advance and create Income
+                    let account = await this.accountModel.findById(accountObjectId).lean().catch(() => null);
+                    let advance = null;
+                    if (!account) {
+                        advance = await this.incomeModel.findById(accountObjectId?.toString()).catch(() => null);
+                    }
+
+                    let operationType: IncomeTypeOperation;
+                    if (advance) {
+                        operationType = IncomeTypeOperation.ANTICIPO;
+                    } else if (account) {
+                        operationType = this.resolveOperationTypeFromAccount(account);
+                    } else {
+                        throw new NotFoundException(`Cuenta o anticipo con id ${accountObjectId} no encontrado`);
+                    }
+
+                    paymentDto.typeOperation = operationType;
+                    paymentDto.hasCurrentAdvancePayment = (operationType === IncomeTypeOperation.ANTICIPO);
+                    paymentDto.purchaseOrderId = new Types.ObjectId(id);
+
+                    if ([IncomeTypeOperation.SALES, IncomeTypeOperation.RECEIPTS].includes(operationType)) {
+                        paymentDto.hasCurrentAdvancePayment = false;
+                        const incomeDoc = await this.incomeService.create(paymentDto);
+                        newIncomeIds.push(incomeDoc._id as Types.ObjectId);
+                    } else if (operationType === IncomeTypeOperation.ANTICIPO) {
+                        await this.incomeModel.findByIdAndUpdate(accountObjectId, {
+                            hasCurrentAdvancePayment: false,
+                            purchaseOrderId: new Types.ObjectId(id),
+                            updatedAt: getCurrentUTCDate(),
+                        });
+                        newIncomeIds.push(accountObjectId);
+                    }
+                }
+            }
+
+            // 4. Build the update payload and persist
             const update: any = {
                 details: expandedDetails,
                 totalOrder,
                 itemsQuantity: expandedDetails.length,
+                methodOfPayment: newIncomeIds,
                 updatedAt: getCurrentUTCDate(),
             };
 
@@ -189,34 +267,11 @@ export class PurchaseOrderService {
             if (dto.notes !== undefined) update.notes = dto.notes;
             if (dto.status) update.status = dto.status;
 
-            // Fetch the current order to get its methodOfPayment income IDs
-            const currentOrder = await this.purchaseOrderModel.findById(id).lean();
-
             const updated = await this.purchaseOrderModel.findByIdAndUpdate(
                 id,
                 { $set: update },
                 { new: true }
             );
-
-            if (!updated) {
-                throw new NotFoundException(`Pedido con ID ${id} no encontrado`);
-            }
-
-            // Update linked income records with the new payment values from the payload
-            if (dto.methodOfPayment?.length > 0 && currentOrder?.methodOfPayment?.length > 0) {
-                const existingIncomeIds = currentOrder.methodOfPayment as Types.ObjectId[];
-                const updateCount = Math.min(dto.methodOfPayment.length, existingIncomeIds.length);
-                for (let i = 0; i < updateCount; i++) {
-                    const incomeId = existingIncomeIds[i];
-                    const paymentDto = dto.methodOfPayment[i];
-                    if (incomeId && paymentDto.value !== undefined) {
-                        await this.incomeModel.findByIdAndUpdate(
-                            incomeId,
-                            { $set: { value: paymentDto.value, updatedAt: getCurrentUTCDate() } }
-                        );
-                    }
-                }
-            }
 
             return ApiResponse.success('Pedido actualizado con éxito', updated, HttpStatus.OK);
         } catch (error) {
