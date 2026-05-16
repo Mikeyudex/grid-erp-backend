@@ -72,6 +72,14 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.getByOrderNumber(num);
     }
 
+    @Put('update/:id')
+    async updateOrder(@Param('id') id: string, @Body() dto: CreatePurchaseOrderDto) {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('id no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.updateOrder(id, dto);
+    }
+
     @Put('update-order-status/:id/:userId')
     async updateOrderStatus(@Param('id') id: string, @Param('userId') userId: string, @Body() dto: { status: string }) {
         return this.purchaseOrderService.updateOrderStatus(id, dto.status, userId);

@@ -161,6 +161,58 @@ export class PurchaseOrderService {
 
     }
 
+    async updateOrder(id: string, dto: CreatePurchaseOrderDto) {
+        try {
+            if (!Types.ObjectId.isValid(id)) {
+                throw new BadRequestException('id no es un ObjectId válido');
+            }
+
+            const details = dto.details.map(detail => ({
+                ...detail,
+                productId: new Types.ObjectId(detail.productId as string),
+            }));
+
+            const expandedDetails = this.expandDetails(details as CreatePurchaseOrderItemDto[]);
+            const totalOrder = expandedDetails.reduce((acc, item) => acc + item.totalItem, 0);
+
+            const update: any = {
+                details: expandedDetails,
+                totalOrder,
+                itemsQuantity: expandedDetails.length,
+                updatedAt: getCurrentUTCDate(),
+            };
+
+            if (dto.clientId) update.clientId = new Types.ObjectId(dto.clientId as string);
+            if (dto.zoneId) update.zoneId = new Types.ObjectId(dto.zoneId as string);
+            if (dto.createdBy) update.createdBy = new Types.ObjectId(dto.createdBy as string);
+            if (dto.deliveryDate) update.deliveryDate = dto.deliveryDate;
+            if (dto.notes !== undefined) update.notes = dto.notes;
+            if (dto.status) update.status = dto.status;
+
+            const updated = await this.purchaseOrderModel.findByIdAndUpdate(
+                id,
+                { $set: update },
+                { new: true }
+            );
+
+            if (!updated) {
+                throw new NotFoundException(`Pedido con ID ${id} no encontrado`);
+            }
+
+            return ApiResponse.success('Pedido actualizado con éxito', updated, HttpStatus.OK);
+        } catch (error) {
+            this.logger.error('Error al actualizar pedido', error);
+            if (error instanceof BadRequestException || error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async createDebt(order: PurchaseOrderDocument, methodOfPayments: CreateIncomeDto[], isInternalDebt: boolean) {
         try {
             let value = 0;
@@ -390,12 +442,20 @@ export class PurchaseOrderService {
                 .populate({ path: 'methodOfPayment', populate: { path: 'accountId', select: 'name' } })
                 .lean();
             const collapsedDetails = this.compactDetails(order.details);
-            order.details = (await Promise.all(
+            const mappedDetails = await Promise.all(
                 collapsedDetails.map(async (detail) => {
                     const product = await this.productsService.findOne(detail.productId);
-                    return { ...detail, productName: product?.name ?? 'Producto eliminado' };
+                    const categoryName = (product as any)?.id_category?.name ?? '';
+                    return {
+                        ...detail,
+                        productName: product?.name ?? 'Producto eliminado',
+                        categoryName,
+                    };
                 })
-            )) as any;
+            );
+            order.details = mappedDetails.sort((a: any, b: any) =>
+                (a.productName ?? '').localeCompare(b.productName ?? '', 'es', { sensitivity: 'base' })
+            ) as any;
             return ApiResponse.success('Orden obtenida con éxito', order);
         } catch (error) {
             throw new InternalServerErrorException({
@@ -892,12 +952,20 @@ export class PurchaseOrderService {
                 });
             }
             const collapsedDetails = this.compactDetails(order.details);
-            order.details = (await Promise.all(
+            const mappedDetails = await Promise.all(
                 collapsedDetails.map(async (detail) => {
                     const product = await this.productsService.findOne(detail.productId);
-                    return { ...detail, productName: product?.name ?? 'Producto eliminado' };
+                    const categoryName = (product as any)?.id_category?.name ?? '';
+                    return {
+                        ...detail,
+                        productName: product?.name ?? 'Producto eliminado',
+                        categoryName,
+                    };
                 })
-            )) as any;
+            );
+            order.details = mappedDetails.sort((a: any, b: any) =>
+                (a.productName ?? '').localeCompare(b.productName ?? '', 'es', { sensitivity: 'base' })
+            ) as any;
             return ApiResponse.success('Orden obtenida con éxito', order);
         } catch (error) {
             throw new InternalServerErrorException({
