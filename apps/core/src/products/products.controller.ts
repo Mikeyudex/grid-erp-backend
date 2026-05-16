@@ -390,9 +390,6 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   @Get('/searchProductByFullText')
   async searchProductByFullText(@Query('typeProduct') typeProduct: string, @Query('search') search: string) {
-    if (!typeProduct) {
-      throw new BadRequestException('TypeProduct are required');
-    }
     return this.productService.searchProductByFullText(search, typeProduct);
   }
 }
