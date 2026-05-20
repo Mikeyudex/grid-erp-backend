@@ -40,6 +40,8 @@ import { RetentionModule } from './retention/retention.module';
 import { ReportsModule } from './reports/reports.module';
 import { ResourceModule } from './resource/resource.module';
 import { RoleUserModule } from './role-user/role-user.module';
+import { CitiesModule } from './cities/cities.module';
+
 
 @Module({
   imports: [
@@ -108,6 +110,7 @@ import { RoleUserModule } from './role-user/role-user.module';
     ReportsModule,
     ResourceModule,
     RoleUserModule,
+    CitiesModule,
   ],
   controllers: [CoreController],
   providers: [CoreService, BullBoardService, WebsocketGateway],
