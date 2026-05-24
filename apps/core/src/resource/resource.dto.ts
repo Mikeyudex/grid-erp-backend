@@ -17,6 +17,11 @@ export class CreateResourceDto {
     @IsNotEmpty({ message: 'La ruta del recurso es requerido.' })
     @ApiProperty({ description: "ruta del recurso" })
     path: string;
+
+    @IsString({ message: 'El módulo del recurso debe ser una cadena de texto.' })
+    @IsOptional()
+    @ApiProperty({ description: "módulo al que pertenece el recurso (ej: reports, customers)" })
+    module?: string;
 }
 
 export class UpdateResourceDto extends CreateResourceDto { }

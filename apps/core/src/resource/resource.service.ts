@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { ApiResponse } from '../common/api-response';
 import { CreateResourceDto } from './resource.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -53,8 +53,36 @@ export class ResourceService {
 
     }
 
-    update() {
-        return ApiResponse.success('Resource update successfully', null);
+    async update(id: string, payload: CreateResourceDto) {
+        try {
+            const resource = await this.resourceModel
+                .findByIdAndUpdate(id, { $set: { ...payload, updatedAt: new Date() } }, { new: true })
+                .exec();
+            if (!resource) throw new NotFoundException('Recurso no encontrado');
+            return ApiResponse.success('Recurso actualizado correctamente', resource, HttpStatus.OK);
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    async delete(id: string) {
+        try {
+            const resource = await this.resourceModel.findByIdAndDelete(id).exec();
+            if (!resource) throw new NotFoundException('Recurso no encontrado');
+            return ApiResponse.success('Recurso eliminado correctamente', null, HttpStatus.OK);
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
     }
 
     async getResourceDefault() {

@@ -25,6 +25,9 @@ export class Resource {
     @Prop({ required: true, default: '/' })
     path: string;
 
+    @Prop({ required: false, default: '' })
+    module: string;
+
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
 

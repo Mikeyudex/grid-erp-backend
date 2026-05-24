@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ResourceService } from './resource.service';
 import { CreateResourceDto } from './resource.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
@@ -26,5 +26,17 @@ export class ResourceController {
     @Post('/create')
     create(@Body() payload: CreateResourceDto) {
         return this.resourceService.create(payload);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put('/update/:id')
+    update(@Param('id') id: string, @Body() payload: CreateResourceDto) {
+        return this.resourceService.update(id, payload);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('/delete/:id')
+    delete(@Param('id') id: string) {
+        return this.resourceService.delete(id);
     }
 }

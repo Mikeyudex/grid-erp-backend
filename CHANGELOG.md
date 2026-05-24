@@ -71,6 +71,50 @@ Registro de todos los cambios relevantes del backend. Formato: `[FECHA] — Áre
 
 ---
 
+## [2026-05-21]
+
+### `resource` — Endpoints UPDATE y DELETE
+
+**Archivos:** `apps/core/src/resource/resource.service.ts`, `resource.controller.ts`
+
+- `PUT /resources/update/:id` → actualiza `name`, `description`, `path`, `module` y pone `updatedAt`.
+- `DELETE /resources/delete/:id` → elimina el documento. Retorna 404 si no existe.
+- Ambos endpoints protegidos con `JwtAuthGuard`.
+
+---
+
+## [2026-05-20]
+
+### `resource` — Campo `module` para agrupación de permisos
+
+**Archivos:** `apps/core/src/resource/resource.schema.ts`, `resource.dto.ts`
+
+- Añadido campo `module: string` (opcional, default `''`) al schema de `Resource`.
+- Añadido `@IsOptional() @IsString() module?: string` al DTO.
+- **Propósito:** Permite agrupar recursos por módulo en la UI de administración de roles, haciendo legible la lista cuando hay muchos recursos granulares.
+- **Backward compatible:** los recursos existentes sin `module` quedan con `''`; ninguna lógica de acceso depende de este campo.
+
+---
+
+### `resource` — Seed de recursos granulares
+
+**Archivo:** `seed-resources.ts` (raíz del backend)
+
+- Script idempotente que inserta o actualiza todos los recursos del sistema, organizados por módulo:
+  - **general** (2): `home`, `dashboard`
+  - **customers** (6): listado, crear, categorías, tipos de cliente, tipos de documento
+  - **purchase-orders** (2): listado/hub, crear pedido
+  - **production** (2): listado, ítems
+  - **products** (6): listado, crear, categorías, tipo-material, cargues
+  - **accounting** (8): cuentas, pagos, compras, retenciones, impuestos, tipos de egreso, listado de egresos, registrar egreso
+  - **reports** (9): hub + 8 reportes individuales (`/reports-cumulative-sales`, `/reports-detailed-sales`, `/reports-product-sales`, `/reports-receivables`, `/reports-receivables-detailed`, `/reports-bank-accounts-balance`, `/reports-bank-movements`, `/reports-shipping-labels`)
+  - **configurations** (3): hub, sedes, bodegas
+  - **administration** (3): hub, usuarios, roles
+- Upsert por `path` (único de negocio): nunca genera duplicados.
+- Uso: `npx ts-node -r tsconfig-paths/register seed-resources.ts`
+
+---
+
 ## Convención de versiones
 
 - `x.x.Z` patch → bug fixes  
