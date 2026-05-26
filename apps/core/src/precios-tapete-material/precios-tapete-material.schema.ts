@@ -16,6 +16,9 @@ export class MatMaterialPrices {
     @Prop({ required: true, type: Number })
     precioBase: number;
 
+    @Prop({ required: false, type: Number, default: 0 })
+    precioMayorista: number;
+
     @Prop({ default: () => getCurrentUTCDate() })
     createdAt: Date;
 

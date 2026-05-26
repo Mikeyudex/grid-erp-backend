@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export class CreatePrecioTapeteMaterialDto {
@@ -17,6 +17,11 @@ export class CreatePrecioTapeteMaterialDto {
     @IsNotEmpty({ message: 'El precio base es obligatorio' })
     @ApiProperty({ example: 2000 })
     precioBase: number;
+
+    @IsNumber()
+    @IsOptional()
+    @ApiProperty({ example: 1500, required: false })
+    precioMayorista?: number;
 }
 
 export class UpdatePrecioTapeteMaterialDto extends CreatePrecioTapeteMaterialDto { }

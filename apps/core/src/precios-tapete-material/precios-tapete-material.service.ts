@@ -83,10 +83,13 @@ export class PreciosTapeteMaterialService {
         return (salePrice * matMaterialPrice / tapeteMaterialRefPrice) * quantity;
     }
 
-    async retornaPrecioBaseMatMaterial(material: string, tipoTapete: string): Promise<number> {
+    async retornaPrecioBaseMatMaterial(material: string, tipoTapete: string, isMayorista: boolean = false): Promise<number> {
         try {
             let data = await this.matMaterialPricesModel.find().exec();
             const precioSeleccionado = data.filter((item) => item.tipo_tapete === tipoTapete && item.tipo_material === material)[0];
+            if (isMayorista && precioSeleccionado.precioMayorista && precioSeleccionado.precioMayorista > 0) {
+                return precioSeleccionado.precioMayorista;
+            }
             return precioSeleccionado.precioBase;
         } catch (error) {
             throw new Error(error);
@@ -108,12 +111,15 @@ export class PreciosTapeteMaterialService {
 
             let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
+            // Verificar si el cliente es mayorista
+            const isMayorista = typeCustomerData?.shortCode?.toUpperCase() === 'MAY';
+
             //Se valida que el tipo de material seleccionado aplique para ajuste de precio
             let tipoMaterialNoAplican = ["KANT ADH", "BEIGE LISO", "BEIGE ADH", "ALFOMBRA"];
 
             if (tipoMaterialNoAplican.includes(material)) {
                 try {
-                    const precioBase = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
+                    const precioBase = await this.retornaPrecioBaseMatMaterial(material, tipoTapete, isMayorista);
                     const precioFinal = precioBase * cantidad;
                     if (typeCustomerData.percentDiscount > 0) {
                         const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
@@ -179,12 +185,15 @@ export class PreciosTapeteMaterialService {
             let salePrice = parseInt(basePrice);
             let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
+            // Verificar si el cliente es mayorista
+            const isMayorista = typeCustomerData?.shortCode?.toUpperCase() === 'MAY';
+
             //Se valida que el tipo de material seleccionado aplique para ajuste de precio
             let tipoMaterialNoAplican = ["KANT ADH", "BEIGE LISO", "BEIGE ADH", "ALFOMBRA"];
 
             if (tipoMaterialNoAplican.includes(material)) {
                 try {
-                    const precioBase = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
+                    const precioBase = await this.retornaPrecioBaseMatMaterial(material, tipoTapete, isMayorista);
                     const precioFinal = precioBase * cantidad;
                     if (typeCustomerData.percentDiscount > 0) {
                         const discount = Math.round((precioFinal * typeCustomerData.percentDiscount) / 100);
@@ -262,9 +271,12 @@ export class PreciosTapeteMaterialService {
 
             let typeCustomerData = await this.customersServicee.getTypeCustomerById(typeCustomerId);
 
+            // Verificar si el cliente es mayorista
+            const isMayorista = typeCustomerData?.shortCode?.toUpperCase() === 'MAY';
+
             if (!unitPriceModifiedFromApp) {
-                const precioBaseMatMaterial = await this.retornaPrecioBaseMatMaterial(material, tipoTapete);
-                const precioBaseMatMaterialRef = await this.retornaPrecioBaseMatMaterial(materialRef, materialRef);
+                const precioBaseMatMaterial = await this.retornaPrecioBaseMatMaterial(material, tipoTapete, isMayorista);
+                const precioBaseMatMaterialRef = await this.retornaPrecioBaseMatMaterial(materialRef, materialRef, isMayorista);
 
                 let precioFinal = this.calcularPrecioFinalV2(precioBaseMatMaterialRef, precioBaseMatMaterial, salePriceFromApp, cantidad);
 
