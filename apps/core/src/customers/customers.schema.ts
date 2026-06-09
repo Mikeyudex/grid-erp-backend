@@ -41,7 +41,7 @@ export class Customer {
     @Prop({ required: true })
     phone: string;
 
-    @Prop({ required: true })
+    @Prop({ required: false })
     email: string;
 
     @Prop({ required: true })

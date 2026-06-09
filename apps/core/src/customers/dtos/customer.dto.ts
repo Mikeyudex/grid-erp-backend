@@ -24,7 +24,7 @@ export class CreateCustomerDto {
     lastname: string;
 
     @IsEmail()
-    @IsNotEmpty({ message: 'El correo electrónico del cliente no puede estar vacío.' })
+    @IsOptional()
     @ApiProperty({ description: "correo electrónico del cliente" })
     email: string;
 
@@ -97,7 +97,7 @@ export class CreateCustomerDto {
     @IsArray({ message: 'La propiedad customFields debe ser un array.' })
     @ApiProperty({ description: "campos personalizados del cliente de entrega" })
     customFields: ICustomField[];
-    
+
     @IsOptional()
     @IsString({ message: 'La propiedad observations debe ser un string.' })
     @ApiProperty({ description: "observaciones del cliente de entrega" })
