@@ -374,7 +374,14 @@ export class PurchaseOrderService {
         try {
             let filter: any = {};
             if (zoneId) {
-                filter.zoneId = new Types.ObjectId(zoneId);
+                if (zoneId.includes(',')) {
+                    const ids = zoneId.split(',').filter(id => Types.ObjectId.isValid(id.trim())).map(id => new Types.ObjectId(id.trim()));
+                    if (ids.length > 0) {
+                        filter.zoneId = { $in: ids };
+                    }
+                } else if (Types.ObjectId.isValid(zoneId)) {
+                    filter.zoneId = new Types.ObjectId(zoneId);
+                }
             }
 
             if (status) {
@@ -436,9 +443,21 @@ export class PurchaseOrderService {
    */
     async findAllByViewProduction(page: number, limit: number, zoneId: string) {
         try {
+            let zoneFilter: any;
+            if (zoneId) {
+                if (zoneId.includes(',')) {
+                    const ids = zoneId.split(',').filter(id => Types.ObjectId.isValid(id.trim())).map(id => new Types.ObjectId(id.trim()));
+                    if (ids.length > 0) {
+                        zoneFilter = { $in: ids };
+                    }
+                } else if (Types.ObjectId.isValid(zoneId)) {
+                    zoneFilter = new Types.ObjectId(zoneId);
+                }
+            }
+
             let filter = {
                 $or: [
-                    { zoneId: new Types.ObjectId(zoneId) },
+                    ...(zoneFilter ? [{ zoneId: zoneFilter }] : []),
                     { zoneId: null },
                     { zoneId: { $exists: false } }
                 ],
