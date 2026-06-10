@@ -484,6 +484,7 @@ export class ReportsService implements OnModuleInit {
                                 "$discount",
                             ],
                         },
+                        createdAt: "$createdAt",
                     },
                 },
             ];

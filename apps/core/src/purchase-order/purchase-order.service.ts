@@ -916,12 +916,38 @@ export class PurchaseOrderService {
     }
 
     /**
+     * Obtiene una vista previa de los elementos asociados a eliminar.
+     * @param orderId ID de la orden de pedido
+     */
+    async getDeletePreview(orderId: string) {
+        try {
+            let castedOrderId = new Types.ObjectId(orderId);
+            let debtsCount = await this.debtModel.countDocuments({ purchaseOrderId: castedOrderId }).exec();
+            let incomesCount = await this.incomeModel.countDocuments({ purchaseOrderId: castedOrderId }).exec();
+            return ApiResponse.success('Vista previa de eliminación obtenida con éxito', { debtsCount, incomesCount }, HttpStatus.OK);
+        } catch (error) {
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error al obtener la vista previa de eliminación',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
+    /**
      * Elimina una orden de pedido.
      * @param orderId ID de la orden de pedido
      */
     async deleteOrder(orderId: string) {
         try {
             let castedOrderId = new Types.ObjectId(orderId);
+
+            // Eliminar deudas asociadas
+            await this.debtModel.deleteMany({ purchaseOrderId: castedOrderId }).exec();
+
+            // Eliminar movimientos/ingresos asociados
+            await this.incomeModel.deleteMany({ purchaseOrderId: castedOrderId }).exec();
+
             let deletedOrder = await this.purchaseOrderModel.findByIdAndDelete(castedOrderId).exec();
             return ApiResponse.success('Orden de pedido eliminada con éxito', deletedOrder, HttpStatus.OK);
         } catch (error) {
@@ -941,6 +967,13 @@ export class PurchaseOrderService {
     async bulkDeleteOrders(ids: string[]) {
         try {
             let idsObjectId = ids.map(id => new Types.ObjectId(id));
+
+            // Eliminar deudas asociadas en bloque
+            await this.debtModel.deleteMany({ purchaseOrderId: { $in: idsObjectId } }).exec();
+
+            // Eliminar movimientos/ingresos asociados en bloque
+            await this.incomeModel.deleteMany({ purchaseOrderId: { $in: idsObjectId } }).exec();
+
             let deletedOrders = await this.purchaseOrderModel.deleteMany({ _id: { $in: idsObjectId } });
             return ApiResponse.success('Ordenes de pedido eliminadas con éxito', deletedOrders, HttpStatus.OK);
         } catch (error) {

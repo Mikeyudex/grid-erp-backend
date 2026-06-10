@@ -161,6 +161,15 @@ export class PurchaseOrderController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get('delete-preview/:orderId')
+    async getDeletePreview(@Param('orderId') orderId: string) {
+        if (!Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestException('orderId no es un ObjectId válido');
+        }
+        return this.purchaseOrderService.getDeletePreview(orderId);
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Delete('delete-order/:orderId')
     async deleteOrder(@Param('orderId') orderId: string) {
         if (!Types.ObjectId.isValid(orderId)) {
