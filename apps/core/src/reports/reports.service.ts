@@ -30,6 +30,12 @@ export class ReportsService implements OnModuleInit {
         @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
     ) { }
 
+    private getEndOfDay(dateStr: string): Date {
+        const date = new Date(dateStr);
+        date.setUTCHours(23, 59, 59, 999);
+        return date;
+    }
+
     async onModuleInit() {
         try {
             await this.backfillCreditIncomes();
@@ -117,7 +123,7 @@ export class ReportsService implements OnModuleInit {
             if (startDate || endDate) {
                 filters.deliveryDate = {};
                 if (startDate) filters.deliveryDate.$gte = new Date(startDate);
-                if (endDate) filters.deliveryDate.$lte = new Date(endDate);
+                if (endDate) filters.deliveryDate.$lte = this.getEndOfDay(endDate);
             }
             const report = await this.purchaseOrderModel.aggregate([
                 { $match: filters },
@@ -252,7 +258,7 @@ export class ReportsService implements OnModuleInit {
                     filters.deliveryDate.$gte = new Date(startDate);
                 }
                 if (endDate) {
-                    filters.deliveryDate.$lte = new Date(endDate);
+                    filters.deliveryDate.$lte = this.getEndOfDay(endDate);
                 }
             }
 
@@ -396,7 +402,7 @@ export class ReportsService implements OnModuleInit {
             if (startDate || endDate) {
                 filters.deliveryDate = {};
                 if (startDate) filters.deliveryDate.$gte = new Date(startDate);
-                if (endDate) filters.deliveryDate.$lte = new Date(endDate);
+                if (endDate) filters.deliveryDate.$lte = this.getEndOfDay(endDate);
             }
             const pipeline: any[] = [
                 { $match: filters },
@@ -782,7 +788,7 @@ export class ReportsService implements OnModuleInit {
 
         const dateFilter: any = {};
         if (startDate) dateFilter.$gte = new Date(startDate);
-        if (endDate) dateFilter.$lte = new Date(endDate);
+        if (endDate) dateFilter.$lte = this.getEndOfDay(endDate);
 
         const matchIncome: any = { deletedAt: null, isInternalPayment: false, typeOperation: { $ne: 'credito' } };
         const matchExpense: any = { deletedAt: null };

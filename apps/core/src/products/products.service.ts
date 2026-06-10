@@ -430,16 +430,18 @@ export class ProductsService {
     return lastProductCategory ? String(Number(lastProductCategory.shortCode) + 100) : "1000000";
   }
 
-  async findProductCategorysByCompanyId(companyId: string, page: number = 1, limit: number = 10): Promise<{ totalRowCount: number, data: ProductCategory[] }> {
+  async findProductCategorysByCompanyId(companyId: string, page: number = 1, limit: number = 1000): Promise<{ totalRowCount: number, data: ProductCategory[] }> {
     let companyIdCasted = new Types.ObjectId(companyId);
     if (!Types.ObjectId.isValid(companyIdCasted)) {
       throw new BadRequestException(`Invalid ID: ${companyId}`);
     }
-    const skip = (page - 1) * limit;
+    const parsedLimit = Number(limit) || 1000;
+    const parsedPage = Number(page) || 1;
+    const skip = (parsedPage - 1) * parsedLimit;
     let categories = await this.productCategoryModel.find({ companyId: companyIdCasted })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
+      .limit(parsedLimit)
       .exec();
     if (categories.length === 0) {
       throw new NotFoundException(`Categories by companyId not found`);
