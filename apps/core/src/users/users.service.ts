@@ -630,6 +630,42 @@ export class UsersService {
         })
     }
 
+    async changePassword(id: string, currentPassword: string, newPassword: string) {
+        try {
+            const user = await this.userModel.findById(id).exec();
+            if (!user) throw new NotFoundException({
+                statusCode: 404,
+                message: 'Usuario no encontrado',
+                error: 'Usuario no encontrado',
+            });
+
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) throw new BadRequestException({
+                statusCode: 400,
+                message: 'La contraseña actual es incorrecta',
+                error: 'La contraseña actual es incorrecta',
+            });
+
+            const isSame = await bcrypt.compare(newPassword, user.password);
+            if (isSame) throw new BadRequestException({
+                statusCode: 400,
+                message: 'La nueva contraseña no puede ser igual a la actual',
+                error: 'La nueva contraseña no puede ser igual a la actual',
+            });
+
+            const hashPassword = await bcrypt.hash(newPassword, 10);
+            await this.userModel.findByIdAndUpdate(id, { password: hashPassword });
+            return ApiResponse.success('Contraseña actualizada correctamente', null);
+        } catch (error) {
+            if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+            throw new InternalServerErrorException({
+                statusCode: 500,
+                message: 'Error interno del servidor',
+                error: error.message || 'Unknown error',
+            });
+        }
+    }
+
     async uploadAvatar(id: string, file: Express.Multer.File) {
         try {
             let user = await this.userModel.findById(id).exec();

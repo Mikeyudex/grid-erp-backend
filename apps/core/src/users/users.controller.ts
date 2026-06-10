@@ -156,6 +156,16 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Put('/change-password/:id')
+  async changePassword(
+    @Param('id') id: string,
+    @Body('currentPassword') currentPassword: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.usersService.changePassword(id, currentPassword, newPassword);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Put('/upload-avatar/:id')
   @UseInterceptors(
     FileInterceptor('file', {
