@@ -95,7 +95,8 @@ export class PurchaseOrderService {
                 // 6) Crear Income si aplica
                 if ([
                     IncomeTypeOperation.SALES,
-                    IncomeTypeOperation.RECEIPTS
+                    IncomeTypeOperation.RECEIPTS,
+                    IncomeTypeOperation.CREDITO
                 ].includes(operationType)) {
                     methodOfPaymentDto.customerId = new Types.ObjectId(methodOfPaymentDto.customerId);
                     methodOfPaymentDto.accountId = new Types.ObjectId(methodOfPaymentDto.accountId);
@@ -200,6 +201,26 @@ export class PurchaseOrderService {
 
                 const existingIncomeId = existingIncomeIds[i];
 
+                // Resolve operationType first
+                let account = await this.accountModel.findById(accountObjectId).lean().catch(() => null);
+                let advance = null;
+                if (!account) {
+                    advance = await this.incomeModel.findById(accountObjectId?.toString()).catch(() => null);
+                }
+
+                let operationType: IncomeTypeOperation;
+                if (advance) {
+                    operationType = IncomeTypeOperation.ANTICIPO;
+                } else if (account) {
+                    operationType = this.resolveOperationTypeFromAccount(account);
+                } else {
+                    throw new NotFoundException(`Cuenta o anticipo con id ${accountObjectId} no encontrado`);
+                }
+
+                paymentDto.typeOperation = operationType;
+                paymentDto.hasCurrentAdvancePayment = (operationType === IncomeTypeOperation.ANTICIPO);
+                paymentDto.purchaseOrderId = new Types.ObjectId(id);
+
                 if (existingIncomeId) {
                     // Update the existing Income record in-place
                     await this.incomeModel.findByIdAndUpdate(
@@ -208,6 +229,8 @@ export class PurchaseOrderService {
                             $set: {
                                 value: paymentDto.value,
                                 accountId: accountObjectId,
+                                typeOperation: operationType,
+                                hasCurrentAdvancePayment: paymentDto.hasCurrentAdvancePayment,
                                 paymentDate: paymentDto.paymentDate,
                                 customerId: paymentDto.customerId,
                                 updatedAt: getCurrentUTCDate(),
@@ -216,27 +239,8 @@ export class PurchaseOrderService {
                     );
                     newIncomeIds.push(existingIncomeId);
                 } else {
-                    // New payment slot → resolve account / advance and create Income
-                    let account = await this.accountModel.findById(accountObjectId).lean().catch(() => null);
-                    let advance = null;
-                    if (!account) {
-                        advance = await this.incomeModel.findById(accountObjectId?.toString()).catch(() => null);
-                    }
-
-                    let operationType: IncomeTypeOperation;
-                    if (advance) {
-                        operationType = IncomeTypeOperation.ANTICIPO;
-                    } else if (account) {
-                        operationType = this.resolveOperationTypeFromAccount(account);
-                    } else {
-                        throw new NotFoundException(`Cuenta o anticipo con id ${accountObjectId} no encontrado`);
-                    }
-
-                    paymentDto.typeOperation = operationType;
-                    paymentDto.hasCurrentAdvancePayment = (operationType === IncomeTypeOperation.ANTICIPO);
-                    paymentDto.purchaseOrderId = new Types.ObjectId(id);
-
-                    if ([IncomeTypeOperation.SALES, IncomeTypeOperation.RECEIPTS].includes(operationType)) {
+                    // New payment slot → create Income
+                    if ([IncomeTypeOperation.SALES, IncomeTypeOperation.RECEIPTS, IncomeTypeOperation.CREDITO].includes(operationType)) {
                         paymentDto.hasCurrentAdvancePayment = false;
                         const incomeDoc = await this.incomeService.create(paymentDto);
                         newIncomeIds.push(incomeDoc._id as Types.ObjectId);

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, PipelineStage } from 'mongoose';
 import { PurchaseOrder, PurchaseOrderDocument } from '../purchase-order/purchase-order.schema';
@@ -21,7 +21,7 @@ interface GetreportsParams {
 
 
 @Injectable()
-export class ReportsService {
+export class ReportsService implements OnModuleInit {
 
     constructor(
         @InjectModel(PurchaseOrder.name) private readonly purchaseOrderModel: Model<PurchaseOrderDocument>,
@@ -29,6 +29,78 @@ export class ReportsService {
         @InjectModel(Account.name) private readonly accountModel: Model<AccountDocument>,
         @InjectModel(Income.name) private readonly incomeModel: Model<IncomeDocument>,
     ) { }
+
+    async onModuleInit() {
+        try {
+            await this.backfillCreditIncomes();
+        } catch (err) {
+            console.error('Error backfilling credit incomes:', err);
+        }
+    }
+
+    async backfillCreditIncomes() {
+        console.log('Starting backfill for credit incomes...');
+        const creditAccounts = await this.accountModel.find({
+            $or: [
+                { typeAccount: { $regex: /^crédito$/i } },
+                { bankAccount: 'CXC' },
+                { name: { $regex: /crédito/i } }
+            ]
+        });
+
+        if (creditAccounts.length === 0) {
+            console.log('No credit accounts found to associate backfilled incomes.');
+            return;
+        }
+
+        const creditAccountId = creditAccounts[0]._id;
+        console.log(`Using credit account ID: ${creditAccountId} (${creditAccounts[0].name})`);
+
+        const debts = await this.debtModel.find({
+            deletedAt: null,
+            isInternalDebt: false,
+            purchaseOrderId: { $ne: null }
+        });
+
+        console.log(`Found ${debts.length} active debts to check.`);
+
+        let createdCount = 0;
+        for (const debt of debts) {
+            const order = await this.purchaseOrderModel.findById(debt.purchaseOrderId);
+            if (!order) {
+                continue;
+            }
+
+            const existingIncome = await this.incomeModel.findOne({
+                purchaseOrderId: debt.purchaseOrderId,
+                typeOperation: 'credito'
+            });
+
+            if (!existingIncome) {
+                const newIncome = new this.incomeModel({
+                    purchaseOrderId: debt.purchaseOrderId,
+                    typeOperation: 'credito',
+                    paymentDate: debt.dueDate || order.createdAt || new Date(),
+                    customerId: debt.customerId,
+                    accountId: creditAccountId,
+                    value: debt.amountPayable,
+                    debtIds: [debt._id],
+                    observations: `Migración automática: Ingreso de crédito para Pedido #${order.orderNumber}`,
+                    hasCurrentAdvancePayment: false,
+                    isInternalPayment: false
+                });
+                await newIncome.save();
+
+                await this.purchaseOrderModel.findByIdAndUpdate(debt.purchaseOrderId, {
+                    $addToSet: { methodOfPayment: newIncome._id }
+                });
+
+                createdCount++;
+            }
+        }
+
+        console.log(`Backfill completed. Created ${createdCount} missing credit incomes.`);
+    }
 
     async CumulativeSalesReport(params: GetreportsParams): Promise<CumulativeSalesReportDto[]> {
         try {
@@ -651,7 +723,7 @@ export class ReportsService {
             // 🧩 Construir nombre de cuenta
             {
                 $addFields: {
-                    cuenta: { $concat: ['$bankAccount', ' - ', '$numberAccount'] },
+                    cuenta: '$name',
                 },
             },
 
@@ -664,6 +736,7 @@ export class ReportsService {
                     typeAccount: 1,
                     bankAccount: 1,
                     numberAccount: 1,
+                    name: 1,
                 },
             },
 
@@ -674,7 +747,7 @@ export class ReportsService {
             {
                 $group: {
                     _id: null,
-                    cuentas: { $push: { cuenta: '$cuenta', saldo: '$saldo', typeAccount: '$typeAccount', bankAccount: '$bankAccount', numberAccount: '$numberAccount' } },
+                    cuentas: { $push: { cuenta: '$cuenta', saldo: '$saldo', typeAccount: '$typeAccount', bankAccount: '$bankAccount', numberAccount: '$numberAccount', name: '$name' } },
                     totalGeneral: { $sum: '$saldo' },
                 },
             },
@@ -711,7 +784,7 @@ export class ReportsService {
         if (startDate) dateFilter.$gte = new Date(startDate);
         if (endDate) dateFilter.$lte = new Date(endDate);
 
-        const matchIncome: any = { deletedAt: null, isInternalPayment: false };
+        const matchIncome: any = { deletedAt: null, isInternalPayment: false, typeOperation: { $ne: 'credito' } };
         const matchExpense: any = { deletedAt: null };
         if (accountId) {
             matchIncome.accountId = new Types.ObjectId(accountId);
@@ -745,21 +818,16 @@ export class ReportsService {
             { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
             {
                 $project: {
-                    cuenta: {
-                        $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'],
-                    },
+                    cuenta: { $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'] },
                     accountNumber: '$account.numberAccount',
                     bankAccount: '$account.bankAccount',
                     typeAccount: '$account.typeAccount',
-                    nombreTercero: {
-                        $ifNull: ['$customer.commercialName', 'Sin cliente'],
-                    },
-                    comprobante: {
-                        $concat: ['REC-', { $toString: '$sequence' }],
-                    },
+                    nombreTercero: { $ifNull: ['$customer.commercialName', 'Sin cliente'] },
+                    comprobante: { $concat: ['REC-', { $toString: '$sequence' }] },
                     fecha: '$paymentDate',
                     ingreso: '$value',
                     egreso: { $literal: 0 },
+                    movementType: { $literal: 'Ingreso' },
                 },
             },
         ];
@@ -787,37 +855,117 @@ export class ReportsService {
             { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
             {
                 $project: {
-                    cuenta: {
-                        $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'],
-                    },
+                    cuenta: { $concat: ['$account.bankAccount', ' - ', '$account.numberAccount'] },
                     accountNumber: '$account.numberAccount',
                     bankAccount: '$account.bankAccount',
                     typeAccount: '$account.typeAccount',
-                    nombreTercero: {
-                        $ifNull: ['$provider.commercialName', 'Sin proveedor'],
-                    },
-                    comprobante: {
-                        $concat: ['EGR-', { $toString: '$sequence' }],
-                    },
+                    nombreTercero: { $ifNull: ['$provider.commercialName', 'Sin proveedor'] },
+                    comprobante: { $concat: ['EGR-', { $toString: '$sequence' }] },
                     fecha: '$paymentDate',
                     ingreso: { $literal: 0 },
                     egreso: '$value',
+                    movementType: { $literal: 'Egreso' },
                 },
             },
         ];
 
-        // 🔹 FUSIONAR INGRESOS Y EGRESOS + CALCULAR SALDO
+        // PIPELINE DE CREDITOS — deudas generadas por pedidos con metodo de pago tipo credito
+        const matchDebt: any = { deletedAt: null, isInternalDebt: false };
+        if (Object.keys(dateFilter).length > 0) {
+            matchDebt.dueDate = dateFilter;
+        }
+
+        const creditAccountFilter = accountId
+            ? [{ $match: { $expr: { $eq: [{ $arrayElemAt: ['$creditIncomes.accountId', 0] }, new Types.ObjectId(accountId)] } } }]
+            : [];
+
+        const creditPipeline: any[] = [
+            { $match: matchDebt },
+            {
+                $lookup: {
+                    from: 'purchaseorders',
+                    localField: 'purchaseOrderId',
+                    foreignField: '_id',
+                    as: 'order',
+                },
+            },
+            { $unwind: { path: '$order', preserveNullAndEmptyArrays: false } },
+            {
+                $lookup: {
+                    from: 'incomes',
+                    let: { orderId: '$order._id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$purchaseOrderId', '$$orderId'] },
+                                        { $eq: ['$typeOperation', 'credito'] },
+                                    ],
+                                },
+                            },
+                        },
+                        { $limit: 1 },
+                    ],
+                    as: 'creditIncomes',
+                },
+            },
+            { $match: { $expr: { $gt: [{ $size: '$creditIncomes' }, 0] } } },
+            ...creditAccountFilter,
+            {
+                $lookup: {
+                    from: 'customers',
+                    localField: 'customerId',
+                    foreignField: '_id',
+                    as: 'customer',
+                },
+            },
+            { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'accounts',
+                    let: { acctId: { $arrayElemAt: ['$creditIncomes.accountId', 0] } },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ['$_id', '$$acctId'] } } },
+                        { $limit: 1 },
+                    ],
+                    as: 'creditAccount',
+                },
+            },
+            { $unwind: { path: '$creditAccount', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    cuenta: {
+                        $concat: [
+                            { $ifNull: ['$creditAccount.bankAccount', 'Credito'] },
+                            ' - ',
+                            { $ifNull: ['$creditAccount.numberAccount', ''] },
+                        ],
+                    },
+                    accountNumber: { $ifNull: ['$creditAccount.numberAccount', ''] },
+                    bankAccount: { $ifNull: ['$creditAccount.bankAccount', 'Credito'] },
+                    typeAccount: { $ifNull: ['$creditAccount.typeAccount', 'Credito'] },
+                    nombreTercero: { $ifNull: ['$customer.commercialName', 'Sin cliente'] },
+                    comprobante: { $concat: ['CRE-', { $toString: '$order.orderNumber' }] },
+                    fecha: '$dueDate',
+                    ingreso: '$amountPayable',
+                    egreso: { $literal: 0 },
+                    movementType: { $literal: 'Credito' },
+                },
+            },
+        ];
+
+        // FUSIONAR INGRESOS, EGRESOS Y CREDITOS + CALCULAR SALDO
         const combinedPipeline: any[] = [
             { $unionWith: { coll: 'expenses', pipeline: expensePipeline } },
+            { $unionWith: { coll: 'debts', pipeline: creditPipeline } },
             { $sort: { fecha: 1 } },
             {
                 $setWindowFields: {
                     sortBy: { fecha: 1 },
                     output: {
                         saldo: {
-                            $sum: {
-                                $subtract: ['$ingreso', '$egreso'],
-                            },
+                            $sum: { $subtract: ['$ingreso', '$egreso'] },
                             window: { documents: ['unbounded', 'current'] },
                         },
                     },
@@ -836,6 +984,7 @@ export class ReportsService {
                     ingreso: 1,
                     egreso: 1,
                     saldo: 1,
+                    movementType: 1,
                 },
             },
         ];
