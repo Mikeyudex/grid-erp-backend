@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as dayjs from 'dayjs';
 import { Document, Types } from 'mongoose';
 
-import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
+import { getCurrentUTCDate, normalizeDateToNoonUTC } from 'apps/core/utils/getUtcDate';
 import { PurchaseOrderHistory, PurchaseOrderHistorySchema } from './purchase-order-history.schema';
 import { ItemStatusEnum } from './enums/itemStatus.enum';
 import { PurchaseStatusEnum } from './enums/purchaseStatus.enum';
@@ -91,6 +91,9 @@ export class PurchaseOrder {
     zoneId: Types.ObjectId;
 
     @Prop({ type: Date, required: false, default: null })
+    orderDate: Date;
+
+    @Prop({ type: Date, required: false, default: null })
     deliveryDate: Date;
 
     @Prop({ type: [PurchaseOrderHistorySchema], default: [] })
@@ -125,9 +128,23 @@ PurchaseOrderSchema.pre<PurchaseOrderDocument>('save', async function (next) {
         );
         this.orderNumber = counter.seq;
     }
-    // Asignar fecha de entrega si no existe
+    // Normalizar orderDate a mediodía UTC para evitar desfase de timezone
+    if (this.orderDate) {
+        this.orderDate = normalizeDateToNoonUTC(this.orderDate);
+    }
+
+    // Asignar fecha de entrega a partir de orderDate si no existe
     if (!this.deliveryDate) {
-        this.deliveryDate = dayjs().add(3, 'day').toDate(); // Sumar 3 días a hoy
+        if (this.orderDate) {
+            this.deliveryDate = dayjs(this.orderDate).add(3, 'day').toDate();
+        } else {
+            this.deliveryDate = dayjs().add(3, 'day').toDate();
+        }
+    }
+
+    // Normalizar deliveryDate a mediodía UTC para evitar desfase de timezone
+    if (this.deliveryDate) {
+        this.deliveryDate = normalizeDateToNoonUTC(this.deliveryDate);
     }
     next();
 });

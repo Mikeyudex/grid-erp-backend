@@ -112,6 +112,11 @@ export class CreatePurchaseOrderDto {
   @IsOptional()
   @Type(() => Date)
   @IsDate()
+  orderDate?: Date;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
   deliveryDate?: Date;
 
   @IsMongoId()

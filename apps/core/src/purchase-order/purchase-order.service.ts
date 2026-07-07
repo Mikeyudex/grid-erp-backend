@@ -13,7 +13,7 @@ import { ApiResponse } from '../common/api-response';
 import { PurchaseOrderDAO } from './purchase-order.dao';
 import { ProductsService } from '../products/products.service';
 import { PurchaseOrderActions } from './enums/purchase-order-actions.enum';
-import { getCurrentUTCDate } from 'apps/core/utils/getUtcDate';
+import { getCurrentUTCDate, normalizeDateToNoonUTC } from 'apps/core/utils/getUtcDate';
 import { UsersService } from '../users/users.service';
 import { ItemStatusEnum } from './enums/itemStatus.enum';
 import { PurchaseStatusEnum } from './enums/purchaseStatus.enum';
@@ -135,6 +135,11 @@ export class PurchaseOrderService {
             // Recalcular total de la orden
             createPurchaseOrderDto.totalOrder = createPurchaseOrderDto.details
                 .reduce((acc, item) => acc + item.totalItem, 0);
+
+            // Normalizar orderDate a mediodía UTC para evitar desfase de timezone
+            if (createPurchaseOrderDto.orderDate) {
+                createPurchaseOrderDto.orderDate = normalizeDateToNoonUTC(createPurchaseOrderDto.orderDate);
+            }
 
             const createdOrder = new this.purchaseOrderModel({
                 ...createPurchaseOrderDto,
@@ -299,7 +304,12 @@ export class PurchaseOrderService {
             if (dto.clientId) update.clientId = new Types.ObjectId(dto.clientId as string);
             if (dto.zoneId) update.zoneId = new Types.ObjectId(dto.zoneId as string);
             if (dto.createdBy) update.createdBy = new Types.ObjectId(dto.createdBy as string);
-            if (dto.deliveryDate) update.deliveryDate = dto.deliveryDate;
+            if (dto.orderDate) {
+                update.orderDate = normalizeDateToNoonUTC(dto.orderDate);
+                update.deliveryDate = moment(update.orderDate).add(3, 'day').toDate();
+            } else if (dto.deliveryDate) {
+                update.deliveryDate = dto.deliveryDate;
+            }
             if (dto.notes !== undefined) update.notes = dto.notes;
             if (dto.status) update.status = dto.status;
 
