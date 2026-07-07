@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as moment from "moment";
 import { ClientSession, Model, Types } from 'mongoose';
@@ -148,14 +148,42 @@ export class PurchaseOrderService {
             await this.crossAdvancePayment(order, methodOfPayments);
             await this.incomeService.updatePurchaseOrderId(incomeIds, order._id);
             return ApiResponse.success('Orden creada con éxito', order, HttpStatus.CREATED);
-        } catch (error) {
+        } catch (error: any) {
             this.logger.error('Error al crear orden de pedido', error);
             await session.abortTransaction();
-            throw new InternalServerErrorException({
-                statusCode: 500,
-                message: 'Error interno del servidor',
+
+            let errorCode = 'ORDER_CREATION_FAILED';
+            let friendlyMessage = 'Ocurrió un error inesperado al crear el pedido.';
+            let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+
+            if (error instanceof NotFoundException) {
+                errorCode = 'PAYMENT_ACCOUNT_NOT_FOUND';
+                friendlyMessage = error.message;
+                statusCode = HttpStatus.NOT_FOUND;
+            } else if (error.name === 'ValidationError') {
+                errorCode = 'VALIDATION_FAILED';
+                friendlyMessage = 'Error de validación de datos en el pedido.';
+                statusCode = HttpStatus.BAD_REQUEST;
+            } else if (error.code === 11000) {
+                errorCode = 'DUPLICATE_ORDER_NUMBER';
+                friendlyMessage = 'El número de orden ya existe.';
+                statusCode = HttpStatus.CONFLICT;
+            } else if (error.message && error.message.includes('Error al crear la deuda')) {
+                errorCode = 'DEBT_CREATION_FAILED';
+                friendlyMessage = 'No se pudo generar la deuda asociada al pedido.';
+                statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+            } else if (error.message && error.message.includes('Error al cruzar el anticipo')) {
+                errorCode = 'ADVANCE_CROSS_FAILED';
+                friendlyMessage = 'No se pudo cruzar el anticipo de pago.';
+                statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+
+            throw new HttpException({
+                statusCode,
+                message: friendlyMessage,
+                code: errorCode,
                 error: error.message || 'Unknown error',
-            });
+            }, statusCode);
         } finally {
             session.endSession();
         }
@@ -278,16 +306,36 @@ export class PurchaseOrderService {
             );
 
             return ApiResponse.success('Pedido actualizado con éxito', updated, HttpStatus.OK);
-        } catch (error) {
+        } catch (error: any) {
             this.logger.error('Error al actualizar pedido', error);
-            if (error instanceof BadRequestException || error instanceof NotFoundException) {
+            if (error instanceof BadRequestException) {
                 throw error;
             }
-            throw new InternalServerErrorException({
-                statusCode: 500,
-                message: 'Error interno del servidor',
+            
+            let errorCode = 'ORDER_UPDATE_FAILED';
+            let friendlyMessage = 'Ocurrió un error inesperado al actualizar el pedido.';
+            let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+
+            if (error instanceof NotFoundException) {
+                errorCode = 'PAYMENT_ACCOUNT_NOT_FOUND';
+                friendlyMessage = error.message;
+                statusCode = HttpStatus.NOT_FOUND;
+            } else if (error.name === 'ValidationError') {
+                errorCode = 'VALIDATION_FAILED';
+                friendlyMessage = 'Error de validación de datos en el pedido.';
+                statusCode = HttpStatus.BAD_REQUEST;
+            } else if (error.code === 11000) {
+                errorCode = 'DUPLICATE_ORDER_NUMBER';
+                friendlyMessage = 'El número de orden ya existe.';
+                statusCode = HttpStatus.CONFLICT;
+            }
+
+            throw new HttpException({
+                statusCode,
+                message: friendlyMessage,
+                code: errorCode,
                 error: error.message || 'Unknown error',
-            });
+            }, statusCode);
         }
     }
 
