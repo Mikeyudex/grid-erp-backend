@@ -61,6 +61,7 @@ export class CreatePurchaseOrderItemDto {
   assignedId?: string | Types.ObjectId;
 
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   assignedAt?: Date;
 
@@ -69,6 +70,7 @@ export class CreatePurchaseOrderItemDto {
   updatedBy?: string | Types.ObjectId;
 
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   updatedAt?: Date;
 }
@@ -108,6 +110,7 @@ export class CreatePurchaseOrderDto {
   zoneId?: string | Types.ObjectId;
 
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   deliveryDate?: Date;
 

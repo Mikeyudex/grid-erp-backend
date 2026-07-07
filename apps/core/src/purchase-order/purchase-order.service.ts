@@ -113,7 +113,11 @@ export class PurchaseOrderService {
             delete createPurchaseOrderDto.methodOfPayment;
 
             createPurchaseOrderDto.clientId = new Types.ObjectId(createPurchaseOrderDto.clientId);
-            createPurchaseOrderDto.zoneId = new Types.ObjectId(createPurchaseOrderDto.zoneId);
+            if (createPurchaseOrderDto.zoneId) {
+                createPurchaseOrderDto.zoneId = new Types.ObjectId(createPurchaseOrderDto.zoneId);
+            } else {
+                delete createPurchaseOrderDto.zoneId;
+            }
             createPurchaseOrderDto.createdBy = new Types.ObjectId(createPurchaseOrderDto.createdBy);
 
             // Convertir productId a ObjectId
